@@ -1,0 +1,84 @@
+# CollabSims
+
+**AI Agent Collaboration Simulator** - Web UI para monitorar e interagir com agentes Claude em tempo real.
+
+## Visão Geral
+
+CollabSims é uma plataforma completa para executar e monitorar agentes de IA Claude, oferecendo:
+
+- 🎯 **Execução Single-Turn**: Execute tarefas únicas com resposta imediata
+- 💬 **Sessões Multi-Turn**: Conversas persistentes com contexto mantido
+- ✅ **Aprovação de Ferramentas**: Controle granular sobre execução de ferramentas
+- 📊 **Monitoramento em Tempo Real**: Interface web com streaming SSE
+- 💾 **Persistência**: Histórico completo em SQLite
+- 🔧 **API REST**: FastAPI com documentação automática
+
+## Stack Tecnológico
+
+**Backend:**
+- Python 3.13+
+- FastAPI + Uvicorn
+- Claude Agent SDK
+- SQLite (aiosqlite)
+
+**Frontend:**
+- Alpine.js 3
+- Tailwind CSS
+- Vanilla JavaScript (ES6 modules)
+- Server-Sent Events (SSE)
+
+## Documentação
+
+### Primeiros Passos
+- 📘 [README.md](README.md) - Instalação, testes e inicialização
+
+### Arquitetura e Componentes
+- 🏗️ [Arquitetura](docs/architecture.md) - Visão de alto nível do sistema
+- 🗄️ [Banco de Dados](docs/database.md) - Esquema e estruturas de tabelas
+- 🌐 [API](docs/api.md) - Endpoints e exemplos de uso
+- 📡 [Eventos](docs/events.md) - Sistema de eventos e streaming
+- 💻 [Frontend Web](docs/frontend.md) - Interface e componentes
+
+## Início Rápido
+
+```bash
+# 1. Instalar dependências
+pip install -e .
+
+# 2. Iniciar API (Terminal 1)
+./run_api.sh
+
+# 3. Iniciar Frontend (Terminal 2)
+cd web && python3 -m http.server 3005
+```
+
+**Acesse:** http://localhost:3005
+
+## Estrutura do Projeto
+
+```
+collab-sims/
+├── collab_sims/          # Backend Python
+│   ├── api/              # FastAPI routes e services
+│   ├── core/             # Lógica principal (Agent, Session)
+│   ├── persistence/      # SQLite repository
+│   └── trackers/         # Event tracking
+├── web/                  # Frontend (Alpine.js)
+│   ├── js/               # Componentes e serviços
+│   └── sessions/         # Páginas HTML
+└── docs/                 # Documentação detalhada
+```
+
+## Contribuindo
+
+Este projeto usa:
+- **Gerenciamento de pacotes**: `pip` ou `uv`
+- **Linting**: `ruff`
+- **Testes**: `pytest`
+- **Formatação**: `ruff format`
+
+Veja [README.md](README.md) para comandos completos.
+
+## Licença
+
+MIT License - veja LICENSE para detalhes.
