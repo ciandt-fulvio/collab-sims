@@ -1,0 +1,257 @@
+"""Multi-turn session management endpoints"""
+
+import json
+from typing import Optional
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
+from ..schemas import (
+    SessionCreateRequest,
+    SessionQueryRequest,
+    SessionResponse,
+    SessionListResponse,
+    ExecuteResponse,
+    EventResponse,
+)
+from ..services import session_manager
+
+router = APIRouter(prefix="/api/sessions", tags=["sessions"])
+
+
+@router.post("", response_model=SessionResponse, status_code=201)
+async def create_session(request: SessionCreateRequest):
+    """
+    Create a new multi-turn conversation session.
+
+    The session maintains context across multiple queries,
+    allowing Claude to remember previous interactions.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.warning(f"🔵 create_session endpoint called with config: {request.config}")
+
+    try:
+        session_data = await session_manager.create_session(
+            config=request.config,
+            session_type=request.session_type
+        )
+        logger.warning(f"🟢 create_session completed: {session_data['session_id']} (type: {request.session_type})")
+        return SessionResponse(**session_data)
+    except Exception as e:
+        logger.error(f"🔴 create_session failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("", response_model=SessionListResponse)
+async def list_sessions():
+    """List all active sessions"""
+    sessions = await session_manager.list_sessions()
+    return SessionListResponse(
+        sessions=[SessionResponse(**s) for s in sessions], total=len(sessions)
+    )
+
+
+@router.get("/{session_id}", response_model=SessionResponse)
+async def get_session(session_id: str):
+    """Get details about a specific session"""
+    session_data = await session_manager.get_session(session_id)
+
+    if not session_data:
+        raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+
+    return SessionResponse(**session_data)
+
+
+@router.post("/{session_id}/query", response_model=ExecuteResponse)
+async def query_session(session_id: str, request: SessionQueryRequest):
+    """
+    Send a query to an existing session (buffered response).
+
+    The agent will respond with context from previous queries in this session.
+    For real-time streaming, use POST /api/sessions/{session_id}/query/stream.
+
+    Args:
+        session_id: Session identifier
+        request: Query request with prompt
+
+    Returns:
+        ExecuteResponse with all events, status, and optional error
+    """
+    events, status, error = await session_manager.query_session(
+        session_id=session_id, prompt=request.prompt
+    )
+
+    if status == "error" and error and "not found" in error:
+        raise HTTPException(status_code=404, detail=error)
+
+    # Convert events to response models
+    event_responses = [
+        EventResponse(
+            event_type=event.get("type", event.get("event_type", "unknown")),
+            timestamp=event["timestamp"],
+            data=event,
+        )
+        for event in events
+    ]
+
+    return ExecuteResponse(events=event_responses, status=status, error=error)
+
+
+@router.post("/{session_id}/query/stream")
+async def query_session_stream(session_id: str, request: SessionQueryRequest):
+    """
+    Send a query to an existing session with Server-Sent Events streaming.
+
+    Events are streamed in real-time as they occur during execution.
+    The session context is maintained - Claude remembers all previous queries.
+
+    Args:
+        session_id: Session identifier
+        request: Query request with prompt
+
+    Returns:
+        StreamingResponse with SSE-formatted events
+    """
+    async def event_generator():
+        """Generator that yields SSE-formatted events"""
+        try:
+            async for event in session_manager.query_session_stream(
+                session_id=session_id, prompt=request.prompt
+            ):
+                # Format as SSE
+                yield f"data: {json.dumps(event)}\n\n"
+
+        except Exception as e:
+            # Send error event
+            error_event = {
+                "event_type": "error",
+                "error": str(e),
+            }
+            yield f"data: {json.dumps(error_event)}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Disable nginx buffering
+        },
+    )
+
+
+@router.post("/{session_id}/interrupt", status_code=200)
+async def interrupt_session(session_id: str):
+    """
+    Interrupt the currently executing query in a session.
+
+    This stops Claude mid-execution and halts event streaming, similar to pressing
+    ESC in Claude Code shell. The session remains connected and ready for new queries.
+
+    Args:
+        session_id: Session identifier
+
+    Returns:
+        Success response with session status
+
+    Raises:
+        404: Session not found
+        400: Session not connected or no query is executing
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    try:
+        success = await session_manager.interrupt_session(session_id)
+
+        if not success:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Session {session_id} not found or cannot be interrupted"
+            )
+
+        return {
+            "session_id": session_id,
+            "status": "interrupted",
+            "message": "Query execution interrupted successfully"
+        }
+    except Exception as e:
+        logger.error(f"Failed to interrupt session {session_id}: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/{session_id}", status_code=204)
+async def delete_session(session_id: str):
+    """
+    Close and delete a session.
+
+    This ends the conversation and frees up resources.
+    """
+    success = await session_manager.close_session(session_id)
+
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+
+    return None
+
+
+@router.get("/{session_id}/events")
+async def get_session_events(
+    session_id: str,
+    event_type: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 100
+):
+    """
+    Get all events for a session from database.
+
+    This retrieves persisted events, allowing you to view session history
+    even after the session has closed or the server restarted.
+
+    Args:
+        session_id: Session identifier
+        event_type: Optional filter by event type (message, tool_use, etc.)
+        page: Page number (1-indexed)
+        page_size: Number of events per page (max 1000)
+
+    Returns:
+        Paginated list of events with metadata
+
+    Example:
+        GET /api/sessions/{id}/events?event_type=message&page=1&page_size=50
+    """
+    from ..services.session_manager import session_manager
+
+    # Validate page_size
+    page_size = min(page_size, 1000)
+    offset = (page - 1) * page_size
+
+    # Get database tracker
+    db_tracker = session_manager.db_tracker
+    repository = db_tracker.repository
+
+    try:
+        # Get events from database
+        events = await repository.get_events(
+            session_id=session_id,
+            event_type=event_type,
+            limit=page_size,
+            offset=offset
+        )
+
+        # Get total count
+        total = await repository.count_events(
+            session_id=session_id,
+            event_type=event_type
+        )
+
+        return {
+            "session_id": session_id,
+            "events": events,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": (total + page_size - 1) // page_size
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve events: {str(e)}")

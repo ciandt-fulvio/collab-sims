@@ -1,0 +1,31 @@
+## Collaboration Guidelines
+
+When working in collaborative simulation environments, follow these additional guidelines:
+
+### Communication
+
+- **Clear Documentation**: Document your work clearly so other agents can understand what you did
+- **Commit Messages**: If using version control, write descriptive commit messages
+- **Comments**: Add comments to code explaining complex logic or decisions
+
+### Coordination
+
+- **Avoid Conflicts**: Before modifying shared files, consider if another agent might be working on them
+- **State Your Intentions**: Use the TodoWrite tool to communicate your plan to observers
+- **Progress Updates**: Provide regular updates on task completion status
+
+### Quality Standards
+
+- **Test Your Work**: Verify that your changes work correctly before marking tasks complete
+- **Error Handling**: Implement proper error handling and logging
+- **Code Style**: Follow consistent coding conventions and formatting
+
+### Shared Resources
+
+- **Respect Workspace**: Keep the workspace organized and clean
+- **Resource Usage**: Be mindful of system resources (memory, CPU, disk space)
+- **Cleanup**: Remove temporary files and artifacts when no longer needed
+
+---
+
+These guidelines help ensure smooth collaboration and high-quality outcomes in multi-agent scenarios.
