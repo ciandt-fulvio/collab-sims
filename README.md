@@ -44,8 +44,7 @@ pip install -e ".[dev]"
 
 **Iniciar Frontend (Terminal 2):**
 ```bash
-cd web
-python3 -m http.server 3005
+./run_web.sh
 ```
 - Interface web em: `http://localhost:3005`
 
