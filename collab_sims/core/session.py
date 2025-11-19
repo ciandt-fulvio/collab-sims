@@ -2,31 +2,30 @@
 
 import asyncio
 import logging
+import os
 import traceback as tb
 import uuid
-from pathlib import Path
-from typing import AsyncGenerator, Optional
+from collections.abc import AsyncGenerator
 from datetime import datetime
-import os
+from pathlib import Path
 
 from claude_agent_sdk import (
-    ClaudeSDKClient,
     ClaudeAgentOptions,
+    ClaudeSDKClient,
 )
 
-logger = logging.getLogger(__name__)
-
-from .config import SessionConfig, get_default_working_dir, get_collab_sims_config_dir
-from .prompts import get_session_prompt
+from ._session_base import _SessionBase
+from .config import SessionConfig, get_collab_sims_config_dir, get_default_working_dir
 from .events import (
     AgentEvent,
-    EventType,
-    SessionStartEvent,
-    SessionEndEvent,
-    QueryEvent,
     ErrorEvent,
+    QueryEvent,
+    SessionEndEvent,
+    SessionStartEvent,
 )
-from ._session_base import _SessionBase
+from .prompts import get_session_prompt
+
+logger = logging.getLogger(__name__)
 
 
 class CollabSimsSession(_SessionBase):
@@ -64,7 +63,7 @@ class CollabSimsSession(_SessionBase):
         config: SessionConfig,
         trackers: list = None,
         approval_manager=None,
-        session_id: Optional[str] = None,
+        session_id: str | None = None,
     ):
         """Initialize session (internal - use CollabSims.create_session() instead).
 
@@ -80,15 +79,15 @@ class CollabSimsSession(_SessionBase):
         self.approval_manager = approval_manager
 
         # Session state
-        self.client: Optional[ClaudeSDKClient] = None
+        self.client: ClaudeSDKClient | None = None
         self.is_connected = False
         self._session_id = session_id or str(uuid.uuid4())
         self._user_id = config.user_id
         self._query_count = 0
-        self._start_time: Optional[datetime] = None
+        self._start_time: datetime | None = None
 
         # Queue for events that need to be yielded (e.g., approval_request)
-        self._event_queue: Optional[asyncio.Queue] = None
+        self._event_queue: asyncio.Queue | None = None
 
         # Set Collab Sims config directory for Claude SDK session storage
         # This isolates Collab Sims sessions from personal Claude Code sessions in ~/.claude/
@@ -183,7 +182,7 @@ class CollabSimsSession(_SessionBase):
         if self._event_queue is not None:
             await self._event_queue.put(event)
 
-    async def query(self, prompt: str) -> AsyncGenerator[AgentEvent, None]:
+    async def query(self, prompt: str) -> AsyncGenerator[AgentEvent]:
         """Send a query and stream response events.
 
         The query is sent in the existing conversation context. Claude
@@ -239,7 +238,7 @@ class CollabSimsSession(_SessionBase):
                         break
                     event = await asyncio.wait_for(self._event_queue.get(), timeout=0.1)
                     await merged_queue.put(('queued', event))
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     continue
             # Drain remaining events after SDK is done
             if self._event_queue is not None:
@@ -289,7 +288,7 @@ class CollabSimsSession(_SessionBase):
 
                             await self._emit_event(event)
                             yield event
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     continue
 
             # Wait for tasks to complete

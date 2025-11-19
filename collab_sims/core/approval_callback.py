@@ -1,16 +1,17 @@
 """Approval callback for Claude Agent SDK can_use_tool hook."""
 
 import uuid
-from typing import Callable, Awaitable
+from collections.abc import Awaitable, Callable
+
 from claude_agent_sdk.types import (
     PermissionResultAllow,
     PermissionResultDeny,
-    ToolPermissionContext
+    ToolPermissionContext,
 )
 
 # Note: ApprovalManager import will be resolved at runtime
 # from collab_sims.api.services.approval_manager import ApprovalManager
-from collab_sims.core.events import ApprovalRequestEvent, ApprovalResponseEvent, AgentEvent
+from collab_sims.core.events import AgentEvent, ApprovalRequestEvent, ApprovalResponseEvent
 
 
 class ApprovalCallback:

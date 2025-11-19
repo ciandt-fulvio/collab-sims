@@ -1,7 +1,13 @@
 """Approval management endpoints for tool execution approval workflow"""
 
 from fastapi import APIRouter, HTTPException
-from ..schemas import ApprovalRequestData, PendingApprovalsResponse, PendingApprovalInfo, ApprovalConfig
+
+from ..schemas import (
+    ApprovalConfig,
+    ApprovalRequestData,
+    PendingApprovalInfo,
+    PendingApprovalsResponse,
+)
 from ..services import session_manager
 
 router = APIRouter(prefix="/api/sessions/{session_id}/approvals", tags=["approvals"])

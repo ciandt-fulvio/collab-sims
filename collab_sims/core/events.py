@@ -1,10 +1,10 @@
 """Event types for agent execution tracking."""
 
-from dataclasses import dataclass, field, asdict
-from datetime import datetime
-from typing import Any, Dict, List, Optional
-from enum import Enum
 import uuid
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any
 
 
 class EventType(str, Enum):
@@ -43,11 +43,11 @@ class AgentEvent:
     type: EventType
     event_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
-    session_id: Optional[str] = None
-    user_id: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    session_id: str | None = None
+    user_id: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert event to dictionary."""
         return asdict(self)
 
@@ -63,7 +63,7 @@ class StartEvent(AgentEvent):
 
     type: EventType = EventType.START
     prompt: str = ""
-    options: Dict[str, Any] = field(default_factory=dict)
+    options: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -72,10 +72,10 @@ class CompleteEvent(AgentEvent):
 
     type: EventType = EventType.COMPLETE
     duration_ms: int = 0
-    total_cost_usd: Optional[float] = None
+    total_cost_usd: float | None = None
     num_turns: int = 0
-    result: Optional[str] = None
-    usage: Dict[str, Any] = field(default_factory=dict)
+    result: str | None = None
+    usage: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -89,9 +89,9 @@ class TaskInfo:
 @dataclass
 class PlanChanges:
     """Changes in the plan."""
-    added: List[str] = field(default_factory=list)
-    removed: List[str] = field(default_factory=list)
-    status_changed: List[Dict[str, str]] = field(default_factory=list)
+    added: list[str] = field(default_factory=list)
+    removed: list[str] = field(default_factory=list)
+    status_changed: list[dict[str, str]] = field(default_factory=list)
 
 
 @dataclass
@@ -99,12 +99,12 @@ class PlanEvent(AgentEvent):
     """Emitted when agent creates or updates task plan."""
 
     type: EventType = EventType.PLAN
-    todos: List[TaskInfo] = field(default_factory=list)
+    todos: list[TaskInfo] = field(default_factory=list)
     total_tasks: int = 0
     completed: int = 0
     in_progress: int = 0
     pending: int = 0
-    changes: Optional[PlanChanges] = None
+    changes: PlanChanges | None = None
     tool_use_id: str = ""
 
 
@@ -115,8 +115,8 @@ class MessageEvent(AgentEvent):
     type: EventType = EventType.MESSAGE
     role: str = ""  # "assistant" | "user" | "system"
     content: str = ""
-    model: Optional[str] = None
-    thinking: Optional[str] = None
+    model: str | None = None
+    thinking: str | None = None
 
 
 @dataclass
@@ -140,8 +140,8 @@ class ToolUseEvent(AgentEvent):
     type: EventType = EventType.TOOL_USE
     tool_name: str = ""
     tool_use_id: str = ""
-    input: Dict[str, Any] = field(default_factory=dict)
-    originated_from_message_id: Optional[str] = None  # Links to MessageEvent that announced this tool
+    input: dict[str, Any] = field(default_factory=dict)
+    originated_from_message_id: str | None = None  # Links to MessageEvent that announced this tool
 
 
 @dataclass
@@ -153,7 +153,7 @@ class ToolResultEvent(AgentEvent):
     tool_name: str = ""
     output: Any = None
     is_error: bool = False
-    originated_from_message_id: Optional[str] = None  # Links to MessageEvent that announced this tool
+    originated_from_message_id: str | None = None  # Links to MessageEvent that announced this tool
 
 
 @dataclass
@@ -164,7 +164,7 @@ class ProgressEvent(AgentEvent):
     completed: int = 0
     total: int = 0
     percentage: float = 0.0
-    current_task: Optional[str] = None
+    current_task: str | None = None
 
 
 @dataclass
@@ -173,7 +173,7 @@ class SystemEvent(AgentEvent):
 
     type: EventType = EventType.SYSTEM
     subtype: str = ""
-    data: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -183,8 +183,8 @@ class ErrorEvent(AgentEvent):
     type: EventType = EventType.ERROR
     error: str = ""
     error_type: str = ""
-    context: Dict[str, Any] = field(default_factory=dict)
-    traceback: Optional[str] = None
+    context: dict[str, Any] = field(default_factory=dict)
+    traceback: str | None = None
 
 
 @dataclass
@@ -192,8 +192,8 @@ class SessionStartEvent(AgentEvent):
     """Emitted when a new session is created."""
 
     type: EventType = EventType.SESSION_START
-    tags: List[str] = field(default_factory=list)
-    system_prompt: Optional[str] = None  # The full system prompt sent to Claude Agent SDK
+    tags: list[str] = field(default_factory=list)
+    system_prompt: str | None = None  # The full system prompt sent to Claude Agent SDK
 
 
 @dataclass
@@ -221,7 +221,7 @@ class ApprovalRequestEvent(AgentEvent):
     type: EventType = EventType.APPROVAL_REQUEST
     tool_use_id: str = ""
     tool_name: str = ""
-    tool_input: Dict[str, Any] = field(default_factory=dict)
+    tool_input: dict[str, Any] = field(default_factory=dict)
     status: str = "pending"  # "pending" | "approved" | "rejected"
     risk_level: str = "medium"  # "safe" | "medium" | "high"
 
@@ -234,7 +234,7 @@ class ApprovalResponseEvent(AgentEvent):
     tool_use_id: str = ""
     approved: bool = False
     remember: bool = False  # Remember approval for this tool in session
-    reason: Optional[str] = None
+    reason: str | None = None
 
 
 @dataclass
@@ -245,4 +245,4 @@ class MetricsEvent(AgentEvent):
     duration_ms: int = 0
     input_tokens: int = 0
     output_tokens: int = 0
-    total_cost_usd: Optional[float] = None
+    total_cost_usd: float | None = None

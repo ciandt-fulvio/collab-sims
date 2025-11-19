@@ -1,11 +1,12 @@
 """SQLite implementation of SessionRepository."""
 
 import json
-import aiosqlite
-from pathlib import Path
-from typing import List, Dict, Any, Optional
-from datetime import datetime
 import logging
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+import aiosqlite
 
 from .repository import SessionRepository
 
@@ -26,7 +27,7 @@ class SQLiteRepository(SessionRepository):
             db_path: Path to SQLite database file (will be created if doesn't exist)
         """
         self.db_path = db_path
-        self.db: Optional[aiosqlite.Connection] = None
+        self.db: aiosqlite.Connection | None = None
 
     async def initialize(self) -> None:
         """Initialize database connection and create schema.
@@ -66,9 +67,9 @@ class SQLiteRepository(SessionRepository):
     async def create_session(
         self,
         session_id: str,
-        user_id: Optional[str],
+        user_id: str | None,
         created_at: datetime,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: dict[str, Any] | None = None
     ) -> None:
         """Create a new session record."""
         metadata_json = json.dumps(metadata) if metadata else None
@@ -86,9 +87,9 @@ class SQLiteRepository(SessionRepository):
     async def update_session(
         self,
         session_id: str,
-        closed_at: Optional[datetime] = None,
-        status: Optional[str] = None,
-        query_count: Optional[int] = None
+        closed_at: datetime | None = None,
+        status: str | None = None,
+        query_count: int | None = None
     ) -> None:
         """Update session record."""
         updates = []
@@ -116,7 +117,7 @@ class SQLiteRepository(SessionRepository):
         await self.db.commit()
         logger.debug(f"Updated session {session_id}")
 
-    async def get_session(self, session_id: str) -> Optional[Dict[str, Any]]:
+    async def get_session(self, session_id: str) -> dict[str, Any] | None:
         """Get session by ID."""
         cursor = await self.db.execute(
             "SELECT * FROM session WHERE session_id = ?",
@@ -136,11 +137,11 @@ class SQLiteRepository(SessionRepository):
 
     async def list_sessions(
         self,
-        user_id: Optional[str] = None,
-        status: Optional[str] = None,
+        user_id: str | None = None,
+        status: str | None = None,
         limit: int = 100,
         offset: int = 0
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """List sessions with optional filtering."""
         query = "SELECT * FROM session WHERE 1=1"
         params = []
@@ -171,8 +172,8 @@ class SQLiteRepository(SessionRepository):
 
     async def count_sessions(
         self,
-        user_id: Optional[str] = None,
-        status: Optional[str] = None
+        user_id: str | None = None,
+        status: str | None = None
     ) -> int:
         """Count sessions matching criteria."""
         query = "SELECT COUNT(*) as count FROM session WHERE 1=1"
@@ -195,9 +196,9 @@ class SQLiteRepository(SessionRepository):
         session_id: str,
         event_type: str,
         timestamp: datetime,
-        data: Dict[str, Any],
-        query_index: Optional[int] = None,
-        message_id: Optional[str] = None
+        data: dict[str, Any],
+        query_index: int | None = None,
+        message_id: str | None = None
     ) -> None:
         """Add an event to the database."""
         data_json = json.dumps(data)
@@ -214,10 +215,10 @@ class SQLiteRepository(SessionRepository):
     async def get_events(
         self,
         session_id: str,
-        event_type: Optional[str] = None,
+        event_type: str | None = None,
         limit: int = 100,
         offset: int = 0
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get events for a session."""
         query = "SELECT * FROM event WHERE session_id = ?"
         params = [session_id]
@@ -245,7 +246,7 @@ class SQLiteRepository(SessionRepository):
     async def count_events(
         self,
         session_id: str,
-        event_type: Optional[str] = None
+        event_type: str | None = None
     ) -> int:
         """Count events for a session."""
         query = "SELECT COUNT(*) as count FROM event WHERE session_id = ?"

@@ -3,7 +3,6 @@
 import time
 from asyncio import Future
 from dataclasses import dataclass
-from typing import Dict, Optional
 
 
 @dataclass
@@ -23,8 +22,8 @@ class ApprovalManager:
 
     def __init__(self):
         """Initialize the approval manager."""
-        self._pending: Dict[str, ApprovalRequest] = {}
-        self._approval_config: Dict[str, dict] = {}  # per-session config
+        self._pending: dict[str, ApprovalRequest] = {}
+        self._approval_config: dict[str, dict] = {}  # per-session config
 
     def set_config(self, session_id: str, config: dict):
         """
@@ -88,7 +87,7 @@ class ApprovalManager:
         tool_name: str,
         tool_input: dict,
         session_id: str
-    ) -> tuple[bool, Optional[str], bool]:
+    ) -> tuple[bool, str | None, bool]:
         """
         Request approval and wait for user response.
 

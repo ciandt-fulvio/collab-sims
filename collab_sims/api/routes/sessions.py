@@ -1,16 +1,17 @@
 """Multi-turn session management endpoints"""
 
 import json
-from typing import Optional
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
+
 from ..schemas import (
+    EventResponse,
+    ExecuteResponse,
     SessionCreateRequest,
+    SessionListResponse,
     SessionQueryRequest,
     SessionResponse,
-    SessionListResponse,
-    ExecuteResponse,
-    EventResponse,
 )
 from ..services import session_manager
 
@@ -197,7 +198,7 @@ async def delete_session(session_id: str):
 @router.get("/{session_id}/events")
 async def get_session_events(
     session_id: str,
-    event_type: Optional[str] = None,
+    event_type: str | None = None,
     page: int = 1,
     page_size: int = 100
 ):

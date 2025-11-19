@@ -1,9 +1,10 @@
 """Custom tracker for streaming events to API clients"""
 
 import asyncio
-from typing import List, Dict, Any
-from .base import BaseTracker
+from typing import Any
+
 from ..core.events import AgentEvent
+from .base import BaseTracker
 
 
 class StreamTracker(BaseTracker):
@@ -18,7 +19,7 @@ class StreamTracker(BaseTracker):
 
     def __init__(self):
         super().__init__()
-        self.events: List[Dict[str, Any]] = []
+        self.events: list[dict[str, Any]] = []
         self._event_queue: asyncio.Queue = asyncio.Queue()
         self._is_streaming = False
 
@@ -30,7 +31,7 @@ class StreamTracker(BaseTracker):
         if self._is_streaming:
             await self._event_queue.put(event_dict)
 
-    def get_events(self) -> List[Dict[str, Any]]:
+    def get_events(self) -> list[dict[str, Any]]:
         """Get all collected events"""
         return self.events
 

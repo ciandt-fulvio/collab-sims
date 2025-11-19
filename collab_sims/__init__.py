@@ -10,9 +10,9 @@ from .persistence import SessionRepository, SQLiteRepository
 from .trackers import (
     BaseTracker,
     ConsoleTracker,
+    DatabaseTracker,
     JSONTracker,
     StreamTracker,
-    DatabaseTracker,
 )
 
 __all__ = [

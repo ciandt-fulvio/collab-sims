@@ -1,11 +1,11 @@
 """Service for single-turn execution"""
 
 import uuid
-from typing import Dict, Any, Optional, List, AsyncGenerator
+from collections.abc import AsyncGenerator
 from datetime import datetime
+from typing import Any
 
 # Import only from collab_sims (no CollabSims dependencies)
-from ...trackers import StreamTracker
 
 
 class ExecutionService:
@@ -16,8 +16,8 @@ class ExecutionService:
 
     @staticmethod
     async def execute(
-        prompt: str, config: Optional[Dict[str, Any]] = None
-    ) -> tuple[List[Dict[str, Any]], str, Optional[str]]:
+        prompt: str, config: dict[str, Any] | None = None
+    ) -> tuple[list[dict[str, Any]], str, str | None]:
         """
         Execute a single-turn prompt and return all events (buffered).
 
@@ -39,8 +39,8 @@ class ExecutionService:
 
     @staticmethod
     async def execute_stream(
-        prompt: str, config: Optional[Dict[str, Any]] = None
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+        prompt: str, config: dict[str, Any] | None = None
+    ) -> AsyncGenerator[dict[str, Any]]:
         """
         Execute with real-time event streaming (for SSE).
 
@@ -65,7 +65,7 @@ class ExecutionService:
             }
 
     @staticmethod
-    async def _simulate_execution(prompt: str) -> List[Dict[str, Any]]:
+    async def _simulate_execution(prompt: str) -> list[dict[str, Any]]:
         """Simulate a single-turn execution (buffered)"""
         events = []
 
@@ -108,7 +108,7 @@ class ExecutionService:
         return events
 
     @staticmethod
-    async def _simulate_execution_stream(prompt: str) -> AsyncGenerator[Dict[str, Any], None]:
+    async def _simulate_execution_stream(prompt: str) -> AsyncGenerator[dict[str, Any]]:
         """Simulate streaming execution with partial messages"""
         import asyncio
 

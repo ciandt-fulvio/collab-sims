@@ -207,3 +207,6 @@ runtimes_data/
 *.bak
 *.backup
 *.old
+
+# SQLData
+data/

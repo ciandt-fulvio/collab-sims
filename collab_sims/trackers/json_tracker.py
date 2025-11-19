@@ -2,9 +2,9 @@
 
 import json
 from pathlib import Path
-from typing import List, Optional
-from .base import BaseTracker
+
 from ..core.events import AgentEvent
+from .base import BaseTracker
 
 
 class JSONTracker(BaseTracker):
@@ -19,7 +19,7 @@ class JSONTracker(BaseTracker):
         """
         self.output_file = Path(output_file)
         self.indent = indent
-        self.events: List[dict] = []
+        self.events: list[dict] = []
 
     async def on_event(self, event: AgentEvent) -> None:
         """Store event in memory."""

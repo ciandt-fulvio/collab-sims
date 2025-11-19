@@ -4,14 +4,14 @@ import asyncio
 import logging
 import os
 import uuid
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
-from typing import Dict, Any, Optional, List, AsyncGenerator
 from datetime import datetime
+from typing import Any
 
 # Import only from collab_sims (no CollabSims dependencies)
 from ...persistence import SQLiteRepository
-from ...trackers import StreamTracker, DatabaseTracker
-from ...core.events import EventType
+from ...trackers import DatabaseTracker, StreamTracker
 from .approval_manager import ApprovalManager
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ class QueryTask:
     task: asyncio.Task
     status: str  # "running", "completed", "error"
     created_at: datetime
-    error: Optional[str] = None
+    error: str | None = None
 
 
 class SessionManager:
@@ -40,12 +40,12 @@ class SessionManager:
     - Provide event streaming per query
     """
 
-    def __init__(self, approval_manager: Optional[ApprovalManager] = None):
-        self._sessions: Dict[str, Dict[str, Any]] = {}
-        self._active_queries: Dict[str, QueryTask] = {}
-        self._event_subscribers: Dict[str, List[asyncio.Queue]] = {}
+    def __init__(self, approval_manager: ApprovalManager | None = None):
+        self._sessions: dict[str, dict[str, Any]] = {}
+        self._active_queries: dict[str, QueryTask] = {}
+        self._event_subscribers: dict[str, list[asyncio.Queue]] = {}
         self.approval_manager = approval_manager or ApprovalManager()
-        self._cleanup_task: Optional[asyncio.Task] = None
+        self._cleanup_task: asyncio.Task | None = None
 
         # Initialize database tracker for persistence
         self.db_tracker = self._init_database_tracker()
@@ -120,9 +120,9 @@ class SessionManager:
 
     async def create_session(
         self,
-        config: Optional[Dict[str, Any]] = None,
+        config: dict[str, Any] | None = None,
         session_type: str = "worker"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a new multi-turn session.
 
@@ -170,7 +170,7 @@ class SessionManager:
 
         return self._get_session_metadata(session_id)
 
-    async def get_session(self, session_id: str) -> Optional[Dict[str, Any]]:
+    async def get_session(self, session_id: str) -> dict[str, Any] | None:
         """Get session metadata"""
         # Check in-memory first (active sessions)
         if session_id in self._sessions:
@@ -183,7 +183,7 @@ class SessionManager:
             logger.error(f"Failed to get session {session_id} from database: {e}")
             return None
 
-    async def list_sessions(self) -> List[Dict[str, Any]]:
+    async def list_sessions(self) -> list[dict[str, Any]]:
         """List all active sessions from database"""
         try:
             # Fetch all sessions from database
@@ -205,7 +205,7 @@ class SessionManager:
 
     async def query_session(
         self, session_id: str, prompt: str
-    ) -> tuple[List[Dict[str, Any]], str, Optional[str]]:
+    ) -> tuple[list[dict[str, Any]], str, str | None]:
         """
         Execute a query in a session context (buffered).
 
@@ -237,7 +237,7 @@ class SessionManager:
         except Exception as e:
             return tracker.get_events(), "error", str(e)
 
-    async def _broadcast_event(self, session_id: str, event: Dict[str, Any]):
+    async def _broadcast_event(self, session_id: str, event: dict[str, Any]):
         """Broadcast event to all SSE subscribers for this session"""
         if session_id in self._event_subscribers:
             # Send to all connected clients
@@ -245,14 +245,14 @@ class SessionManager:
             for queue in self._event_subscribers[session_id]:
                 try:
                     queue.put_nowait(event)
-                except:
+                except asyncio.QueueFull:
                     dead_queues.append(queue)
 
             # Cleanup dead queues
             for queue in dead_queues:
                 self._event_subscribers[session_id].remove(queue)
 
-    async def subscribe_to_session_events(self, session_id: str) -> AsyncGenerator[Dict[str, Any], None]:
+    async def subscribe_to_session_events(self, session_id: str) -> AsyncGenerator[dict[str, Any]]:
         """Subscribe to live events for a session (SSE-friendly)
 
         Args:
@@ -281,7 +281,7 @@ class SessionManager:
                 except (ValueError, KeyError):
                     pass
 
-    def _get_active_query_for_session(self, session_id: str) -> Optional[QueryTask]:
+    def _get_active_query_for_session(self, session_id: str) -> QueryTask | None:
         """Get currently running query for a session (if any)"""
         for query in self._active_queries.values():
             if query.session_id == session_id and query.status == "running":
@@ -329,7 +329,7 @@ class SessionManager:
 
         return query_id
 
-    async def _simulate_agent_response(self, prompt: str, session_id: str) -> List[Dict[str, Any]]:
+    async def _simulate_agent_response(self, prompt: str, session_id: str) -> list[dict[str, Any]]:
         """Simulate an agent response (no CollabSims SDK required)"""
         events = []
 
@@ -427,7 +427,7 @@ class SessionManager:
                 self._sessions[session_id]["execution_state"] = "idle"
                 self._sessions[session_id]["current_query_id"] = None
 
-    async def _simulate_agent_response_streaming(self, prompt: str, session_id: str) -> List[Dict[str, Any]]:
+    async def _simulate_agent_response_streaming(self, prompt: str, session_id: str) -> list[dict[str, Any]]:
         """Simulate streaming agent response with partial messages"""
         events = []
 
@@ -564,7 +564,7 @@ class SessionManager:
         elif prompt.strip():
             # Start new background query
             try:
-                query_id = await self.start_query_background(session_id, prompt)
+                await self.start_query_background(session_id, prompt)
 
                 # Subscribe to live events
                 async for event in self.subscribe_to_session_events(session_id):
@@ -633,7 +633,7 @@ class SessionManager:
 
         return True
 
-    def _get_session_metadata(self, session_id: str) -> Dict[str, Any]:
+    def _get_session_metadata(self, session_id: str) -> dict[str, Any]:
         """Extract public metadata for a session"""
         session_data = self._sessions[session_id]
 

@@ -1,6 +1,7 @@
 """Schemas for approval configuration and responses"""
 
-from typing import Dict, List, Optional, Literal
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -20,7 +21,7 @@ class ApprovalConfig(BaseModel):
         )
     )
 
-    tool_policies: Dict[str, Literal["safe", "medium", "high"]] = Field(
+    tool_policies: dict[str, Literal["safe", "medium", "high"]] = Field(
         default_factory=dict,
         description=(
             "Map of tool names to risk levels:\n"
@@ -32,7 +33,7 @@ class ApprovalConfig(BaseModel):
         )
     )
 
-    auto_approved_tools: List[str] = Field(
+    auto_approved_tools: list[str] = Field(
         default_factory=list,
         description=(
             "List of tool names to auto-approve for this session.\n"
@@ -71,7 +72,7 @@ class PendingApprovalInfo(BaseModel):
 
     tool_use_id: str = Field(description="Unique identifier for this tool execution")
     tool_name: str = Field(description="Name of the tool requesting approval")
-    tool_input: Dict = Field(description="Input parameters for the tool")
+    tool_input: dict = Field(description="Input parameters for the tool")
     created_at: float = Field(description="Unix timestamp when approval was requested")
 
 
@@ -83,7 +84,7 @@ class ApprovalRequestData(BaseModel):
         default=False,
         description="If true, remember this approval for the tool in this session"
     )
-    reason: Optional[str] = Field(
+    reason: str | None = Field(
         default=None,
         description="Optional reason for rejection"
     )
@@ -92,7 +93,7 @@ class ApprovalRequestData(BaseModel):
 class PendingApprovalsResponse(BaseModel):
     """Response containing all pending approvals for a session"""
 
-    pending: List[PendingApprovalInfo] = Field(
+    pending: list[PendingApprovalInfo] = Field(
         description="List of pending approval requests"
     )
     count: int = Field(description="Number of pending approvals")

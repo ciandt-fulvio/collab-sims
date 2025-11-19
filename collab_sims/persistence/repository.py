@@ -1,8 +1,8 @@
 """Abstract repository interface for session persistence."""
 
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional
 from datetime import datetime
+from typing import Any
 
 
 class SessionRepository(ABC):
@@ -26,9 +26,9 @@ class SessionRepository(ABC):
     async def create_session(
         self,
         session_id: str,
-        user_id: Optional[str],
+        user_id: str | None,
         created_at: datetime,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: dict[str, Any] | None = None
     ) -> None:
         """Create a new session record.
 
@@ -44,9 +44,9 @@ class SessionRepository(ABC):
     async def update_session(
         self,
         session_id: str,
-        closed_at: Optional[datetime] = None,
-        status: Optional[str] = None,
-        query_count: Optional[int] = None
+        closed_at: datetime | None = None,
+        status: str | None = None,
+        query_count: int | None = None
     ) -> None:
         """Update session record.
 
@@ -59,7 +59,7 @@ class SessionRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_session(self, session_id: str) -> Optional[Dict[str, Any]]:
+    async def get_session(self, session_id: str) -> dict[str, Any] | None:
         """Get session by ID.
 
         Args:
@@ -73,11 +73,11 @@ class SessionRepository(ABC):
     @abstractmethod
     async def list_sessions(
         self,
-        user_id: Optional[str] = None,
-        status: Optional[str] = None,
+        user_id: str | None = None,
+        status: str | None = None,
         limit: int = 100,
         offset: int = 0
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """List sessions with optional filtering.
 
         Args:
@@ -94,8 +94,8 @@ class SessionRepository(ABC):
     @abstractmethod
     async def count_sessions(
         self,
-        user_id: Optional[str] = None,
-        status: Optional[str] = None
+        user_id: str | None = None,
+        status: str | None = None
     ) -> int:
         """Count sessions matching criteria.
 
@@ -114,9 +114,9 @@ class SessionRepository(ABC):
         session_id: str,
         event_type: str,
         timestamp: datetime,
-        data: Dict[str, Any],
-        query_index: Optional[int] = None,
-        message_id: Optional[str] = None
+        data: dict[str, Any],
+        query_index: int | None = None,
+        message_id: str | None = None
     ) -> None:
         """Add an event to the database.
 
@@ -134,10 +134,10 @@ class SessionRepository(ABC):
     async def get_events(
         self,
         session_id: str,
-        event_type: Optional[str] = None,
+        event_type: str | None = None,
         limit: int = 100,
         offset: int = 0
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get events for a session.
 
         Args:
@@ -155,7 +155,7 @@ class SessionRepository(ABC):
     async def count_events(
         self,
         session_id: str,
-        event_type: Optional[str] = None
+        event_type: str | None = None
     ) -> int:
         """Count events for a session.
 

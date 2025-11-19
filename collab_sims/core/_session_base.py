@@ -1,34 +1,33 @@
 """Base class for shared session logic."""
 
-from typing import List, Optional, Dict, Any
 from claude_agent_sdk import (
     AssistantMessage,
-    SystemMessage,
-    UserMessage,
     ResultMessage,
-    ToolUseBlock,
-    ToolResultBlock,
+    SystemMessage,
     TextBlock,
     ThinkingBlock,
+    ToolResultBlock,
+    ToolUseBlock,
+    UserMessage,
 )
 from claude_agent_sdk.types import StreamEvent
 
+from collab_sims.trackers.base import BaseTracker
+
 from .events import (
     AgentEvent,
+    CompleteEvent,
     EventType,
-    PlanEvent,
     MessageEvent,
     PartialMessageEvent,
-    ToolUseEvent,
-    ToolResultEvent,
+    PlanChanges,
+    PlanEvent,
     ProgressEvent,
     SystemEvent,
-    ErrorEvent,
-    CompleteEvent,
     TaskInfo,
-    PlanChanges,
+    ToolResultEvent,
+    ToolUseEvent,
 )
-from collab_sims.trackers.base import BaseTracker
 
 
 class _SessionBase:
@@ -39,19 +38,19 @@ class _SessionBase:
     """
 
 
-    def __init__(self, trackers: Optional[List[BaseTracker]] = None):
+    def __init__(self, trackers: list[BaseTracker] | None = None):
         """Initialize session base.
 
         Args:
             trackers: List of event trackers
         """
         self.trackers = trackers or []
-        self._session_id: Optional[str] = None
-        self._previous_plan: Optional[List[Dict]] = None
-        self._tool_use_names: Dict[str, str] = {}  # tool_use_id -> tool_name mapping
-        self._last_message_id: Optional[str] = None  # Track last MESSAGE event to link tools
+        self._session_id: str | None = None
+        self._previous_plan: list[dict] | None = None
+        self._tool_use_names: dict[str, str] = {}  # tool_use_id -> tool_name mapping
+        self._last_message_id: str | None = None  # Track last MESSAGE event to link tools
 
-    def _parse_message(self, message) -> List[AgentEvent]:
+    def _parse_message(self, message) -> list[AgentEvent]:
         """Parse SDK message into domain events.
 
         Args:
@@ -234,8 +233,8 @@ class _SessionBase:
 
     def _detect_plan_changes(
         self,
-        old_todos: List[Dict],
-        new_todos: List[Dict]
+        old_todos: list[dict],
+        new_todos: list[dict]
     ) -> PlanChanges:
         """Detect changes between plan snapshots.
 
@@ -272,7 +271,7 @@ class _SessionBase:
             status_changed=status_changed
         )
 
-    def _get_current_task(self, tasks: List[TaskInfo]) -> Optional[str]:
+    def _get_current_task(self, tasks: list[TaskInfo]) -> str | None:
         """Get the current in-progress task.
 
         Args:

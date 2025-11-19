@@ -3,7 +3,7 @@
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 def get_collab_sims_config_dir() -> str:
@@ -71,10 +71,10 @@ class SessionConfig:
         ... )
     """
 
-    user_id: Optional[str] = None
-    tags: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    resume_session_id: Optional[str] = None
+    user_id: str | None = None
+    tags: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    resume_session_id: str | None = None
     include_partial_messages: bool = False
-    approval_config: Optional[Dict[str, Any]] = None
-    working_dir: Optional[str] = None
+    approval_config: dict[str, Any] | None = None
+    working_dir: str | None = None

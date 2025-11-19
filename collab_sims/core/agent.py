@@ -1,23 +1,23 @@
 """Main Agent API for executing prompts with event tracking."""
 
 import traceback as tb
-from typing import AsyncGenerator, List, Optional
+from collections.abc import AsyncGenerator
 from datetime import datetime
 
 from claude_agent_sdk import (
-    ClaudeSDKClient,
     ClaudeAgentOptions,
+    ClaudeSDKClient,
 )
 
+from collab_sims.trackers.base import BaseTracker
+
+from ._session_base import _SessionBase
 from .config import SessionConfig
 from .events import (
     AgentEvent,
-    EventType,
-    StartEvent,
     ErrorEvent,
+    StartEvent,
 )
-from collab_sims.trackers.base import BaseTracker
-from ._session_base import _SessionBase
 
 
 class CollabSims(_SessionBase):
@@ -25,9 +25,9 @@ class CollabSims(_SessionBase):
 
     def __init__(
         self,
-        options: Optional[ClaudeAgentOptions] = None,
-        trackers: Optional[List[BaseTracker]] = None,
-        config: Optional[SessionConfig] = None,
+        options: ClaudeAgentOptions | None = None,
+        trackers: list[BaseTracker] | None = None,
+        config: SessionConfig | None = None,
         approval_manager=None
     ):
         """Initialize CollabSims.
@@ -47,7 +47,7 @@ class CollabSims(_SessionBase):
             permission_mode="bypassPermissions",
             include_partial_messages=self.config.include_partial_messages
         )
-        self._start_time: Optional[datetime] = None
+        self._start_time: datetime | None = None
 
     def add_tracker(self, tracker: BaseTracker) -> None:
         """Add a tracker at runtime.
@@ -59,7 +59,7 @@ class CollabSims(_SessionBase):
 
     async def create_session(
         self,
-        config: Optional[SessionConfig] = None
+        config: SessionConfig | None = None
     ):
         """Create and start a new session for multi-turn conversations.
 
@@ -95,7 +95,7 @@ class CollabSims(_SessionBase):
         await session._connect()
         return session
 
-    async def execute(self, prompt: str) -> AsyncGenerator[AgentEvent, None]:
+    async def execute(self, prompt: str) -> AsyncGenerator[AgentEvent]:
         """Execute a prompt and stream events.
 
         Args:

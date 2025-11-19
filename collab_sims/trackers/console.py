@@ -1,18 +1,17 @@
 """Console tracker for debugging."""
 
-from typing import Optional
-from .base import BaseTracker
 from ..core.events import (
     AgentEvent,
-    EventType,
-    PlanEvent,
-    MessageEvent,
-    ToolUseEvent,
-    ProgressEvent,
-    ErrorEvent,
-    StartEvent,
     CompleteEvent,
+    ErrorEvent,
+    EventType,
+    MessageEvent,
+    PlanEvent,
+    ProgressEvent,
+    StartEvent,
+    ToolUseEvent,
 )
+from .base import BaseTracker
 
 
 class ConsoleTracker(BaseTracker):
@@ -32,7 +31,7 @@ class ConsoleTracker(BaseTracker):
         """Handle start event."""
         if self.pretty:
             print("🚀 " + "=" * 68)
-            print(f"   AGENT EXECUTION STARTED")
+            print("   AGENT EXECUTION STARTED")
             print("   " + "=" * 68)
             print(f"   Prompt: {event.prompt[:80]}{'...' if len(event.prompt) > 80 else ''}")
             print("=" * 70)
@@ -74,7 +73,7 @@ class ConsoleTracker(BaseTracker):
     async def _handle_plan(self, event: PlanEvent) -> None:
         """Handle plan event."""
         if self.pretty:
-            print(f"\n📋 PLAN UPDATE")
+            print("\n📋 PLAN UPDATE")
             print("=" * 70)
 
             for i, task in enumerate(event.todos, 1):

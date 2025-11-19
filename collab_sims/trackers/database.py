@@ -2,17 +2,16 @@
 
 import logging
 from datetime import datetime
-from typing import Optional
 
-from .base import BaseTracker
 from ..core.events import (
     AgentEvent,
     EventType,
-    SessionStartEvent,
-    SessionEndEvent,
     QueryEvent,
+    SessionEndEvent,
+    SessionStartEvent,
 )
 from ..persistence import SessionRepository
+from .base import BaseTracker
 
 logger = logging.getLogger(__name__)
 

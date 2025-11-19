@@ -9,16 +9,16 @@ Unified API providing:
 All functionality is simulated - perfect for frontend development without backend dependencies.
 """
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 import logging
 
+from fastapi import FastAPI
+
+from .middleware import setup_cors
 from .routes import (
+    approvals_router,
     execute_router,
     sessions_router,
-    approvals_router,
 )
-from .middleware import setup_cors
 
 # Configure logging
 logging.basicConfig(

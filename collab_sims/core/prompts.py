@@ -1,8 +1,7 @@
 """System prompt management for Collab Sims agents."""
 
-from pathlib import Path
-from typing import Dict
 import logging
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +89,7 @@ Always be helpful, accurate, and transparent about your capabilities and limitat
 """
 
 
-def list_available_prompts() -> Dict[str, str]:
+def list_available_prompts() -> dict[str, str]:
     """List all available prompt files with their first line."""
     prompts = {}
 

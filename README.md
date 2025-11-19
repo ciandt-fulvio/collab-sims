@@ -49,18 +49,6 @@ python3 -m http.server 3005
 ```
 - Interface web em: `http://localhost:3005`
 
-### Método 2: Manual
-
-**Backend:**
-```bash
-python3 -m uvicorn collab_sims.api.main:app --reload --port 3007
-```
-
-**Frontend:**
-```bash
-cd web && python3 -m http.server 3005
-```
-
 ## Testando
 
 ### Executar Todos os Testes

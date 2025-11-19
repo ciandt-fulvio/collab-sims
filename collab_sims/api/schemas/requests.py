@@ -1,15 +1,15 @@
 """Request schemas for API endpoints"""
 
-from typing import Optional, Dict, Any
+from typing import Any
+
 from pydantic import BaseModel, Field
-from .approval import ApprovalConfig
 
 
 class ExecuteRequest(BaseModel):
     """Request for single-turn execution"""
 
     prompt: str = Field(..., description="Prompt to send to Claude agent")
-    config: Optional[Dict[str, Any]] = Field(
+    config: dict[str, Any] | None = Field(
         default=None, description="Optional session configuration (user_id, etc.)"
     )
 
@@ -35,7 +35,7 @@ class SessionCreateRequest(BaseModel):
     - approval_config (ApprovalConfig): Tool approval settings
     """
 
-    config: Optional[Dict[str, Any]] = Field(
+    config: dict[str, Any] | None = Field(
         default=None,
         description=(
             "Optional session configuration including:\n"

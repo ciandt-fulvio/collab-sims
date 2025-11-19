@@ -1,7 +1,7 @@
 """Base tracker interface."""
 
 from abc import ABC, abstractmethod
-from typing import Optional
+
 from ..core.events import AgentEvent
 
 
@@ -12,45 +12,45 @@ class BaseTracker(ABC):
     or override on_event() to handle all events uniformly.
     """
 
-    async def on_start(self, event: AgentEvent) -> None:
+    async def on_start(self, event: AgentEvent) -> None:  # noqa: B027
         """Called when execution starts (single-turn API).
 
         Args:
             event: StartEvent with prompt and options
         """
-        pass
+        ...
 
-    async def on_complete(self, event: AgentEvent) -> None:
+    async def on_complete(self, event: AgentEvent) -> None:  # noqa: B027
         """Called when execution completes.
 
         Args:
             event: CompleteEvent with results and metrics
         """
-        pass
+        ...
 
-    async def on_session_start(self, event: AgentEvent) -> None:
+    async def on_session_start(self, event: AgentEvent) -> None:  # noqa: B027
         """Called when a session starts (multi-turn API).
 
         Args:
             event: SessionStartEvent with session_id, user_id, tags, metadata
         """
-        pass
+        ...
 
-    async def on_session_end(self, event: AgentEvent) -> None:
+    async def on_session_end(self, event: AgentEvent) -> None:  # noqa: B027
         """Called when a session ends (multi-turn API).
 
         Args:
             event: SessionEndEvent with session_id, total_queries, duration
         """
-        pass
+        ...
 
-    async def on_query(self, event: AgentEvent) -> None:
+    async def on_query(self, event: AgentEvent) -> None:  # noqa: B027
         """Called when a query is sent in a session.
 
         Args:
             event: QueryEvent with prompt, query_number, session_id
         """
-        pass
+        ...
 
     @abstractmethod
     async def on_event(self, event: AgentEvent) -> None:
@@ -64,13 +64,13 @@ class BaseTracker(ABC):
         """
         pass
 
-    async def on_error(self, event: AgentEvent) -> None:
+    async def on_error(self, event: AgentEvent) -> None:  # noqa: B027
         """Called when an error occurs.
 
         Args:
             event: ErrorEvent with error details
         """
-        pass
+        ...
 
     def should_handle(self, event: AgentEvent) -> bool:
         """Filter to determine if this tracker should handle the event.
@@ -100,10 +100,10 @@ class BaseTracker(ABC):
         """Async context manager exit."""
         await self.teardown()
 
-    async def setup(self) -> None:
+    async def setup(self) -> None:  # noqa: B027
         """Setup tracker (e.g., open file, connect to DB)."""
-        pass
+        ...
 
-    async def teardown(self) -> None:
+    async def teardown(self) -> None:  # noqa: B027
         """Cleanup tracker (e.g., close file, disconnect from DB)."""
-        pass
+        ...

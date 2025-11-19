@@ -1,9 +1,11 @@
 """Single-turn execution endpoints"""
 
 import json
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from ..schemas import ExecuteRequest, ExecuteResponse, EventResponse, ErrorResponse
+
+from ..schemas import EventResponse, ExecuteRequest, ExecuteResponse
 from ..services import ExecutionService
 
 router = APIRouter(prefix="/api", tags=["execute"])
