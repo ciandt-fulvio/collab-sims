@@ -3,13 +3,16 @@
 import traceback as tb
 from collections.abc import AsyncGenerator
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from claude_agent_sdk import (
     ClaudeAgentOptions,
     ClaudeSDKClient,
 )
 
-from collab_sims.trackers.base import BaseTracker
+# Use TYPE_CHECKING to avoid circular import
+if TYPE_CHECKING:
+    from collab_sims.trackers.base import BaseTracker
 
 from ._session_base import _SessionBase
 from .config import SessionConfig
@@ -26,7 +29,7 @@ class CollabSims(_SessionBase):
     def __init__(
         self,
         options: ClaudeAgentOptions | None = None,
-        trackers: list[BaseTracker] | None = None,
+        trackers: list | None = None,  # Changed from list[BaseTracker] to avoid import
         config: SessionConfig | None = None,
         approval_manager=None
     ):
@@ -49,7 +52,7 @@ class CollabSims(_SessionBase):
         )
         self._start_time: datetime | None = None
 
-    def add_tracker(self, tracker: BaseTracker) -> None:
+    def add_tracker(self, tracker) -> None:  # Remove type hint to avoid import
         """Add a tracker at runtime.
 
         Args:

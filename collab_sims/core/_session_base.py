@@ -1,5 +1,7 @@
 """Base class for shared session logic."""
 
+from typing import TYPE_CHECKING
+
 from claude_agent_sdk import (
     AssistantMessage,
     ResultMessage,
@@ -12,7 +14,9 @@ from claude_agent_sdk import (
 )
 from claude_agent_sdk.types import StreamEvent
 
-from collab_sims.trackers.base import BaseTracker
+# Use TYPE_CHECKING to avoid circular import
+if TYPE_CHECKING:
+    from collab_sims.trackers.base import BaseTracker
 
 from .events import (
     AgentEvent,
@@ -38,7 +42,7 @@ class _SessionBase:
     """
 
 
-    def __init__(self, trackers: list[BaseTracker] | None = None):
+    def __init__(self, trackers: list | None = None):  # Remove type hint to avoid import
         """Initialize session base.
 
         Args:
