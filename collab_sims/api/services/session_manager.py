@@ -9,7 +9,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-# Import only from collab_sims (no CollabSims dependencies)
+from claude_agent_sdk import ClaudeAgentOptions
+
+# Import from collab_sims core
+from ...core import CollabSims, CollabSimsSession, SessionConfig
+from ...core.events import AgentEvent
 from ...persistence import SQLiteRepository
 from ...trackers import DatabaseTracker, StreamTracker
 from .approval_manager import ApprovalManager
@@ -65,8 +69,9 @@ class SessionManager:
     async def restore_sessions_from_database(self):
         """Restore active sessions from database on server startup.
 
-        This allows sessions to persist across server restarts.
-        Only restores sessions marked as 'active' in the database.
+        Note: Claude Agent SDK does not allow reusing session-ids that were previously used.
+        Therefore, we mark all "active" sessions as "closed" on startup to prevent conflicts.
+        Sessions remain in the database for historical/audit purposes.
         """
         try:
             # Get all active sessions from database
@@ -75,30 +80,21 @@ class SessionManager:
                 limit=1000
             )
 
-            restored_count = 0
-            for session_data in active_sessions:
-                session_id = session_data["session_id"]
+            if active_sessions:
+                logger.info(f"Found {len(active_sessions)} active session(s) in database")
+                logger.info("Marking them as 'closed' (Claude SDK does not allow session-id reuse)")
 
-                # Create a stream tracker for this session
-                stream_tracker = StreamTracker()
+                # Mark all active sessions as closed to prevent conflicts
+                for session_data in active_sessions:
+                    session_id = session_data["session_id"]
+                    await self.db_tracker.repository.update_session(
+                        session_id=session_id,
+                        status="closed",
+                        closed_at=datetime.now()
+                    )
+                    logger.debug(f"Marked session {session_id} as closed")
 
-                # Store in memory (matching the structure from create_session)
-                self._sessions[session_id] = {
-                    "session_id": session_id,
-                    "tracker": stream_tracker,
-                    "config": session_data.get("metadata", {}),
-                    "created_at": session_data["created_at"],
-                    "status": session_data.get("status", "active"),
-                    "execution_state": "idle",  # Always start idle on restore
-                    "current_query_id": None,
-                    "query_count": session_data.get("query_count", 0),
-                    "session_type": session_data.get("metadata", {}).get("session_type", "worker"),
-                }
-
-                restored_count += 1
-
-            if restored_count > 0:
-                logger.info(f"✅ Restored {restored_count} active session(s) from database")
+                logger.info(f"✅ Cleaned up {len(active_sessions)} session(s) from previous runs")
 
         except Exception as e:
             logger.error(f"Failed to restore sessions from database: {e}")
@@ -136,7 +132,8 @@ class SessionManager:
         # Ensure cleanup task is running
         self._ensure_cleanup_task_started()
 
-        session_id = f"session-{uuid.uuid4()}"
+        # Generate pure UUID (Claude SDK requires valid UUID format)
+        session_id = str(uuid.uuid4())
         created_at = datetime.now()
 
         # Create trackers for this session
@@ -153,10 +150,33 @@ class SessionManager:
             }
         )
 
+        # Create CollabSimsSession for real Claude integration
+        session_config = SessionConfig(
+            include_partial_messages=config.get("include_partial_messages", True) if config else True,
+            user_id=config.get("user_id") if config else None,
+        )
+
+        options = ClaudeAgentOptions(
+            permission_mode="bypassPermissions",  # Use approval_manager instead
+            include_partial_messages=session_config.include_partial_messages
+        )
+
+        claude_session = CollabSimsSession(
+            options=options,
+            config=session_config,
+            trackers=[self.db_tracker, stream_tracker],
+            approval_manager=self.approval_manager,
+            session_id=session_id,
+        )
+
+        # Connect the session to Claude SDK
+        await claude_session._connect()
+
         # Store session data in memory
         self._sessions[session_id] = {
             "session_id": session_id,
             "tracker": stream_tracker,
+            "claude_session": claude_session,  # Store the real session
             "config": config or {},
             "created_at": created_at.isoformat(),
             "status": "active",
@@ -166,7 +186,7 @@ class SessionManager:
             "session_type": session_type,
         }
 
-        logger.info(f"Created session {session_id} (type: {session_type})")
+        logger.info(f"Created session {session_id} (type: {session_type}) with real Claude SDK")
 
         return self._get_session_metadata(session_id)
 
@@ -178,7 +198,10 @@ class SessionManager:
 
         # Fall back to database (sessions from previous runs)
         try:
-            return await self.db_tracker.repository.get_session(session_id)
+            db_session = await self.db_tracker.repository.get_session(session_id)
+            if db_session:
+                return self._normalize_db_session(db_session)
+            return None
         except Exception as e:
             logger.error(f"Failed to get session {session_id} from database: {e}")
             return None
@@ -196,7 +219,8 @@ class SessionManager:
                     sessions.append(self._get_session_metadata(session_id))
                 else:
                     # Use database data (for sessions from previous runs)
-                    sessions.append(db_session)
+                    # Normalize to match _get_session_metadata structure
+                    sessions.append(self._normalize_db_session(db_session))
             return sessions
         except Exception as e:
             logger.error(f"Failed to list sessions from database: {e}")
@@ -220,14 +244,14 @@ class SessionManager:
             return [], "error", f"Session {session_id} not found"
 
         session_data = self._sessions[session_id]
-        tracker: StreamTracker = session_data["tracker"]
-
-        # Clear previous query events
-        tracker.clear_events()
+        claude_session: CollabSimsSession = session_data["claude_session"]
 
         try:
-            # Simulate agent response (similar to api_simple.py)
-            events = await self._simulate_agent_response(prompt, session_id)
+            # Execute real query using Claude SDK and collect all events
+            events = []
+            async for event in claude_session.query(prompt):
+                event_dict = self._agent_event_to_dict(event, session_id)
+                events.append(event_dict)
 
             # Update query count
             session_data["query_count"] += 1
@@ -235,7 +259,8 @@ class SessionManager:
             return events, "completed", None
 
         except Exception as e:
-            return tracker.get_events(), "error", str(e)
+            logger.error(f"Error in query_session: {e}")
+            return [], "error", str(e)
 
     async def _broadcast_event(self, session_id: str, event: dict[str, Any]):
         """Broadcast event to all SSE subscribers for this session"""
@@ -329,8 +354,52 @@ class SessionManager:
 
         return query_id
 
+    def _agent_event_to_dict(self, event: AgentEvent, session_id: str) -> dict[str, Any]:
+        """Convert AgentEvent from Claude SDK to dict format for API
+
+        Args:
+            event: AgentEvent from Claude SDK
+            session_id: Session ID to add to event
+
+        Returns:
+            Dict representation of the event
+        """
+        from dataclasses import asdict, is_dataclass
+
+        # Handle timestamp - it may already be a string (from AgentEvent default)
+        timestamp = getattr(event, 'timestamp', datetime.now())
+        if isinstance(timestamp, datetime):
+            timestamp = timestamp.isoformat()
+
+        event_dict = {
+            "type": event.type.value if hasattr(event.type, 'value') else str(event.type),
+            "event_id": getattr(event, 'event_id', str(uuid.uuid4())),
+            "timestamp": timestamp,
+            "session_id": session_id,
+        }
+
+        # Add event-specific fields
+        if hasattr(event, '__dict__'):
+            for key, value in event.__dict__.items():
+                if key not in ['type', 'event_id', 'timestamp'] and not key.startswith('_'):
+                    # Convert datetime objects to ISO format
+                    if isinstance(value, datetime):
+                        event_dict[key] = value.isoformat()
+                    # Convert dataclass objects to dictionaries
+                    elif is_dataclass(value) and not isinstance(value, type):
+                        event_dict[key] = asdict(value)
+                    # Convert lists of dataclass objects
+                    elif isinstance(value, list) and value and is_dataclass(value[0]) and not isinstance(value[0], type):
+                        event_dict[key] = [asdict(item) for item in value]
+                    # Skip non-serializable objects
+                    elif not callable(value):
+                        event_dict[key] = value
+
+        return event_dict
+
     async def _simulate_agent_response(self, prompt: str, session_id: str) -> list[dict[str, Any]]:
-        """Simulate an agent response (no CollabSims SDK required)"""
+        """Simulate an agent response (DEPRECATED - use real Claude SDK instead)"""
+        logger.warning("Using simulated agent response - this should not happen in production")
         events = []
 
         # Event: Query started
@@ -384,19 +453,26 @@ class SessionManager:
         return events
 
     async def _execute_query_background(self, prompt: str, query_id: str, session_id: str):
-        """Background task that generates simulated events and broadcasts them
+        """Background task that executes real Claude query and broadcasts events
 
         This task continues running even if SSE disconnects.
         Events are captured by DatabaseTracker and broadcast to live subscribers.
         """
         try:
-            # Generate simulated events
-            events = await self._simulate_agent_response_streaming(prompt, session_id)
+            session_data = self._sessions[session_id]
+            claude_session: CollabSimsSession = session_data["claude_session"]
 
-            # Broadcast each event
-            for event in events:
-                await self._broadcast_event(session_id, event)
-                await asyncio.sleep(0.05)  # Small delay between events
+            logger.debug(f"Starting query execution for {query_id} in session {session_id[:12]}")
+
+            # Execute real query using Claude SDK
+            async for event in claude_session.query(prompt):
+                # Convert AgentEvent to dict for broadcasting
+                event_dict = self._agent_event_to_dict(event, session_id)
+
+                # Broadcast event to SSE subscribers
+                await self._broadcast_event(session_id, event_dict)
+
+            logger.debug(f"Query {query_id} completed successfully")
 
             # Mark as completed
             if query_id in self._active_queries:
@@ -406,7 +482,18 @@ class SessionManager:
             if session_id in self._sessions:
                 self._sessions[session_id]["query_count"] += 1
 
+        except asyncio.CancelledError:
+            logger.info(f"Query {query_id} was cancelled")
+            if query_id in self._active_queries:
+                self._active_queries[query_id].status = "cancelled"
+            raise
         except Exception as e:
+            # Log full exception details for debugging
+            import traceback
+            logger.error(f"Error executing query {query_id}: {e}")
+            logger.error(f"Exception type: {type(e).__name__}")
+            logger.error(f"Traceback:\n{traceback.format_exc()}")
+
             # Mark as error
             if query_id in self._active_queries:
                 self._active_queries[query_id].status = "error"
@@ -416,7 +503,10 @@ class SessionManager:
             error_event = {
                 'type': 'error',
                 'error': str(e),
-                'timestamp': datetime.now().isoformat()
+                'error_type': type(e).__name__,
+                'timestamp': datetime.now().isoformat(),
+                'session_id': session_id,
+                'event_id': str(uuid.uuid4()),
             }
             await self._broadcast_event(session_id, error_event)
 
@@ -617,6 +707,17 @@ class SessionManager:
         if session_id not in self._sessions:
             return False
 
+        session_data = self._sessions[session_id]
+
+        # Close the Claude session gracefully
+        if "claude_session" in session_data:
+            try:
+                claude_session: CollabSimsSession = session_data["claude_session"]
+                await claude_session.close()
+                logger.info(f"Claude session {session_id} closed gracefully")
+            except Exception as e:
+                logger.error(f"Error closing Claude session: {e}")
+
         # Mark as closed in database
         try:
             session = await self.db_tracker.repository.get_session(session_id)
@@ -632,6 +733,35 @@ class SessionManager:
         logger.info(f"Session {session_id} closed")
 
         return True
+
+    def _normalize_db_session(self, db_session: dict[str, Any]) -> dict[str, Any]:
+        """Normalize database session data to match API response format.
+
+        Args:
+            db_session: Raw session data from database
+
+        Returns:
+            Normalized session data matching SessionResponse schema
+        """
+        # Extract metadata (stored as JSON in database)
+        metadata = db_session.get("metadata", {})
+
+        # Ensure created_at is a string (ISO format)
+        created_at = db_session.get("created_at", "")
+        if isinstance(created_at, datetime):
+            created_at = created_at.isoformat()
+        elif not isinstance(created_at, str):
+            created_at = str(created_at)
+
+        return {
+            "session_id": db_session.get("session_id", ""),
+            "created_at": created_at,
+            "config": metadata,  # Database stores config in metadata field
+            "status": db_session.get("status", "active"),
+            "execution_state": "idle",  # Database sessions are always idle
+            "query_count": db_session.get("query_count", 0),
+            "session_type": metadata.get("session_type", "worker"),
+        }
 
     def _get_session_metadata(self, session_id: str) -> dict[str, Any]:
         """Extract public metadata for a session"""

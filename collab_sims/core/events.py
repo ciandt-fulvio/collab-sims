@@ -107,6 +107,18 @@ class PlanEvent(AgentEvent):
     changes: PlanChanges | None = None
     tool_use_id: str = ""
 
+    def to_dict(self) -> dict[str, Any]:
+        """Convert event to dictionary with proper serialization of TaskInfo objects."""
+        result = asdict(self)
+        # Convert TaskInfo objects to dictionaries
+        if "todos" in result and result["todos"]:
+            result["todos"] = [asdict(task) if isinstance(task, TaskInfo) else task
+                              for task in result["todos"]]
+        # Convert PlanChanges to dictionary
+        if "changes" in result and result["changes"]:
+            result["changes"] = asdict(result["changes"])
+        return result
+
 
 @dataclass
 class MessageEvent(AgentEvent):
