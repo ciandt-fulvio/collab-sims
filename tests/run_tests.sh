@@ -23,8 +23,8 @@ UNIT_COUNT=$(python -m pytest tests/unit/ --collect-only -q | grep "test session
 INTEGRATION_COUNT=$(python -m pytest tests/integration/ --collect-only -q | grep "test session" | awk '{print $1}')
 
 echo "Unit tests: $UNIT_COUNT"
-echo "Integration tests: $INTEGRATION_COUNT (require ANTHROPIC_API_KEY)"
+echo "Integration tests: $INTEGRATION_COUNT (require Claude Code authentication)"
 echo ""
 echo "To run integration tests:"
-echo "  export ANTHROPIC_API_KEY=your_key"
+echo "  # Ensure you're authenticated with Claude Code"
 echo "  python -m pytest tests/integration/ -v"

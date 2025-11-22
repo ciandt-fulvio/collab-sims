@@ -8,6 +8,20 @@ echo "Web interface será executada em: http://localhost:3005"
 echo "Certifique-se de que a API está rodando em: http://localhost:3007"
 echo ""
 
+
+# Ativa o ambiente virtual se existir
+if [ -d ".venv" ]; then
+    echo "📦 Ativando ambiente virtual..."
+    source .venv/bin/activate
+else
+    echo "⚠️  Ambiente virtual não encontrado. Criando..."
+    python3.13 -m venv .venv
+    source .venv/bin/activate
+    echo "📦 Instalando dependências..."
+    pip install -e .
+    echo ""
+fi
+
 cd "$(dirname "$0")/web"
 
 # Verifica se Python está disponível

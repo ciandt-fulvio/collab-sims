@@ -296,6 +296,11 @@ class CollabSimsSession(_SessionBase):
             await queue_task
 
         except Exception as e:
+            # Log detailed error information
+            logger.error(f"Error in session {self._session_id[:12]} query: {e}")
+            logger.error(f"Exception type: {type(e).__name__}")
+            logger.debug(f"Full traceback:\n{tb.format_exc()}")
+
             # Emit error event
             error_event = ErrorEvent(
                 error=str(e),

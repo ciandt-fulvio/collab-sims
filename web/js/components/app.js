@@ -33,20 +33,6 @@ export function simsApp() {
     isLoadingHistory: false,  // Flag to distinguish history load from live streaming
     isRestoringSession: false,  // Flag for showing skeleton UI during session load
 
-    // Runtime state
-    runtimeInfo: null,  // DEPRECATED: Single runtime (kept for backward compat)
-    runtimes: [],       // NEW: List of all runtimes for this session
-    expandedRuntimeIds: new Set(),  // Track which runtimes are expanded
-    currentExpandedRuntimeId: null,  // Track which runtime's ports are being shown
-    isLoadingRuntime: false,
-    runtimeError: null,
-    // Per-runtime port tracking: Map<runtime_id, {detected: [], exposed: []}>
-    runtimePorts: new Map(),
-    isLoadingPorts: new Map(),  // Track loading state per runtime
-    showExposeModal: false,
-    portToExpose: null,
-    exposeConfig: { proxy_path: '/', target_path: '/', external_port: null },
-
     // Theme state (light, dark, or system) - managed by theme utility
     theme: initTheme(),
 

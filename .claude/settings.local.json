@@ -3,7 +3,13 @@
     "allow": [
       "Bash(pip3 install:*)",
       "Bash(sqlite3:*)",
-      "Bash(timeout 5 python3:*)"
+      "Bash(timeout 5 python3:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)",
+      "Bash(curl:*)",
+      "Bash(xargs -I{} sh -c 'echo \"\"\"\"=== {} ===\"\"\"\" && tail -30 {}')",
+      "Bash(bash:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []

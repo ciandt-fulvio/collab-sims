@@ -26,6 +26,11 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
+# Suppress verbose logs from Claude Agent SDK internals
+# These logs include internal errors that don't affect functionality
+logging.getLogger('claude_agent_sdk._internal').setLevel(logging.WARNING)
+logging.getLogger('claude_agent_sdk').setLevel(logging.INFO)
+
 logger = logging.getLogger(__name__)
 
 # Create FastAPI app
@@ -91,7 +96,7 @@ async def startup_event():
     logger.info("     - /api/approvals/* (tool approval workflow)")
     logger.info("     - /health (health check)")
     logger.info("")
-    logger.info("✅ API ready (simulated mode - no CollabSims SDK)")
+    logger.info("✅ API ready")
 
 
 @app.on_event("shutdown")

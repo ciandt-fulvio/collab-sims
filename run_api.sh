@@ -10,13 +10,26 @@ echo ""
 
 cd "$(dirname "$0")"
 
-# Verifica se aiosqlite está instalado
-python3 -c "import aiosqlite" 2>/dev/null
+# Ativa o ambiente virtual se existir
+if [ -d ".venv" ]; then
+    echo "📦 Ativando ambiente virtual..."
+    source .venv/bin/activate
+else
+    echo "⚠️  Ambiente virtual não encontrado. Criando..."
+    python3.13 -m venv .venv
+    source .venv/bin/activate
+    echo "📦 Instalando dependências..."
+    pip install -e .
+    echo ""
+fi
+
+# Verifica se as dependências estão instaladas
+python -c "import claude_agent_sdk" 2>/dev/null
 if [ $? -ne 0 ]; then
-    echo "⚠️  aiosqlite não está instalado. Instalando..."
-    pip3 install aiosqlite
+    echo "📦 Instalando dependências do projeto..."
+    pip install -e .
     echo ""
 fi
 
 # Inicia a API
-python3 -m uvicorn collab_sims.api.main:app --reload --port 3007 --host 0.0.0.0
+python -m uvicorn collab_sims.api.main:app --reload --port 3007 --host 0.0.0.0
