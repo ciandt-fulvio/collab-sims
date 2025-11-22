@@ -20,7 +20,6 @@ import asyncio
 import signal
 import subprocess
 import sys
-import time
 from pathlib import Path
 
 import httpx
@@ -114,6 +113,12 @@ class TestServerStartup:
         except subprocess.TimeoutExpired:
             process.kill()
             process.wait()
+        finally:
+            # Explicitly close pipes to avoid ResourceWarning
+            if process.stdout:
+                process.stdout.close()
+            if process.stderr:
+                process.stderr.close()
 
     @pytest.mark.asyncio
     async def test_server_starts_and_responds(self, running_server):
@@ -295,6 +300,12 @@ class TestServerErrors:
             process.wait(timeout=5)
         except subprocess.TimeoutExpired:
             process.kill()
+        finally:
+            # Explicitly close pipes to avoid ResourceWarning
+            if process.stdout:
+                process.stdout.close()
+            if process.stderr:
+                process.stderr.close()
 
     @pytest.mark.asyncio
     async def test_invalid_json_returns_422(self, running_server):

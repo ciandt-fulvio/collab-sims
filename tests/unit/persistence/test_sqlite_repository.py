@@ -12,7 +12,6 @@ References:
 - https://aiosqlite.omnilib.dev/en/stable/
 """
 
-import json
 from datetime import datetime, timedelta
 
 import pytest

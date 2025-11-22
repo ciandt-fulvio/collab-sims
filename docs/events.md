@@ -384,25 +384,6 @@ Métricas em tempo real durante a execução.
 
 ---
 
-### `system`
-
-Eventos de sistema genéricos.
-
-```json
-{
-  "type": "system",
-  "event_id": "evt_060",
-  "timestamp": "2025-01-18T10:30:13.000Z",
-  "subtype": "runtime_created",
-  "data": {
-    "runtime_id": "rt_001",
-    "container_id": "abc123"
-  }
-}
-```
-
----
-
 ### `error`
 
 Erros durante a execução.

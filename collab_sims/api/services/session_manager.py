@@ -12,7 +12,7 @@ from typing import Any
 from claude_agent_sdk import ClaudeAgentOptions
 
 # Import from collab_sims core
-from ...core import CollabSims, CollabSimsSession, SessionConfig
+from ...core import CollabSimsSession, SessionConfig
 from ...core.events import AgentEvent
 from ...persistence import SQLiteRepository
 from ...trackers import DatabaseTracker, StreamTracker
@@ -180,7 +180,7 @@ class SessionManager:
             "config": config or {},
             "created_at": created_at.isoformat(),
             "status": "active",
-            "execution_state": "idle",  # Runtime execution state: "idle" | "executing"
+            "execution_state": "idle",  # Query execution state: "idle" | "executing"
             "current_query_id": None,  # ID of currently executing query (if any)
             "query_count": 0,
             "session_type": session_type,

@@ -6,7 +6,6 @@ References:
 - https://docs.python.org/3/library/unittest.mock.html
 """
 
-from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -14,7 +13,6 @@ import pytest
 # Import directly from module files to avoid circular imports via __init__.py
 from collab_sims.core.events import (
     CompleteEvent,
-    EventType,
     MessageEvent,
     QueryEvent,
     SessionEndEvent,

@@ -12,7 +12,7 @@ from claude_agent_sdk import (
 
 # Use TYPE_CHECKING to avoid circular import
 if TYPE_CHECKING:
-    from collab_sims.trackers.base import BaseTracker
+    pass
 
 from ._session_base import _SessionBase
 from .config import SessionConfig

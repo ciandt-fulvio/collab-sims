@@ -49,7 +49,7 @@ pip install -e .
 ./run_api.sh
 
 # 3. Iniciar Frontend (Terminal 2)
-cd web && python3 -m http.server 3005
+./run_web.sh
 ```
 
 **Acesse:** http://localhost:3005

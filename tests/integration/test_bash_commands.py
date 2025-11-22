@@ -10,8 +10,6 @@ References:
 - https://github.com/anthropics/claude-agent-sdk
 """
 
-import os
-from pathlib import Path
 
 import pytest
 

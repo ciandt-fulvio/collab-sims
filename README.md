@@ -50,22 +50,57 @@ pip install -e ".[dev]"
 
 ## Testando
 
+### ⚡ Testes Rápidos (Recomendado)
+
+```bash
+# Testes unitários super rápidos (< 1s)
+pytest -m unit -n auto
+
+# Todos os testes em paralelo (~4x mais rápido)
+pytest -n auto
+
+# Ver detalhes em: tests/README.md
+```
+
 ### Executar Todos os Testes
 
 ```bash
+# Serial (lento)
 pytest
+
+# Paralelo (RECOMENDADO - 4x mais rápido)
+pytest -n auto
 ```
 
 ### Executar com Cobertura
 
 ```bash
-pytest --cov=collab_sims --cov-report=html
+# Terminal (rápido)
+pytest --cov=collab_sims --cov-report=term-missing -n auto
+
+# HTML (navegável)
+pytest --cov=collab_sims --cov-report=html -n auto
+open htmlcov/index.html
+```
+
+### Reports de Testes que Falharam
+
+```bash
+# Re-executar apenas testes que falharam
+pytest --lf -n auto
+
+# Traceback detalhado + variáveis locais
+pytest --lf -vv --tb=long --showlocals
+
+# HTML report
+pytest --html=report.html --self-contained-html
+open report.html
 ```
 
 ### Executar Teste Específico
 
 ```bash
-pytest tests/test_session.py::test_create_session
+pytest tests/unit/core/test_events.py::TestEventTypeEnum::test_event_type_values
 ```
 
 ### Testes do Frontend (Vitest)

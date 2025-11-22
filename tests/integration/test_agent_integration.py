@@ -24,7 +24,6 @@ from collab_sims.core.events import (
     CompleteEvent,
     EventType,
     MessageEvent,
-    QueryEvent,
 )
 
 
@@ -150,9 +149,6 @@ class TestAgentBashIntegration:
         ):
             events.append(event)
 
-        # Check for tool events
-        event_types = [e.type for e in events]
-
         # Should have tool_use and tool_result somewhere
         # (might not be in every execution if Claude decides to just answer)
         # So we make this a soft assertion - if tools were used, verify them
@@ -225,7 +221,7 @@ class TestAgentEventStreaming:
         event_count = 0
         first_event_received = False
 
-        async for event in session.query("Count to 3"):
+        async for _event in session.query("Count to 3"):
             event_count += 1
             if event_count == 1:
                 first_event_received = True

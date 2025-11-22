@@ -28,7 +28,7 @@ class SessionResponse(BaseModel):
     created_at: str = Field(..., description="ISO formatted creation timestamp")
     config: dict[str, Any] = Field(default_factory=dict, description="Session configuration")
     status: str = Field(..., description="Session status (active, closed)")
-    execution_state: str = Field(default="idle", description="Runtime execution state (idle, executing)")
+    execution_state: str = Field(default="idle", description="Query execution state (idle, executing)")
     query_count: int = Field(default=0, description="Number of queries in this session")
 
 

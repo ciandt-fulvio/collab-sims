@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/run-tests-after-write.sh \"$CLAUDE_HOOK_INPUT\""
+          }
+        ]
+      }
+    ]
+  }
+}
