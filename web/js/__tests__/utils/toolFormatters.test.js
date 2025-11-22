@@ -45,14 +45,6 @@ describe('formatToolInput', () => {
     expect(result).toContain('/test/config.js');
   });
 
-  it('should format Runtime tool input with dockerfile', () => {
-    const input = {
-      dockerfile_content: 'FROM ubuntu:22.04\nRUN apt-get update',
-    };
-    const result = formatToolInput('Runtime', input);
-    expect(result).toContain('FROM ubuntu');
-  });
-
   it('should return JSON for unknown tools', () => {
     const input = { foo: 'bar' };
     const result = formatToolInput('UnknownTool', input);

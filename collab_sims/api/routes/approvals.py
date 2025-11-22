@@ -110,7 +110,7 @@ async def get_approval_config(session_id: str):
 @router.put("/config")
 async def update_approval_config(session_id: str, config: ApprovalConfig):
     """
-    Update approval configuration for a session at runtime.
+    Update approval configuration for a session.
 
     This allows changing the approval mode and tool policies while
     the session is active. Changes take effect immediately for

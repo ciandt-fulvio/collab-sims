@@ -60,15 +60,6 @@ const ToolInputFormatters = {
         </div>
       </details>
     </div>`;
-  },
-
-  Runtime(input) {
-    const content = input.dockerfile_content || '';
-    const lines = content.split('\n').length;
-    return `<div class="space-y-2">
-      <div class="text-gray-700 dark:text-gray-300"><span class="text-orange-600 dark:text-orange-400">🐳</span> Dockerfile <span class="text-gray-500 dark:text-gray-400 text-xs">(${lines} lines)</span></div>
-      <pre class="font-mono text-gray-800 dark:text-gray-200 text-xs whitespace-pre-wrap max-h-60 overflow-y-auto">${escapeHtml(content)}</pre>
-    </div>`;
   }
 };
 
@@ -213,36 +204,6 @@ export const ToolOutputFormatters = {
       // Fallback for simple "File edited successfully" messages
       if (parsedOutput.includes('successfully') || parsedOutput.includes('edited')) {
         return `<div class="text-green-600 dark:text-green-400">✓ ${escapeHtml(parsedOutput)}</div>`;
-      }
-
-      return `<pre class="font-mono text-gray-800 dark:text-gray-200 whitespace-pre-wrap">${escapeHtml(parsedOutput)}</pre>`;
-    }
-
-    return `<pre class="font-mono text-gray-800 dark:text-gray-200">${escapeHtml(JSON.stringify(parsedOutput, null, 2))}</pre>`;
-  },
-
-  Runtime(output) {
-    // Parse if it's a string that looks like JSON
-    let parsedOutput = output;
-    if (typeof output === 'string') {
-      try {
-        parsedOutput = JSON.parse(output);
-      } catch (e) {
-        // Not JSON, use as-is
-      }
-    }
-
-    // Extract text from array format
-    if (Array.isArray(parsedOutput) && parsedOutput[0]?.type === 'text') {
-      parsedOutput = parsedOutput[0].text;
-    }
-
-    if (typeof parsedOutput === 'string') {
-      if (parsedOutput.includes('Container ID:')) {
-        const lines = parsedOutput.split('\n');
-        return `<div class="space-y-1">${lines.map(line =>
-          `<div class="text-gray-700 dark:text-gray-300">${escapeHtml(line)}</div>`
-        ).join('')}</div>`;
       }
 
       return `<pre class="font-mono text-gray-800 dark:text-gray-200 whitespace-pre-wrap">${escapeHtml(parsedOutput)}</pre>`;

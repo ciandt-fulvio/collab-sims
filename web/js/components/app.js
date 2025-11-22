@@ -15,7 +15,6 @@ import { initTheme, toggleTheme as toggleThemeUtil } from '../utils/theme.js?v=4
 import { metricsPanel } from './chat/metricsPanel.js?v=4';
 import { planPanel } from './chat/planPanel.js?v=4';
 import { eventsPanel } from './chat/eventsPanel.js?v=4';
-import { approvalsPanel } from './chat/approvalsPanel.js?v=4';
 
 export function simsApp() {
   return {
@@ -53,7 +52,6 @@ export function simsApp() {
     ...metricsPanel(),
     ...planPanel(),
     ...eventsPanel(),
-    ...approvalsPanel(),
 
     // Track seen message events to prevent duplicates
     seenMessages: new Set(),
@@ -354,11 +352,6 @@ export function simsApp() {
 
       // Delegate to imported event handler
       dispatchEvent(this, event);
-
-      // Refresh runtime info when Runtime tool is used
-      if (event.type === 'tool_result' && event.tool_name === 'Runtime') {
-        setTimeout(() => this.fetchRuntimeInfo(), 1000); // Delay to allow DB write
-      }
     },
 
     // Add message to chat
