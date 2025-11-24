@@ -58,9 +58,11 @@ export function projectsListComponent() {
       }
     },
 
-    // Get sessions for a specific project
+    // Get sessions for a specific project (sorted by creation date, newest first)
     getProjectSessions(projectName) {
-      return this.sessions.filter(s => s.project_name === projectName);
+      return this.sessions
+        .filter(s => s.project_name === projectName)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     },
 
     // Toggle project expansion

@@ -148,12 +148,6 @@
                           <span x-show="session.agent_name" class="inline-flex items-center px-2 py-0.5 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-xs font-medium rounded-md">
                             <span x-text="session.agent_name"></span>
                           </span>
-
-                          <!-- Status Badge -->
-                          <span class="px-2 py-0.5 text-xs font-semibold rounded-full" :class="{
-                            'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': session.execution_state === 'executing',
-                            'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': session.execution_state === 'idle'
-                          }" x-text="session.execution_state === 'executing' ? 'Executing' : 'Idle'"></span>
                         </div>
 
                         <!-- Session Meta -->
