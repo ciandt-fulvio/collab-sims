@@ -206,6 +206,37 @@ async def get_activity_script(name: str):
     }
 
 
+@router.put("/activity-scripts/{name}")
+async def update_activity_script(name: str, request: ProjectUpdateRequest):
+    """Update an existing activity script markdown file.
+
+    Args:
+        name: Activity script name (without .md extension)
+        request: Activity script update request with new content
+
+    Returns:
+        Success message
+
+    Raises:
+        HTTPException: If activity script update fails
+    """
+    # Check if activity script exists
+    existing = activity_script_loader.get_activity_script(name)
+    if existing is None:
+        raise HTTPException(
+            status_code=404, detail=f"Activity script '{name}' not found"
+        )
+
+    success = activity_script_loader.save_activity_script(name, request.content)
+
+    if not success:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to update activity script '{name}'"
+        )
+
+    return {"message": "Activity script updated successfully", "name": name}
+
+
 # ===== Agents =====
 
 
@@ -244,3 +275,32 @@ async def get_agent(name: str):
         "content": doc.content,
         "raw_content": doc.raw_content,
     }
+
+
+@router.put("/agents/{name}")
+async def update_agent(name: str, request: ProjectUpdateRequest):
+    """Update an existing agent markdown file.
+
+    Args:
+        name: Agent name (without .md extension)
+        request: Agent update request with new content
+
+    Returns:
+        Success message
+
+    Raises:
+        HTTPException: If agent update fails
+    """
+    # Check if agent exists
+    existing = agent_loader.get_agent(name)
+    if existing is None:
+        raise HTTPException(status_code=404, detail=f"Agent '{name}' not found")
+
+    success = agent_loader.save_agent(name, request.content)
+
+    if not success:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to update agent '{name}'"
+        )
+
+    return {"message": "Agent updated successfully", "name": name}

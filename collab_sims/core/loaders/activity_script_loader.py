@@ -63,3 +63,22 @@ class ActivityScriptLoader:
         except Exception as e:
             print(f"Error loading activity script {name}: {e}")
             return None
+
+    def save_activity_script(self, name: str, content: str) -> bool:
+        """Save or update an activity script markdown file.
+
+        Args:
+            name: Activity script name (without .md extension)
+            content: Full markdown content (including frontmatter)
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            self.base_path.mkdir(parents=True, exist_ok=True)
+            file_path = self.base_path / f"{name}.md"
+            file_path.write_text(content, encoding="utf-8")
+            return True
+        except Exception as e:
+            print(f"Error saving activity script {name}: {e}")
+            return False

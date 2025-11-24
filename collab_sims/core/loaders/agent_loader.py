@@ -64,3 +64,22 @@ class AgentLoader:
         except Exception as e:
             print(f"Error loading agent {name}: {e}")
             return None
+
+    def save_agent(self, name: str, content: str) -> bool:
+        """Save or update an agent markdown file.
+
+        Args:
+            name: Agent name (without .md extension)
+            content: Full markdown content (including frontmatter)
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            self.base_path.mkdir(parents=True, exist_ok=True)
+            file_path = self.base_path / f"{name}.md"
+            file_path.write_text(content, encoding="utf-8")
+            return True
+        except Exception as e:
+            print(f"Error saving agent {name}: {e}")
+            return False

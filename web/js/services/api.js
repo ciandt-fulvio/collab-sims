@@ -14,13 +14,17 @@ export class SimsAPI {
     this.baseURL = baseURL;
   }
 
-  async createSession(config = {}, sessionType = 'worker') {
+  async createSession(projectName, agentName = null, config = {}) {
     const response = await fetch(`${this.baseURL}/api/sessions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ config, session_type: sessionType }),
+      body: JSON.stringify({
+        project_name: projectName,
+        agent_name: agentName,
+        config
+      }),
     });
 
     if (!response.ok) {
@@ -192,6 +196,146 @@ export class SimsAPI {
 
     if (!response.ok) {
       throw new Error(`Failed to update approval config: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  // ===== Library API Methods =====
+
+  async listProjects() {
+    const response = await fetch(`${this.baseURL}/api/library/projects`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to list projects: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async getProject(projectName) {
+    const response = await fetch(`${this.baseURL}/api/library/projects/${projectName}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get project: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async updateProject(projectName, content, frontmatter) {
+    const response = await fetch(`${this.baseURL}/api/library/projects/${projectName}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ frontmatter, content }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update project: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async listAgents() {
+    const response = await fetch(`${this.baseURL}/api/library/agents`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to list agents: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async getAgent(agentName) {
+    const response = await fetch(`${this.baseURL}/api/library/agents/${agentName}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get agent: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async updateAgent(agentName, content, frontmatter) {
+    const response = await fetch(`${this.baseURL}/api/library/agents/${agentName}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ frontmatter, content }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update agent: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async listActivityScripts() {
+    const response = await fetch(`${this.baseURL}/api/library/activity_scripts`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to list activity scripts: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async getActivityScript(scriptName) {
+    const response = await fetch(`${this.baseURL}/api/library/activity_scripts/${scriptName}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get activity script: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async updateActivityScript(scriptName, content, frontmatter) {
+    const response = await fetch(`${this.baseURL}/api/library/activity_scripts/${scriptName}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ frontmatter, content }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update activity script: ${response.statusText}`);
     }
 
     return await response.json();
