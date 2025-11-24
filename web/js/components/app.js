@@ -52,6 +52,12 @@ export function simsApp() {
     activityScripts: [],
     selectedResource: null,  // For viewing/editing in MD viewer
 
+    // MD Viewer/Editor state
+    projectContent: '',      // Current project markdown content
+    isEditingProject: false, // Edit mode for project
+    editedProjectContent: '',// Edited project content (buffer)
+    isSavingProject: false,  // Saving state
+
     // Component composition
     ...metricsPanel(),
     ...planPanel(),
@@ -440,6 +446,55 @@ export function simsApp() {
         this.activityScripts = scriptsRes.activity_scripts || [];
       } catch (err) {
         console.error('Failed to load library resources:', err);
+      }
+    },
+
+    // Load project markdown content
+    async loadProjectContent() {
+      if (!this.projectName) {
+        console.warn('No project name available');
+        return;
+      }
+
+      try {
+        const response = await this.api.getProject(this.projectName);
+        this.projectContent = response.content || '';
+      } catch (err) {
+        console.error('Failed to load project content:', err);
+        this.projectContent = '';
+      }
+    },
+
+    // Enter edit mode for project
+    editProject() {
+      this.editedProjectContent = this.projectContent;
+      this.isEditingProject = true;
+    },
+
+    // Cancel edit mode
+    cancelEditProject() {
+      this.isEditingProject = false;
+      this.editedProjectContent = '';
+    },
+
+    // Save project content
+    async saveProject() {
+      if (!this.projectName) {
+        console.warn('No project name available');
+        return;
+      }
+
+      this.isSavingProject = true;
+      try {
+        await this.api.updateProject(this.projectName, this.editedProjectContent);
+        this.projectContent = this.editedProjectContent;
+        this.isEditingProject = false;
+        console.log('Project saved successfully');
+      } catch (err) {
+        console.error('Failed to save project:', err);
+        alert('Failed to save project: ' + err.message);
+      } finally {
+        this.isSavingProject = false;
       }
     },
 

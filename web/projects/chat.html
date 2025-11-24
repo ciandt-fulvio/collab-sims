@@ -1002,19 +1002,66 @@
              PROJECT TAB
              ======================================== -->
         <!-- Project tab -->
-        <div x-show="activeTab === 'project'" class="p-4 space-y-3">
-          <div x-show="projectName" class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+        <div
+          x-show="activeTab === 'project'"
+          x-init="$watch('activeTab', value => { if (value === 'project' && projectName && !projectContent) loadProjectContent() })"
+          class="p-4 space-y-3"
+        >
+          <!-- Project Header -->
+          <div x-show="projectName" class="flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
               <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
               </svg>
               <span x-text="projectName"></span>
             </h3>
-            <p class="text-xs text-gray-600 dark:text-gray-400">This session's project configuration</p>
-            <a :href="`/projects/index.html`" class="mt-3 inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline">
-              View in projects list →
-            </a>
+            <button
+              x-show="!isEditingProject"
+              @click="editProject()"
+              class="px-3 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-900/50 transition"
+            >
+              Edit
+            </button>
           </div>
+
+          <!-- View Mode -->
+          <div x-show="projectName && !isEditingProject" class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div
+              class="markdown-content text-sm text-gray-900 dark:text-gray-100"
+              x-html="renderMarkdown(projectContent || '_No content yet_')"
+            ></div>
+          </div>
+
+          <!-- Edit Mode -->
+          <div x-show="projectName && isEditingProject" class="space-y-3">
+            <textarea
+              x-model="editedProjectContent"
+              rows="20"
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 font-mono"
+              placeholder="Enter project markdown content..."
+            ></textarea>
+
+            <!-- Edit Actions -->
+            <div class="flex gap-2">
+              <button
+                @click="saveProject()"
+                :disabled="isSavingProject"
+                class="px-4 py-2 text-sm bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span x-show="!isSavingProject">Save</span>
+                <span x-show="isSavingProject">Saving...</span>
+              </button>
+              <button
+                @click="cancelEditProject()"
+                :disabled="isSavingProject"
+                class="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+
+          <!-- No Project Message -->
           <div x-show="!projectName" class="text-center text-gray-400 dark:text-gray-500 py-8">
             <p class="text-sm">No project associated with this session</p>
           </div>
