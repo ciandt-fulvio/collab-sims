@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sessions - Sims Agent</title>
+  <title>Projects - CollabSims</title>
 
   <!-- Tailwind CSS with dark mode -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -18,14 +18,14 @@
   </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-  <div x-data="sessionsPage()" x-init="init()" x-cloak>
+  <div x-data="projectsPage()" x-init="init()" x-cloak>
     <!-- Header -->
     <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div class="flex justify-between items-center">
           <div>
-            <h1 class="text-3xl font-bold">Sims Sessions</h1>
-            <p class="text-gray-600 dark:text-gray-400 mt-1">View all conversation sessions</p>
+            <h1 class="text-3xl font-bold">CollabSims Projects</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Manage your projects and sessions</p>
           </div>
           <div class="flex gap-3">
             <button @click="toggleTheme()" class="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition" title="Toggle theme">
@@ -36,63 +36,9 @@
                 <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
               </svg>
             </button>
-            <button @click="loadSessions()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors">
+            <button @click="loadData()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors">
               Refresh
             </button>
-
-            <!-- New Session Dropdown -->
-            <div class="relative" @click.outside="showSessionTypeMenu = false">
-              <button
-                @click="showSessionTypeMenu = !showSessionTypeMenu"
-                :disabled="creatingSession"
-                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <svg x-show="!creatingSession" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                <div x-show="creatingSession" class="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span x-text="creatingSession ? 'Creating...' : 'New Session'"></span>
-                <svg x-show="!creatingSession" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                </svg>
-              </button>
-
-              <!-- Dropdown menu -->
-              <div
-                x-show="showSessionTypeMenu"
-                x-cloak
-                x-transition
-                class="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50"
-              >
-                <div class="py-2">
-                  <div class="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
-                    Select Session Type
-                  </div>
-
-                  <button
-                    @click="createNewSession('worker')"
-                    class="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-start gap-3 transition-colors"
-                  >
-                    <span class="text-2xl">🛠️</span>
-                    <div class="flex-1">
-                      <div class="font-medium text-gray-900 dark:text-gray-100">Worker Session</div>
-                      <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Code execution with artifact workflow guidance</div>
-                    </div>
-                  </button>
-
-                  <button
-                    @click="createNewSession('scout')"
-                    class="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-start gap-3 transition-colors"
-                  >
-                    <span class="text-2xl">🔍</span>
-                    <div class="flex-1">
-                      <div class="font-medium text-gray-900 dark:text-gray-100">Scout Session</div>
-                      <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Swarm coordinator mode for task delegation</div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -101,161 +47,158 @@
     <!-- Loading State -->
     <div x-show="loading" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
       <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      <p class="mt-4 text-gray-600 dark:text-gray-400">Loading sessions...</p>
+      <p class="mt-4 text-gray-600 dark:text-gray-400">Loading projects...</p>
     </div>
 
     <!-- Error State -->
     <div x-show="error" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-        <h3 class="text-lg font-semibold text-red-900 dark:text-red-200 mb-2">Error Loading Sessions</h3>
+        <h3 class="text-lg font-semibold text-red-900 dark:text-red-200 mb-2">Error Loading Data</h3>
         <p class="text-red-700 dark:text-red-300" x-text="error"></p>
-        <button @click="loadSessions()" class="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
+        <button @click="loadData()" class="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
           Retry
         </button>
       </div>
     </div>
 
     <!-- Empty State -->
-    <div x-show="!loading && !error && sessions.length === 0" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+    <div x-show="!loading && !error && projects.length === 0" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
       <div class="bg-white dark:bg-gray-800 rounded-lg p-12 border border-gray-200 dark:border-gray-700">
         <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
         </svg>
-        <h3 class="mt-4 text-lg font-semibold">No sessions yet</h3>
-        <p class="mt-2 text-gray-600 dark:text-gray-400">Choose a session type to create your first session.</p>
-
-        <!-- Session type cards -->
-        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-          <button
-            @click="createNewSession('worker')"
-            :disabled="creatingSession"
-            class="p-6 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors text-center disabled:opacity-50"
-          >
-            <div class="text-4xl mb-3">🛠️</div>
-            <div class="font-semibold text-gray-900 dark:text-gray-100">Worker</div>
-            <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">With artifacts</div>
-          </button>
-
-          <button
-            @click="createNewSession('scout')"
-            :disabled="creatingSession"
-            class="p-6 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors text-center disabled:opacity-50"
-          >
-            <div class="text-4xl mb-3">🔍</div>
-            <div class="font-semibold text-gray-900 dark:text-gray-100">Scout</div>
-            <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">Swarm coordinator</div>
-          </button>
-        </div>
+        <h3 class="mt-4 text-lg font-semibold">No projects found</h3>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">Create project markdown files in the data/projects/ directory.</p>
       </div>
     </div>
 
-    <!-- Sessions List -->
-    <div x-show="!loading && !error && sessions.length > 0" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead class="bg-gray-50 dark:bg-gray-900">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Session
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Role
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Swarm
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Agent
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Status
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Created
-                </th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              <template x-for="session in sessions" :key="session.session_id">
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" @click="viewSession(session.session_id)">
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="flex items-center gap-2">
-                      <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-medium rounded-md font-mono" :title="session.session_id">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                        <span x-text="truncateId(session.session_id)"></span>
-                      </span>
-                      <button @click.stop="copyToClipboard(session.session_id)" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" title="Copy full session ID">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs font-medium rounded-md capitalize">
-                      <span x-text="session.role"></span>
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div x-show="session.swarm_id" class="flex items-center gap-2">
-                      <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-medium rounded-md font-mono" :title="session.swarm_id">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                        <span x-text="truncateId(session.swarm_id)"></span>
-                      </span>
-                      <button @click.stop="copyToClipboard(session.swarm_id)" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" title="Copy full swarm ID">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                      </button>
-                    </div>
-                    <span x-show="!session.swarm_id" class="text-xs text-gray-400">—</span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span x-show="session.agent_name" class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-xs font-medium rounded-md">
-                      <span x-text="session.agent_name"></span>
-                    </span>
-                    <span x-show="!session.agent_name" class="text-xs text-gray-400">—</span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span
-                      class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                      :class="{
-                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': session.execution_state === 'executing',
-                        'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': session.execution_state === 'idle'
-                      }"
-                      x-text="session.execution_state === 'executing' ? 'Executing' : 'Idle'"
-                    >
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900 dark:text-gray-100" x-text="formatDate(session.created_at)"></div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button @click.stop="viewSession(session.session_id)" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4">
-                      Open
-                    </button>
-                    <button @click.stop="deleteSession(session.session_id)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
-        </div>
-      </div>
+    <!-- Projects List -->
+    <div x-show="!loading && !error && projects.length > 0" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <template x-for="project in projects" :key="project.name">
+        <div class="mb-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <!-- Project Header -->
+          <div class="bg-gray-50 dark:bg-gray-900 px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" @click="toggleProject(project.name)">
+            <div class="flex items-center gap-3">
+              <!-- Expand/Collapse Icon -->
+              <svg :class="isProjectExpanded(project.name) ? 'rotate-90' : ''" class="w-5 h-5 text-gray-500 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+              </svg>
 
-      <!-- Session Count -->
-      <div class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-        Showing <span x-text="sessions.length"></span> session<span x-text="sessions.length !== 1 ? 's' : ''"></span>
+              <!-- Project Icon -->
+              <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+              </svg>
+
+              <div>
+                <h2 class="text-lg font-semibold" x-text="project.title || project.name"></h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400" x-text="project.type || 'No type'"></p>
+              </div>
+
+              <!-- Session Count Badge -->
+              <span class="ml-3 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs font-medium rounded-full" x-text="getProjectSessions(project.name).length + ' sessions'"></span>
+            </div>
+
+            <!-- New Session Button -->
+            <button @click.stop="startCreatingSession(project.name)" :disabled="creatingSessionFor === project.name" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+              <svg x-show="creatingSessionFor !== project.name" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              <div x-show="creatingSessionFor === project.name" class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span x-text="creatingSessionFor === project.name ? 'Creating...' : 'New Session'"></span>
+            </button>
+          </div>
+
+          <!-- Agent Selector Modal (Inline) -->
+          <div x-show="showAgentSelector && creatingSessionFor === project.name" x-cloak class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-6 py-4">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Select Agent (Optional)</h3>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <button @click="createSession(project.name, null)" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm transition-colors">
+                No Agent
+              </button>
+              <template x-for="agent in agents" :key="agent.name">
+                <button @click="createSession(project.name, agent.name)" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm transition-colors flex items-center gap-2">
+                  <span x-text="agent.name"></span>
+                  <span class="text-xs text-gray-500 dark:text-gray-400" x-text="agent.description"></span>
+                </button>
+              </template>
+            </div>
+            <button @click="showAgentSelector = false" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">Cancel</button>
+          </div>
+
+          <!-- Sessions List -->
+          <div x-show="isProjectExpanded(project.name)" x-collapse>
+            <template x-if="getProjectSessions(project.name).length === 0">
+              <div class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                <p class="text-sm">No sessions yet. Create one to get started!</p>
+              </div>
+            </template>
+
+            <template x-if="getProjectSessions(project.name).length > 0">
+              <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                <template x-for="session in getProjectSessions(project.name)" :key="session.session_id">
+                  <div class="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition-colors" @click="viewSession(session.session_id)">
+                    <div class="flex items-center justify-between">
+                      <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                          <!-- Session Icon -->
+                          <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          </svg>
+
+                          <!-- Session Name or ID -->
+                          <span class="font-medium" x-text="session.session_name || truncateId(session.session_id)"></span>
+
+                          <!-- Session ID Badge -->
+                          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-mono rounded-md" :title="session.session_id">
+                            <span x-text="truncateId(session.session_id)"></span>
+                            <button @click="copyToClipboard(session.session_id, $event)" class="hover:text-gray-900 dark:hover:text-gray-200" title="Copy full ID">
+                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                              </svg>
+                            </button>
+                          </span>
+
+                          <!-- Agent Badge -->
+                          <span x-show="session.agent_name" class="inline-flex items-center px-2 py-0.5 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-xs font-medium rounded-md">
+                            <span x-text="session.agent_name"></span>
+                          </span>
+
+                          <!-- Status Badge -->
+                          <span class="px-2 py-0.5 text-xs font-semibold rounded-full" :class="{
+                            'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': session.execution_state === 'executing',
+                            'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': session.execution_state === 'idle'
+                          }" x-text="session.execution_state === 'executing' ? 'Executing' : 'Idle'"></span>
+                        </div>
+
+                        <!-- Session Meta -->
+                        <div class="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                          <span x-text="'Created ' + formatDate(session.created_at)"></span>
+                          <span x-text="session.query_count + ' queries'"></span>
+                        </div>
+                      </div>
+
+                      <!-- Actions -->
+                      <div class="flex items-center gap-2">
+                        <button @click.stop="viewSession(session.session_id)" class="px-3 py-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">
+                          Open
+                        </button>
+                        <button @click.stop="deleteSession(session.session_id, $event)" class="px-3 py-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium">
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+
+      <!-- Summary -->
+      <div class="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+        <span x-text="projects.length"></span> project<span x-text="projects.length !== 1 ? 's' : ''"></span> ·
+        <span x-text="sessions.length"></span> session<span x-text="sessions.length !== 1 ? 's' : ''"></span>
       </div>
     </div>
   </div>
@@ -263,10 +206,14 @@
   <!-- Alpine.js bootstrap -->
   <script type="module">
     import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3/dist/module.esm.js';
-    import { sessionsListComponent } from '../js/components/sessions/sessionsListComponent.js?v=4';
+    import collapse from 'https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3/dist/cdn.min.js';
+    import { projectsListComponent } from '../js/components/projects/projectsListComponent.js?v=5';
+
+    // Register collapse plugin
+    Alpine.plugin(collapse);
 
     // Register component
-    Alpine.data('sessionsPage', sessionsListComponent);
+    Alpine.data('projectsPage', projectsListComponent);
     Alpine.start();
   </script>
 </body>
