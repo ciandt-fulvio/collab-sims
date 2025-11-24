@@ -54,6 +54,11 @@ class SessionManager:
         # Initialize database tracker for persistence
         self.db_tracker = self._init_database_tracker()
 
+        # Session restore status
+        self._restore_status = "not_started"  # not_started, in_progress, completed, failed
+        self._restore_count = 0
+        self._restore_failed_count = 0
+
     def _init_database_tracker(self) -> DatabaseTracker:
         """Initialize database tracker with SQLite repository.
 
@@ -71,7 +76,12 @@ class SessionManager:
 
         Uses Claude Agent SDK's resume feature to restore sessions with their conversation history.
         Sessions are recreated in memory and can continue receiving queries.
+
+        This runs asynchronously in the background to avoid blocking server startup.
         """
+        self._restore_status = "in_progress"
+        logger.info("🔄 Starting session restore (background task)...")
+
         try:
             # Get all active sessions from database
             active_sessions = await self.db_tracker.repository.list_sessions(
@@ -80,11 +90,11 @@ class SessionManager:
             )
 
             if not active_sessions:
-                logger.info("No active sessions to restore")
+                logger.info("   No active sessions to restore")
+                self._restore_status = "completed"
                 return
 
-            logger.info(f"Found {len(active_sessions)} active session(s) in database")
-            logger.info("Resuming sessions using Claude SDK resume feature...")
+            logger.info(f"   Found {len(active_sessions)} active session(s) to restore")
 
             restored_count = 0
             failed_count = 0
@@ -147,11 +157,11 @@ class SessionManager:
                     }
 
                     restored_count += 1
-                    logger.debug(f"✅ Resumed session {session_id[:12]} (queries: {query_count})")
+                    logger.debug(f"   ✅ Resumed session {session_id[:12]} (queries: {query_count})")
 
                 except Exception as e:
                     failed_count += 1
-                    logger.error(f"❌ Failed to resume session {session_id}: {e}")
+                    logger.error(f"   ❌ Failed to resume session {session_id}: {e}")
                     # Mark failed session as closed
                     try:
                         await self.db_tracker.repository.update_session(
@@ -162,13 +172,21 @@ class SessionManager:
                     except Exception:
                         pass
 
+            # Update restore status
+            self._restore_count = restored_count
+            self._restore_failed_count = failed_count
+
             if restored_count > 0:
-                logger.info(f"✅ Resumed {restored_count} session(s)")
+                logger.info(f"   ✅ Restored {restored_count} session(s) in background")
             if failed_count > 0:
-                logger.warning(f"⚠️  Failed to resume {failed_count} session(s)")
+                logger.warning(f"   ⚠️  Failed to restore {failed_count} session(s)")
+
+            self._restore_status = "completed"
+            logger.info("🏁 Session restore completed")
 
         except Exception as e:
-            logger.error(f"Failed to restore sessions from database: {e}")
+            self._restore_status = "failed"
+            logger.error(f"❌ Session restore failed: {e}")
 
     def _ensure_cleanup_task_started(self):
         """Start the cleanup task if not already running (lazy initialization)"""

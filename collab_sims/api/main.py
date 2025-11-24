@@ -80,6 +80,8 @@ async def health_check():
 @app.on_event("startup")
 async def startup_event():
     """Startup event handler."""
+    import asyncio
+
     logger.info("🚀 CollabSims API starting...")
 
     # Initialize database
@@ -87,8 +89,10 @@ async def startup_event():
     await session_manager.db_tracker.repository.initialize()
     logger.info("   Database initialized")
 
-    # Restore active sessions from database
-    await session_manager.restore_sessions_from_database()
+    # Start session restore in background (non-blocking)
+    # This allows the server to accept requests immediately
+    asyncio.create_task(session_manager.restore_sessions_from_database())
+    logger.info("   Session restore started in background")
 
     logger.info("   Available routes:")
     logger.info("     - /api/sessions/* (multi-turn conversations)")
