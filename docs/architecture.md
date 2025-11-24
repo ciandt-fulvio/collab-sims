@@ -27,6 +27,7 @@ CollabSims é uma aplicação full-stack que permite executar e monitorar agente
   - `sessions.py` - Gerenciamento de sessões multi-turn
   - `execute.py` - Execução single-turn
   - `approvals.py` - Workflow de aprovação de ferramentas
+  - `library.py` - Biblioteca de projetos, agentes e activity scripts
 - **Services**: Lógica de negócio
   - `session_manager.py` - Gerencia ciclo de vida de sessões
   - `execution_service.py` - Executa queries single-turn
@@ -239,6 +240,58 @@ Disponíveis via eventos:
 GET /health
 → {"status": "healthy", "service": "collab-sims-api"}
 ```
+
+## Gerenciamento de Servidores
+
+### Script de Gerenciamento (`manage_servers.sh`)
+
+Script bash com tmux para gerenciar API e Web servers:
+
+```bash
+# Iniciar servidores
+./manage_servers.sh start
+
+# Visualizar logs
+./manage_servers.sh logs [api|web]
+
+# Reiniciar servidor específico
+./manage_servers.sh restart api
+
+# Parar todos os servidores
+./manage_servers.sh stop
+
+# Ver status
+./manage_servers.sh status
+```
+
+**Características:**
+- Gerenciamento via tmux (sessão `collab-sims`)
+- Duas janelas: `api` (porta 3007) e `web` (porta 3005)
+- Restart independente de cada servidor
+- Logs isolados por servidor
+- Comandos coloridos com feedback visual
+
+## Testing
+
+### Smoke Tests
+
+Smoke tests de integração em `tests/integration/test_smoke_frontend_backend.py`:
+
+```bash
+# Rodar smoke tests
+pytest tests/integration/test_smoke_frontend_backend.py -v -m smoke
+```
+
+**Cobertura:**
+- ✅ Library API endpoints (projetos, agentes, activity scripts)
+- ✅ URL naming consistency (hyphen vs underscore)
+- ⏭️ Session creation metadata (requer servidor completo, skipped)
+
+**Bugs prevenidos:**
+1. **Bug #2**: Library endpoints retornando 404 (faltava `/api` prefix)
+2. **Bug #4**: Frontend usando underscore mas backend usando hyphen
+
+Ver [testing.md](testing.md) para detalhes completos.
 
 ## Próximos Passos
 

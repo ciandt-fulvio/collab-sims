@@ -79,6 +79,10 @@ Este projeto usa:
 
 Veja [README.md](README.md) para comandos completos.
 
-## Licença
+---
 
-MIT License - veja LICENSE para detalhes.
+## Atenção:
+
+- Sempre que vc fizer um plano, guarde ele de forma que eu possa consultar depois. de um nome, uma descrição curta, dia e hora, depois o plano em si
+- Sempre execute os testes de integracao antes de fazer um commit
+- Sempre que for fazer um commit, rode o ruff fix

@@ -16,6 +16,8 @@ Cria uma nova sessão de conversação multi-turn.
 **Request:**
 ```json
 {
+  "project_name": "design-sprint-q1",
+  "agent_name": "facilitator",
   "config": {
     "include_partial_messages": true,
     "approval_config": {
@@ -26,8 +28,7 @@ Cria uma nova sessão de conversação multi-turn.
       },
       "auto_approved_tools": []
     }
-  },
-  "session_type": "worker"
+  }
 }
 ```
 
@@ -35,19 +36,21 @@ Cria uma nova sessão de conversação multi-turn.
 ```json
 {
   "session_id": "550e8400-e29b-41d4-a716-446655440000",
+  "project_name": "design-sprint-q1",
+  "agent_name": "facilitator",
+  "session_name": "Session 2025-01-18 10:30",
   "created_at": "2025-01-18T10:30:00",
   "status": "active",
-  "role": "worker",
-  "agent_name": null,
-  "swarm_id": null,
   "execution_state": "idle",
-  "query_count": 0
+  "query_count": 0,
+  "config": {...}
 }
 ```
 
-**Session Types:**
-- `worker` - Agente com execução de código e artifacts
-- `scout` - Coordenador de swarm para delegação de tarefas
+**Campos opcionais:**
+- `project_name` - Nome do projeto da biblioteca
+- `agent_name` - Nome do agente da biblioteca
+- `session_name` - Nome customizado (gerado automaticamente se omitido)
 
 ---
 
@@ -61,9 +64,11 @@ Lista todas as sessões.
   "sessions": [
     {
       "session_id": "550e8400-...",
+      "project_name": "design-sprint-q1",
+      "agent_name": "facilitator",
+      "session_name": "Session 2025-01-18 10:30",
       "created_at": "2025-01-18T10:30:00",
       "status": "active",
-      "role": "worker",
       "query_count": 3
     }
   ],
@@ -81,11 +86,14 @@ Obtém detalhes de uma sessão específica.
 ```json
 {
   "session_id": "550e8400-...",
+  "project_name": "design-sprint-q1",
+  "agent_name": "facilitator",
+  "session_name": "Session 2025-01-18 10:30",
   "created_at": "2025-01-18T10:30:00",
   "status": "active",
-  "role": "worker",
   "execution_state": "executing",
-  "query_count": 5
+  "query_count": 5,
+  "config": {...}
 }
 ```
 
@@ -318,6 +326,164 @@ Atualiza configuração de aprovações durante a sessão.
 - `safe` - Sempre auto-aprovado (ex: Read, Grep)
 - `medium` - Requer aprovação em modo interactive/manual
 - `high` - Sempre requer aprovação (ex: Bash, Write)
+
+---
+
+### Library
+
+#### `GET /api/library/projects`
+
+Lista todos os projetos disponíveis na biblioteca.
+
+**Response:**
+```json
+{
+  "projects": [
+    {
+      "name": "design-sprint-q1",
+      "description": "Design Sprint Q1 2025",
+      "path": "/library/projects/design-sprint-q1.md",
+      "agents": ["facilitator", "researcher"],
+      "created_at": "2025-01-15T10:00:00"
+    }
+  ]
+}
+```
+
+---
+
+#### `GET /api/library/projects/{project_name}`
+
+Obtém detalhes e conteúdo de um projeto específico.
+
+**Response:**
+```json
+{
+  "name": "design-sprint-q1",
+  "description": "Design Sprint Q1 2025",
+  "content": "# Design Sprint Q1\n\n## Overview\n...",
+  "agents": ["facilitator", "researcher"],
+  "activity_scripts": ["day1-understand"]
+}
+```
+
+---
+
+#### `PUT /api/library/projects/{project_name}`
+
+Atualiza o conteúdo de um projeto.
+
+**Request:**
+```json
+{
+  "content": "# Updated Project Content\n..."
+}
+```
+
+**Response:**
+```json
+{
+  "name": "design-sprint-q1",
+  "content": "# Updated Project Content\n...",
+  "updated_at": "2025-01-18T15:30:00"
+}
+```
+
+---
+
+#### `GET /api/library/agents`
+
+Lista todos os agentes disponíveis na biblioteca.
+
+**Response:**
+```json
+{
+  "agents": [
+    {
+      "name": "facilitator",
+      "description": "Design Sprint Facilitator",
+      "path": "/library/agents/facilitator.md"
+    }
+  ]
+}
+```
+
+---
+
+#### `GET /api/library/agents/{agent_name}`
+
+Obtém detalhes e conteúdo de um agente específico.
+
+**Response:**
+```json
+{
+  "name": "facilitator",
+  "description": "Design Sprint Facilitator",
+  "content": "# Facilitator Agent\n\n## Role\n..."
+}
+```
+
+---
+
+#### `PUT /api/library/agents/{agent_name}`
+
+Atualiza o conteúdo de um agente.
+
+**Request:**
+```json
+{
+  "content": "# Updated Agent Content\n..."
+}
+```
+
+---
+
+#### `GET /api/library/activity-scripts`
+
+Lista todos os activity scripts disponíveis na biblioteca.
+
+**Response:**
+```json
+{
+  "activity_scripts": [
+    {
+      "name": "day1-understand",
+      "description": "Day 1: Understanding the Problem",
+      "path": "/library/activity-scripts/day1-understand.md"
+    }
+  ]
+}
+```
+
+**Nota:** Use `activity-scripts` (hyphen) não `activity_scripts` (underscore).
+
+---
+
+#### `GET /api/library/activity-scripts/{script_name}`
+
+Obtém detalhes e conteúdo de um activity script específico.
+
+**Response:**
+```json
+{
+  "name": "day1-understand",
+  "description": "Day 1: Understanding the Problem",
+  "content": "# Day 1: Understanding\n\n## Goals\n..."
+}
+```
+
+---
+
+#### `PUT /api/library/activity-scripts/{script_name}`
+
+Atualiza o conteúdo de um activity script.
+
+**Request:**
+```json
+{
+  "content": "# Updated Script Content\n..."
+}
+```
 
 ---
 

@@ -18,6 +18,9 @@ Armazena informações de sessões multi-turn.
 | Coluna | Tipo | Constraints | Descrição |
 |--------|------|-------------|-----------|
 | `session_id` | TEXT | PRIMARY KEY | ID único da sessão (UUID) |
+| `project_name` | TEXT | NULL | Nome do projeto da biblioteca |
+| `agent_name` | TEXT | NULL | Nome do agente da biblioteca |
+| `session_name` | TEXT | NULL | Nome customizado da sessão |
 | `user_id` | TEXT | NULL | ID do usuário (futuro uso) |
 | `created_at` | TIMESTAMP | NOT NULL | Data/hora de criação |
 | `closed_at` | TIMESTAMP | NULL | Data/hora de encerramento |
@@ -26,6 +29,8 @@ Armazena informações de sessões multi-turn.
 | `metadata` | TEXT | NULL | JSON com metadados adicionais |
 
 **Índices:**
+- `idx_session_project_name` - Busca por projeto
+- `idx_session_agent_name` - Busca por agente
 - `idx_session_user_id` - Busca por usuário
 - `idx_session_created_at` - Ordenação temporal
 - `idx_session_status` - Filtro por status
@@ -34,14 +39,21 @@ Armazena informações de sessões multi-turn.
 ```json
 {
   "session_id": "550e8400-e29b-41d4-a716-446655440000",
+  "project_name": "design-sprint-q1",
+  "agent_name": "facilitator",
+  "session_name": "Session 2025-01-18 10:30",
   "user_id": null,
   "created_at": "2025-01-18T10:30:00",
   "closed_at": null,
   "status": "active",
   "query_count": 3,
-  "metadata": "{\"role\": \"worker\", \"tags\": [\"development\"]}"
+  "metadata": "{\"tags\": [\"development\"]}"
 }
 ```
+
+**Campos deprecados:**
+- ❌ `session_type` - Removido (era "worker" ou "scout")
+- ✅ Agora usa `project_name` e `agent_name` para identificar tipo de sessão
 
 ### `event`
 

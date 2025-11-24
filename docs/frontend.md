@@ -5,6 +5,7 @@ Interface web moderna construída com Alpine.js para monitorar e interagir com a
 ## Stack Tecnológico
 
 - **Alpine.js 3** - Framework reativo (15KB, sem build step)
+  - **Plugins**: Collapse (`@alpinejs/collapse@3`)
 - **Tailwind CSS** - Utility-first CSS (via CDN)
 - **Vanilla JavaScript** - ES6 modules nativos
 - **Server-Sent Events (SSE)** - Streaming em tempo real
@@ -525,6 +526,28 @@ Requer browsers modernos com ES6 modules:
 
 ## Troubleshooting
 
+### Página em branco / Alpine.js não carrega
+
+**Sintoma:** Página completamente branca, sem conteúdo visível
+
+**Causa comum:** Import incorreto de plugins Alpine.js
+
+**Solução:** Verificar imports de plugins Alpine.js:
+
+```javascript
+// ❌ INCORRETO - causa página em branco
+import collapse from 'https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3/dist/cdn.min.js';
+
+// ✅ CORRETO - use o módulo ES6
+import Collapse from 'https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3/dist/module.esm.js';
+Alpine.plugin(Collapse);
+```
+
+**Regra geral:**
+- Sempre use `/dist/module.esm.js` para plugins Alpine.js em ES6 modules
+- Plugin deve ser registrado com nome capitalizado via `Alpine.plugin()`
+- Imports devem vir **antes** de `Alpine.start()`
+
 ### Eventos não aparecem
 
 1. Verificar Network tab (DevTools)
@@ -537,6 +560,23 @@ Requer browsers modernos com ES6 modules:
 1. Confirmar API rodando em `localhost:3007`
 2. Confirmar frontend em `localhost:3005`
 3. Verificar middleware CORS no backend
+
+### Library tab vazio
+
+**Sintoma:** "No agents available" ou "No activity scripts available"
+
+**Causas possíveis:**
+1. **URL incorreta:** Usar `activity_scripts` (underscore) em vez de `activity-scripts` (hyphen)
+2. **Falta de `/api` prefix:** Backend retorna 404
+
+**Solução:**
+```javascript
+// ✅ CORRETO
+const response = await fetch('http://localhost:3007/api/library/activity-scripts');
+
+// ❌ INCORRETO
+const response = await fetch('http://localhost:3007/library/activity_scripts');
+```
 
 ### Dark mode não funciona
 
