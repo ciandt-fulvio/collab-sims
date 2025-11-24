@@ -855,7 +855,7 @@ class SessionManager:
         self._sessions[session_id]["session_name"] = session_name
 
         # Update in database
-        await self.repository.update_session_name(session_id, session_name)
+        await self.db_tracker.repository.update_session_name(session_id, session_name)
 
         logger.info(f"Session {session_id} name updated to: {session_name}")
 

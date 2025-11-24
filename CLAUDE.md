@@ -86,3 +86,5 @@ Veja [README.md](README.md) para comandos completos.
 - Sempre que vc fizer um plano, guarde ele de forma que eu possa consultar depois. de um nome, uma descrição curta, dia e hora, depois o plano em si
 - Sempre que for fazer um commit, rode o ruff fix
 - A cada 30 minutos, faca um teste de integracao
+- use o script ./manage_servers.sh para iniciar e parar os servidores, evite os scripts ./run_*.sh
+
