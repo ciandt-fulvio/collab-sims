@@ -94,35 +94,21 @@
                 <p class="text-sm text-gray-600 dark:text-gray-400" x-text="project.type || 'No type'"></p>
               </div>
 
-              <!-- Session Count Badge -->
-              <span class="ml-3 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs font-medium rounded-full" x-text="getProjectSessions(project.name).length + ' sessions'"></span>
+              <!-- Session & Activity Count Badges -->
+              <div class="ml-3 flex gap-2">
+                <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs font-medium rounded-full" x-text="getProjectSessions(project.name).length + ' sessions'"></span>
+                <span class="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs font-medium rounded-full" x-text="(project.completed_activities || 0) + ' activities'"></span>
+              </div>
             </div>
 
             <!-- New Session Button -->
-            <button @click.stop="startCreatingSession(project.name)" :disabled="creatingSessionFor === project.name" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+            <button @click.stop="createSession(project.name, null)" :disabled="creatingSessionFor === project.name" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
               <svg x-show="creatingSessionFor !== project.name" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
               </svg>
               <div x-show="creatingSessionFor === project.name" class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               <span x-text="creatingSessionFor === project.name ? 'Creating...' : 'New Session'"></span>
             </button>
-          </div>
-
-          <!-- Agent Selector Modal (Inline) -->
-          <div x-show="showAgentSelector && creatingSessionFor === project.name" x-cloak class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-6 py-4">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Select Agent (Optional)</h3>
-            <div class="flex flex-wrap gap-2 mb-3">
-              <button @click="createSession(project.name, null)" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm transition-colors">
-                No Agent
-              </button>
-              <template x-for="agent in agents" :key="agent.name">
-                <button @click="createSession(project.name, agent.name)" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm transition-colors flex items-center gap-2">
-                  <span x-text="agent.name"></span>
-                  <span class="text-xs text-gray-500 dark:text-gray-400" x-text="agent.description"></span>
-                </button>
-              </template>
-            </div>
-            <button @click="showAgentSelector = false" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">Cancel</button>
           </div>
 
           <!-- Sessions List -->

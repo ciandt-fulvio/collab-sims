@@ -20,8 +20,6 @@ export function projectsListComponent() {
     theme: initTheme(),
     expandedProjects: new Set(),
     creatingSessionFor: null,
-    selectedAgent: null,
-    showAgentSelector: false,
 
     // Initialize
     async init() {
@@ -81,20 +79,12 @@ export function projectsListComponent() {
       return this.expandedProjects.has(projectName);
     },
 
-    // Start creating a new session for a project
-    startCreatingSession(projectName) {
+    // Create new session (agents are selected dynamically by LLM)
+    async createSession(projectName) {
       this.creatingSessionFor = projectName;
-      this.selectedAgent = null;
-      this.showAgentSelector = true;
-    },
-
-    // Create new session with selected agent
-    async createSession(projectName, agentName = null) {
-      this.creatingSessionFor = projectName;
-      this.showAgentSelector = false;
 
       try {
-        const response = await this.api.createSession(projectName, agentName, {
+        const response = await this.api.createSession(projectName, null, {
           include_partial_messages: true,
           approval_config: {
             mode: 'auto',
@@ -111,7 +101,7 @@ export function projectsListComponent() {
         });
 
         // Redirect to the new session
-        window.location.href = `/sessions/chat.html?id=${response.session_id}`;
+        window.location.href = `/projects/chat.html?id=${response.session_id}`;
       } catch (err) {
         console.error('Failed to create session:', err);
         alert('Failed to create session: ' + err.message);
@@ -121,7 +111,7 @@ export function projectsListComponent() {
 
     // Navigate to session
     viewSession(sessionId) {
-      window.location.href = `/sessions/chat.html?id=${sessionId}`;
+      window.location.href = `/projects/chat.html?id=${sessionId}`;
     },
 
     // Delete a session
