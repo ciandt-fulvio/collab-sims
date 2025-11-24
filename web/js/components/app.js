@@ -24,9 +24,8 @@ export function simsApp() {
 
     // Session state
     sessionId: null,
-    sessionRole: null,  // 'worker' or 'scout'
-    agentName: null,    // agent name if this is a swarm agent session
-    swarmId: null,      // swarm ID if this is a swarm agent session
+    projectName: null,  // project name for this session
+    agentName: null,    // agent name if specified
     isStreaming: false,
     isInitializing: true,
     _initCalled: false,  // Guard flag to prevent double initialization
@@ -39,15 +38,18 @@ export function simsApp() {
 
     // UI state
     activeTab: 'plan',
+    activeLibraryTab: 'project',  // project, activities, or agents
     prompt: '',
     partialText: '',
-    sessionType: 'worker', // Session type: worker or scout
 
     // Data
     messages: [],
 
-    // Dropdown visibility states
-    showSessionTypeDropdown: false,
+    // Library resources (for MD viewer tabs)
+    projects: [],
+    agents: [],
+    activityScripts: [],
+    selectedResource: null,  // For viewing/editing in MD viewer
 
     // Component composition
     ...metricsPanel(),
@@ -92,66 +94,11 @@ export function simsApp() {
       }
     },
 
-    // Create new session
+    // Create new session - redirect to sessions list
     async createSession() {
-      console.log('🟡 createSession() called');
-      console.trace('createSession() call stack');
-
-      try {
-        // Clear existing state
-        this.messages = [];
-        this.resetEvents();
-        this.resetPlans();
-        this.resetApprovals();
-        this.partialText = '';
-        this.seenEventIds.clear();
-
-        // Reset metrics
-        this.metrics = {
-          inputTokens: 0,
-          outputTokens: 0,
-          totalTokens: 0,
-          totalCost: 0,
-          durationMs: 0,
-          numTurns: 0,
-          messagesCount: 0,
-          toolsCount: 0,
-        };
-
-        // Reset accumulated metrics
-        this.accumulatedDurationMs = 0;
-        this.accumulatedInputTokens = 0;
-        this.accumulatedOutputTokens = 0;
-        this.currentQueryInputTokens = 0;
-        this.currentQueryOutputTokens = 0;
-
-        console.log('🔵 Making API call to create session with type:', this.sessionType);
-        const response = await this.api.createSession({
-          include_partial_messages: true,  // Always enable word-by-word streaming
-          approval_config: {
-            mode: this.approvalMode,  // Use current approval mode
-            tool_policies: {
-              'Bash': 'high',
-              'Write': 'medium',
-              'Edit': 'medium',
-              'Read': 'safe',
-              'Glob': 'safe',
-              'Grep': 'safe',
-            },
-            auto_approved_tools: []
-          }
-        }, this.sessionType);
-
-        this.sessionId = response.session_id;
-        this.sessionRole = this.sessionType;  // Store the role
-        console.log('🟢 Session created:', this.sessionId, 'Role:', this.sessionRole);
-
-        // Focus input field after session is ready
-        this.focusInput();
-      } catch (error) {
-        console.error('🔴 Failed to create session:', error);
-        alert('Failed to create session. Is the server running?');
-      }
+      console.log('🟡 createSession() called - redirecting to sessions list');
+      // Sessions must be created from the projects list page now
+      window.location.href = '/sessions/';
     },
 
     // Load existing session
@@ -198,10 +145,12 @@ export function simsApp() {
         // Load session details
         console.log('🔵 Loading session details...');
         const session = await this.api.getSession(sessionId);
-        this.sessionRole = session.role;  // Store the role from loaded session
+        this.projectName = session.project_name || null;
         this.agentName = session.agent_name || null;
-        this.swarmId = session.swarm_id || null;
         console.log('🟢 Session loaded:', session);
+
+        // Load library resources for MD viewer tabs
+        await this.loadLibraryResources();
 
         // Load all events from the session
         console.log('🔵 Loading session events...');
@@ -475,6 +424,28 @@ export function simsApp() {
           container.scrollTop = container.scrollHeight;
         }
       });
+    },
+
+    // Load library resources for MD viewer tabs
+    async loadLibraryResources() {
+      try {
+        const [projectsRes, agentsRes, scriptsRes] = await Promise.all([
+          this.api.listProjects(),
+          this.api.listAgents(),
+          this.api.listActivityScripts()
+        ]);
+        this.projects = projectsRes.projects || [];
+        this.agents = agentsRes.agents || [];
+        this.activityScripts = scriptsRes.activity_scripts || [];
+      } catch (err) {
+        console.error('Failed to load library resources:', err);
+      }
+    },
+
+    // Select library tab (project, activities, or agents)
+    selectLibraryTab(tab) {
+      this.activeLibraryTab = tab;
+      this.selectedResource = null;  // Clear selection when switching tabs
     },
 
     // Get tool group by ID
