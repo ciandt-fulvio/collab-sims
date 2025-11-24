@@ -124,6 +124,22 @@ export class SimsAPI {
     }
   }
 
+  async updateSessionName(sessionId, name) {
+    const response = await fetch(`${this.baseURL}/api/sessions/${sessionId}/name`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update session name: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
   async interruptSession(sessionId) {
     const response = await fetch(`${this.baseURL}/api/sessions/${sessionId}/interrupt`, {
       method: 'POST',

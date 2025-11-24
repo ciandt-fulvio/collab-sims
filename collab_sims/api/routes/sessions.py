@@ -260,3 +260,27 @@ async def get_session_events(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve events: {str(e)}")
+
+
+@router.put("/{session_id}/name")
+async def update_session_name(session_id: str, request: dict):
+    """
+    Update the session name (typically from first user message).
+
+    Request body: {"name": "First 30 characters of message..."}
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    session_name = request.get("name")
+    if not session_name:
+        raise HTTPException(status_code=400, detail="name field is required")
+
+    logger.info(f"🔵 Updating session {session_id} name to: {session_name}")
+
+    try:
+        await session_manager.update_session_name(session_id, session_name)
+        return {"session_id": session_id, "name": session_name}
+    except Exception as e:
+        logger.error(f"🔴 Failed to update session name: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

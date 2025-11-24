@@ -840,6 +840,25 @@ class SessionManager:
 
         return True
 
+    async def update_session_name(self, session_id: str, session_name: str):
+        """
+        Update the session name (typically from first user message).
+
+        Args:
+            session_id: Session identifier
+            session_name: New name for the session
+        """
+        if session_id not in self._sessions:
+            raise ValueError(f"Session {session_id} not found")
+
+        # Update in-memory session
+        self._sessions[session_id]["session_name"] = session_name
+
+        logger.info(f"Session {session_id} name updated to: {session_name}")
+
+        # TODO: Update in database when we add update_session method to repository
+        # For now, it will be updated on next event save
+
     def _normalize_db_session(self, db_session: dict[str, Any]) -> dict[str, Any]:
         """Normalize database session data to match API response format.
 
