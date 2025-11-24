@@ -94,11 +94,11 @@ export function simsApp() {
       }
     },
 
-    // Create new session - redirect to sessions list
+    // Create new session - redirect to projects list
     async createSession() {
-      console.log('🟡 createSession() called - redirecting to sessions list');
+      console.log('🟡 createSession() called - redirecting to projects list');
       // Sessions must be created from the projects list page now
-      window.location.href = '/sessions/';
+      window.location.href = '/projects/';
     },
 
     // Load existing session
