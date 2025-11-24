@@ -296,7 +296,7 @@ export class SimsAPI {
   }
 
   async listActivityScripts() {
-    const response = await fetch(`${this.baseURL}/api/library/activity_scripts`, {
+    const response = await fetch(`${this.baseURL}/api/library/activity-scripts`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -311,7 +311,7 @@ export class SimsAPI {
   }
 
   async getActivityScript(scriptName) {
-    const response = await fetch(`${this.baseURL}/api/library/activity_scripts/${scriptName}`, {
+    const response = await fetch(`${this.baseURL}/api/library/activity-scripts/${scriptName}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -326,7 +326,7 @@ export class SimsAPI {
   }
 
   async updateActivityScript(scriptName, content) {
-    const response = await fetch(`${this.baseURL}/api/library/activity_scripts/${scriptName}`, {
+    const response = await fetch(`${this.baseURL}/api/library/activity-scripts/${scriptName}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

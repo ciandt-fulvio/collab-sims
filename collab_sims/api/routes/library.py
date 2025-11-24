@@ -8,7 +8,7 @@ from collab_sims.core.loaders.agent_loader import AgentLoader
 from collab_sims.core.loaders.project_loader import ProjectLoader
 from collab_sims.core.loaders.project_type_loader import ProjectTypeLoader
 
-router = APIRouter(prefix="/library", tags=["library"])
+router = APIRouter(prefix="/api/library", tags=["library"])
 
 # Initialize loaders
 project_loader = ProjectLoader()

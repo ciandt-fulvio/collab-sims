@@ -12,6 +12,12 @@
       "Bash(pkill:*)",
       "Bash(/tmp/test_session_resume_ui.sh:*)",
       "Bash(timeout:*)",
+      "Bash(./manage_servers.sh:*)",
+      "Bash(./run_api.sh:*)",
+      "Bash(./run_web.sh:*)",
+      "Bash(tmux:*)",
+      "Bash(sleep:*)",
+      "Bash(chmod:*)",      
       "Read:**",
       "Write:**",
       "Edit:**"

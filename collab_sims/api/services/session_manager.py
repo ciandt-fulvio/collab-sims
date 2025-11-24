@@ -861,12 +861,14 @@ class SessionManager:
 
         return {
             "session_id": db_session.get("session_id", ""),
+            "project_name": db_session.get("project_name", ""),
+            "agent_name": db_session.get("agent_name"),
+            "session_name": db_session.get("session_name"),
             "created_at": created_at,
             "config": metadata,  # Database stores config in metadata field
             "status": db_session.get("status", "active"),
             "execution_state": "idle",  # Database sessions are always idle
             "query_count": db_session.get("query_count", 0),
-            "session_type": metadata.get("session_type", "worker"),
         }
 
     def _get_session_metadata(self, session_id: str) -> dict[str, Any]:
@@ -875,12 +877,14 @@ class SessionManager:
 
         return {
             "session_id": session_data["session_id"],
+            "project_name": session_data["project_name"],
+            "agent_name": session_data.get("agent_name"),
+            "session_name": session_data.get("session_name"),
             "created_at": session_data["created_at"],
             "config": session_data["config"],
             "status": session_data["status"],
             "execution_state": session_data.get("execution_state", "idle"),
             "query_count": session_data["query_count"],
-            "session_type": session_data.get("session_type", "worker"),
         }
 
     async def shutdown(self):

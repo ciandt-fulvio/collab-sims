@@ -206,11 +206,11 @@
   <!-- Alpine.js bootstrap -->
   <script type="module">
     import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3/dist/module.esm.js';
-    import collapse from 'https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3/dist/cdn.min.js';
+    import Collapse from 'https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3/dist/module.esm.js';
     import { projectsListComponent } from '../js/components/projects/projectsListComponent.js?v=5';
 
     // Register collapse plugin
-    Alpine.plugin(collapse);
+    Alpine.plugin(Collapse);
 
     // Register component
     Alpine.data('projectsPage', projectsListComponent);
