@@ -9,7 +9,8 @@
       "Bash(curl:*)",
       "Bash(xargs -I{} sh -c 'echo \"\"\"\"=== {} ===\"\"\"\" && tail -30 {}')",
       "Bash(bash:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(/tmp/test_session_resume_ui.sh:*)"
     ],
     "deny": [],
     "ask": []

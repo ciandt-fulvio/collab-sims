@@ -15,6 +15,7 @@ import { initTheme, toggleTheme as toggleThemeUtil } from '../utils/theme.js?v=4
 import { metricsPanel } from './chat/metricsPanel.js?v=4';
 import { planPanel } from './chat/planPanel.js?v=4';
 import { eventsPanel } from './chat/eventsPanel.js?v=4';
+import { approvalsPanel } from './chat/approvalsPanel.js?v=4';
 
 export function simsApp() {
   return {
@@ -52,6 +53,7 @@ export function simsApp() {
     ...metricsPanel(),
     ...planPanel(),
     ...eventsPanel(),
+    ...approvalsPanel(),
 
     // Track seen message events to prevent duplicates
     seenMessages: new Set(),
@@ -245,22 +247,20 @@ export function simsApp() {
         // Hide skeleton UI - session is fully loaded
         this.isRestoringSession = false;
 
-        // Check if session has an active query (has QueryEvent but no CompleteEvent after it)
-        const hasQueryEvent = events.some(e => e.type === 'query' || e.event_type === 'query');
-        const lastEvent = events[events.length - 1];
-        const lastEventIsComplete = lastEvent && (lastEvent.event_type === 'complete' || lastEvent.type === 'complete');
-        const isStillStreaming = hasQueryEvent && !lastEventIsComplete;
+        // ✅ Use execution_state from API to determine if session is actually executing
+        // This is more reliable than inferring from events, especially for resumed sessions
+        const isExecuting = session.execution_state === 'executing';
 
-        if (isStillStreaming) {
-          console.log('🔵 Session has active query, reconnecting...');
-          // Set streaming state so arrows show
+        if (isExecuting) {
+          console.log('🔵 Session is executing, reconnecting to SSE...');
+          // ⚠️ Set streaming state BEFORE reconnecting so UI shows loading immediately
           this.isStreaming = true;
           // Reconnect to ongoing SSE stream
           this.reconnectToActiveSession();
-        } else if (!hasQueryEvent) {
-          console.log('🟢 Session is empty (no queries sent yet)');
         } else {
-          console.log('🟢 Session is complete');
+          console.log('🟢 Session is idle and ready for new queries');
+          // ✅ Ensure streaming is disabled for idle sessions
+          this.isStreaming = false;
         }
 
         // Focus input field
@@ -499,7 +499,8 @@ export function simsApp() {
       if (!this.sessionId) return;
 
       console.log('🔄 Reconnecting to active session via SSE');
-      this.isStreaming = true;
+      // ✅ Don't set isStreaming = true here! Let events control streaming state.
+      // This prevents input from being blocked when reconnecting to idle sessions.
       this.partialText = '';
 
       // Find the most recent QueryEvent to get when the current query started

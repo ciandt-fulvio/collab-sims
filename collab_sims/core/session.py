@@ -64,6 +64,7 @@ class CollabSimsSession(_SessionBase):
         trackers: list = None,
         approval_manager=None,
         session_id: str | None = None,
+        resume: bool = False,
     ):
         """Initialize session (internal - use CollabSims.create_session() instead).
 
@@ -73,10 +74,12 @@ class CollabSimsSession(_SessionBase):
             trackers: List of event trackers (inherited from CollabSims)
             approval_manager: Optional ApprovalManager for tool approval workflow
             session_id: Optional session ID (if not provided, generates a new UUID)
+            resume: If True, resume an existing session with the given session_id
         """
         super().__init__(trackers=trackers or [])
         self.config = config
         self.approval_manager = approval_manager
+        self._resume = resume  # Store resume flag for use in _connect()
 
         # Session state
         self.client: ClaudeSDKClient | None = None
@@ -136,18 +139,28 @@ class CollabSimsSession(_SessionBase):
         for tracker in self.trackers:
             await tracker.setup()
 
-        # Get system prompt
-        system_prompt = get_session_prompt(self._session_id)
+        # Get system prompt (skip for resumed sessions - they already have context)
+        system_prompt = None if self._resume else get_session_prompt(self._session_id)
 
         # Build ClaudeAgentOptions for local execution (no MCP servers)
-        final_options = ClaudeAgentOptions(
-            permission_mode="bypassPermissions",
-            include_partial_messages=self.config.include_partial_messages,
-            cwd=str(self._working_dir),
-            system_prompt=system_prompt,
-            setting_sources=['user'],  # Enable user settings (includes file tools)
-            extra_args={"session-id": self._session_id},
-        )
+        final_options_kwargs = {
+            "permission_mode": "bypassPermissions",
+            "include_partial_messages": self.config.include_partial_messages,
+            "cwd": str(self._working_dir),
+            "setting_sources": ['user'],  # Enable user settings (includes file tools)
+        }
+
+        # Add resume parameter if resuming session
+        if self._resume:
+            # When resuming, use resume parameter (cannot use session-id with resume)
+            final_options_kwargs["resume"] = self._session_id
+            logger.info(f"Resuming session {self._session_id}")
+        else:
+            # Only set system_prompt and session-id for new sessions
+            final_options_kwargs["system_prompt"] = system_prompt
+            final_options_kwargs["extra_args"] = {"session-id": self._session_id}
+
+        final_options = ClaudeAgentOptions(**final_options_kwargs)
 
         # Create and connect SDK client
         self.client = ClaudeSDKClient(options=final_options)

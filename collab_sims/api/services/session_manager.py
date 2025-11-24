@@ -69,9 +69,8 @@ class SessionManager:
     async def restore_sessions_from_database(self):
         """Restore active sessions from database on server startup.
 
-        Note: Claude Agent SDK does not allow reusing session-ids that were previously used.
-        Therefore, we mark all "active" sessions as "closed" on startup to prevent conflicts.
-        Sessions remain in the database for historical/audit purposes.
+        Uses Claude Agent SDK's resume feature to restore sessions with their conversation history.
+        Sessions are recreated in memory and can continue receiving queries.
         """
         try:
             # Get all active sessions from database
@@ -80,21 +79,93 @@ class SessionManager:
                 limit=1000
             )
 
-            if active_sessions:
-                logger.info(f"Found {len(active_sessions)} active session(s) in database")
-                logger.info("Marking them as 'closed' (Claude SDK does not allow session-id reuse)")
+            if not active_sessions:
+                logger.info("No active sessions to restore")
+                return
 
-                # Mark all active sessions as closed to prevent conflicts
-                for session_data in active_sessions:
-                    session_id = session_data["session_id"]
-                    await self.db_tracker.repository.update_session(
-                        session_id=session_id,
-                        status="closed",
-                        closed_at=datetime.now()
+            logger.info(f"Found {len(active_sessions)} active session(s) in database")
+            logger.info("Resuming sessions using Claude SDK resume feature...")
+
+            restored_count = 0
+            failed_count = 0
+
+            for session_data in active_sessions:
+                session_id = session_data["session_id"]
+                try:
+                    # Extract metadata and config
+                    metadata = session_data.get("metadata", {})
+                    session_type = metadata.get("session_type", "worker")
+                    user_id = session_data.get("user_id")
+
+                    # Create session config from stored metadata
+                    config_dict = {k: v for k, v in metadata.items() if k != "session_type"}
+                    if user_id:
+                        config_dict["user_id"] = user_id
+
+                    # Create stream tracker for this session
+                    stream_tracker = StreamTracker()
+
+                    # Create session configuration
+                    session_config = SessionConfig(
+                        include_partial_messages=config_dict.get("include_partial_messages", True),
+                        user_id=user_id,
                     )
-                    logger.debug(f"Marked session {session_id} as closed")
 
-                logger.info(f"✅ Cleaned up {len(active_sessions)} session(s) from previous runs")
+                    # Create CollabSimsSession with resume=True
+                    claude_session = CollabSimsSession(
+                        options=ClaudeAgentOptions(
+                            permission_mode="bypassPermissions",
+                            include_partial_messages=session_config.include_partial_messages
+                        ),
+                        config=session_config,
+                        trackers=[self.db_tracker, stream_tracker],
+                        approval_manager=self.approval_manager,
+                        session_id=session_id,
+                        resume=True,  # ✅ Resume existing session
+                    )
+
+                    # Connect (will use resume parameter)
+                    await claude_session._connect()
+
+                    # Get query count from database
+                    query_count = session_data.get("query_count", 0)
+
+                    # Store session data in memory
+                    self._sessions[session_id] = {
+                        "session_id": session_id,
+                        "tracker": stream_tracker,
+                        "claude_session": claude_session,
+                        "config": config_dict,
+                        "created_at": session_data.get("created_at", datetime.now()).isoformat()
+                                     if isinstance(session_data.get("created_at"), datetime)
+                                     else session_data.get("created_at", datetime.now().isoformat()),
+                        "status": "active",
+                        "execution_state": "idle",
+                        "current_query_id": None,
+                        "query_count": query_count,
+                        "session_type": session_type,
+                    }
+
+                    restored_count += 1
+                    logger.debug(f"✅ Resumed session {session_id[:12]} (queries: {query_count})")
+
+                except Exception as e:
+                    failed_count += 1
+                    logger.error(f"❌ Failed to resume session {session_id}: {e}")
+                    # Mark failed session as closed
+                    try:
+                        await self.db_tracker.repository.update_session(
+                            session_id=session_id,
+                            status="closed",
+                            closed_at=datetime.now()
+                        )
+                    except Exception:
+                        pass
+
+            if restored_count > 0:
+                logger.info(f"✅ Resumed {restored_count} session(s)")
+            if failed_count > 0:
+                logger.warning(f"⚠️  Failed to resume {failed_count} session(s)")
 
         except Exception as e:
             logger.error(f"Failed to restore sessions from database: {e}")
@@ -207,25 +278,15 @@ class SessionManager:
             return None
 
     async def list_sessions(self) -> list[dict[str, Any]]:
-        """List all active sessions from database"""
-        try:
-            # Fetch all sessions from database
-            db_sessions = await self.db_tracker.repository.list_sessions()
-            sessions = []
-            for db_session in db_sessions:
-                # Merge with in-memory data if available
-                session_id = db_session.get("session_id")
-                if session_id in self._sessions:
-                    sessions.append(self._get_session_metadata(session_id))
-                else:
-                    # Use database data (for sessions from previous runs)
-                    # Normalize to match _get_session_metadata structure
-                    sessions.append(self._normalize_db_session(db_session))
-            return sessions
-        except Exception as e:
-            logger.error(f"Failed to list sessions from database: {e}")
-            # Fallback to in-memory sessions only
-            return [self._get_session_metadata(sid) for sid in self._sessions.keys()]
+        """List all active sessions in memory.
+
+        Active sessions are restored from database on startup using resume feature,
+        so this returns all sessions that can receive queries.
+
+        Returns:
+            List of session metadata dicts
+        """
+        return [self._get_session_metadata(sid) for sid in self._sessions.keys()]
 
     async def query_session(
         self, session_id: str, prompt: str
@@ -778,18 +839,32 @@ class SessionManager:
         }
 
     async def shutdown(self):
-        """Shutdown session manager and cancel background tasks"""
+        """Shutdown session manager and cancel background tasks.
+
+        Sessions are left as 'active' in the database so they can be resumed on restart.
+        """
         logger.info("SessionManager shutdown initiated...")
 
-        # Close all active sessions first
+        # Disconnect Claude sessions but keep them as 'active' in database
         session_ids = list(self._sessions.keys())
         if session_ids:
-            logger.debug(f"Closing {len(session_ids)} active sessions")
+            logger.debug(f"Disconnecting {len(session_ids)} active sessions (keeping as 'active' for resume)")
             for session_id in session_ids:
                 try:
-                    await self.close_session(session_id)
+                    session_data = self._sessions[session_id]
+                    # Close Claude SDK client without emitting session_end event
+                    if "claude_session" in session_data:
+                        claude_session = session_data["claude_session"]
+                        # Disconnect client directly without calling close() (which emits session_end)
+                        if claude_session.client:
+                            try:
+                                await claude_session.client.disconnect()
+                            except Exception:
+                                pass  # Ignore disconnect errors during shutdown
+
+                    logger.debug(f"Disconnected session {session_id[:12]} (remains active in DB)")
                 except Exception as e:
-                    logger.warning(f"Error closing session {session_id}: {e}")
+                    logger.warning(f"Error disconnecting session {session_id}: {e}")
 
         # Cancel all active query tasks
         tasks_to_cancel = []
