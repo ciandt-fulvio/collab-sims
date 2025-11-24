@@ -47,6 +47,8 @@ class SessionConfig:
     """Configuration for creating an agent session.
 
     Attributes:
+        project_name: Project name (references MD file in data/projects/) - REQUIRED
+        agent_name: Agent persona to use (references MD file in data/agents/)
         user_id: Optional user identifier for multi-tenant tracking
         tags: List of tags for categorizing/filtering sessions
         metadata: Arbitrary metadata dictionary for custom data
@@ -59,6 +61,8 @@ class SessionConfig:
 
     Example:
         >>> config = SessionConfig(
+        ...     project_name="design-sprint-q1",
+        ...     agent_name="facilitator",
         ...     user_id="user123",
         ...     tags=["production", "support"],
         ...     metadata={"source": "web_ui", "region": "us-west"},
@@ -71,6 +75,8 @@ class SessionConfig:
         ... )
     """
 
+    project_name: str  # REQUIRED
+    agent_name: str | None = None
     user_id: str | None = None
     tags: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
