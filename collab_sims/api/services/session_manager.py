@@ -854,10 +854,10 @@ class SessionManager:
         # Update in-memory session
         self._sessions[session_id]["session_name"] = session_name
 
-        logger.info(f"Session {session_id} name updated to: {session_name}")
+        # Update in database
+        await self.repository.update_session_name(session_id, session_name)
 
-        # TODO: Update in database when we add update_session method to repository
-        # For now, it will be updated on next event save
+        logger.info(f"Session {session_id} name updated to: {session_name}")
 
     def _normalize_db_session(self, db_session: dict[str, Any]) -> dict[str, Any]:
         """Normalize database session data to match API response format.
