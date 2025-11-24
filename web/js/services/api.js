@@ -233,13 +233,13 @@ export class SimsAPI {
     return await response.json();
   }
 
-  async updateProject(projectName, content, frontmatter) {
+  async updateProject(projectName, content) {
     const response = await fetch(`${this.baseURL}/api/library/projects/${projectName}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ frontmatter, content }),
+      body: JSON.stringify({ content }),
     });
 
     if (!response.ok) {
@@ -279,13 +279,13 @@ export class SimsAPI {
     return await response.json();
   }
 
-  async updateAgent(agentName, content, frontmatter) {
+  async updateAgent(agentName, content) {
     const response = await fetch(`${this.baseURL}/api/library/agents/${agentName}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ frontmatter, content }),
+      body: JSON.stringify({ content }),
     });
 
     if (!response.ok) {
@@ -325,13 +325,13 @@ export class SimsAPI {
     return await response.json();
   }
 
-  async updateActivityScript(scriptName, content, frontmatter) {
+  async updateActivityScript(scriptName, content) {
     const response = await fetch(`${this.baseURL}/api/library/activity_scripts/${scriptName}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ frontmatter, content }),
+      body: JSON.stringify({ content }),
     });
 
     if (!response.ok) {
