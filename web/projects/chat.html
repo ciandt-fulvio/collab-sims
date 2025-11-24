@@ -786,11 +786,32 @@
         <div class="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
           <nav class="flex">
             <button
-              @click="activeTab = 'plan'"
-              :class="activeTab === 'plan' ? 'border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+              @click="activeTab = 'project'"
+              :class="activeTab === 'project' ? 'border-green-600 dark:border-green-500 text-green-600 dark:text-green-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
               class="px-3 py-3 text-sm font-medium border-b-2 transition"
             >
-              Plan
+              Project
+            </button>
+            <button
+              @click="activeTab = 'activities'"
+              :class="activeTab === 'activities' ? 'border-yellow-600 dark:border-yellow-500 text-yellow-600 dark:text-yellow-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+              class="px-3 py-3 text-sm font-medium border-b-2 transition"
+            >
+              Activities
+            </button>
+            <button
+              @click="activeTab = 'agents'"
+              :class="activeTab === 'agents' ? 'border-purple-600 dark:border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+              class="px-3 py-3 text-sm font-medium border-b-2 transition"
+            >
+              Agents
+            </button>
+            <button
+              @click="activeTab = 'task'"
+              :class="activeTab === 'task' ? 'border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+              class="px-3 py-3 text-sm font-medium border-b-2 transition"
+            >
+              Task
             </button>
             <button
               @click="activeTab = 'events'"
@@ -798,13 +819,6 @@
               class="px-3 py-3 text-sm font-medium border-b-2 transition"
             >
               Events
-            </button>
-            <button
-              @click="activeTab = 'library'"
-              :class="activeTab === 'library' ? 'border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
-              class="px-3 py-3 text-sm font-medium border-b-2 transition"
-            >
-              Library
             </button>
           </nav>
         </div>
@@ -1000,11 +1014,11 @@
         </div>
 
         <!-- ========================================
-             PLAN TAB
+             TASK TAB (formerly Plan)
              Component: planPanel.js
              ======================================== -->
-        <!-- Plan tab -->
-        <div x-show="activeTab === 'plan'" class="p-4 space-y-4">
+        <!-- Task tab -->
+        <div x-show="activeTab === 'task'" class="p-4 space-y-4">
           <!-- Current Plan -->
           <div x-show="getCurrentPlan()" class="space-y-3">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Current Plan</h3>
@@ -1115,114 +1129,83 @@
         </div>
 
         <!-- ========================================
-             LIBRARY TAB (Project, Activities, Agents)
+             PROJECT TAB
              ======================================== -->
-        <!-- Library tab -->
-        <div x-show="activeTab === 'library'" class="p-4 space-y-4">
-          <!-- Library Sub-tabs -->
-          <div class="flex gap-2 border-b border-gray-200 dark:border-gray-700">
-            <button
-              @click="selectLibraryTab('project')"
-              :class="activeLibraryTab === 'project' ? 'border-green-600 dark:border-green-500 text-green-600 dark:text-green-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
-              class="px-3 py-2 text-xs font-medium border-b-2 transition flex items-center gap-1"
-            >
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Project tab -->
+        <div x-show="activeTab === 'project'" class="p-4 space-y-3">
+          <div x-show="projectName" class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+              <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
               </svg>
-              Project
-            </button>
-            <button
-              @click="selectLibraryTab('activities')"
-              :class="activeLibraryTab === 'activities' ? 'border-yellow-600 dark:border-yellow-500 text-yellow-600 dark:text-yellow-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
-              class="px-3 py-2 text-xs font-medium border-b-2 transition flex items-center gap-1"
-            >
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-              </svg>
-              Activities
-            </button>
-            <button
-              @click="selectLibraryTab('agents')"
-              :class="activeLibraryTab === 'agents' ? 'border-purple-600 dark:border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
-              class="px-3 py-2 text-xs font-medium border-b-2 transition flex items-center gap-1"
-            >
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-              </svg>
-              Agents
-            </button>
+              <span x-text="projectName"></span>
+            </h3>
+            <p class="text-xs text-gray-600 dark:text-gray-400">This session's project configuration</p>
+            <a :href="`/projects/index.html`" class="mt-3 inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline">
+              View in projects list →
+            </a>
           </div>
-
-          <!-- Project Sub-tab Content -->
-          <div x-show="activeLibraryTab === 'project'" class="space-y-3">
-            <div x-show="projectName" class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-              <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-                <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
-                </svg>
-                <span x-text="projectName"></span>
-              </h3>
-              <p class="text-xs text-gray-600 dark:text-gray-400">This session's project configuration</p>
-              <a :href="`/projects/index.html`" class="mt-3 inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                View in projects list →
-              </a>
-            </div>
-            <div x-show="!projectName" class="text-center text-gray-400 dark:text-gray-500 py-8">
-              <p class="text-sm">No project associated with this session</p>
-            </div>
+          <div x-show="!projectName" class="text-center text-gray-400 dark:text-gray-500 py-8">
+            <p class="text-sm">No project associated with this session</p>
           </div>
+        </div>
 
-          <!-- Activities Sub-tab Content -->
-          <div x-show="activeLibraryTab === 'activities'" class="space-y-2">
-            <template x-if="activityScripts.length > 0">
-              <div class="space-y-2">
-                <template x-for="script in activityScripts" :key="script.name">
-                  <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 hover:border-yellow-300 dark:hover:border-yellow-600 transition">
-                    <div class="flex items-start justify-between">
-                      <div class="flex-1">
-                        <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="script.name"></h4>
-                        <p class="text-xs text-gray-600 dark:text-gray-400 mt-1" x-text="script.description || 'No description'"></p>
-                      </div>
+        <!-- ========================================
+             ACTIVITIES TAB
+             ======================================== -->
+        <!-- Activities tab -->
+        <div x-show="activeTab === 'activities'" class="p-4 space-y-2">
+          <template x-if="activityScripts.length > 0">
+            <div class="space-y-2">
+              <template x-for="script in activityScripts" :key="script.name">
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 hover:border-yellow-300 dark:hover:border-yellow-600 transition">
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="script.name"></h4>
+                      <p class="text-xs text-gray-600 dark:text-gray-400 mt-1" x-text="script.description || 'No description'"></p>
                     </div>
                   </div>
-                </template>
-              </div>
-            </template>
-            <template x-if="activityScripts.length === 0">
-              <div class="text-center text-gray-400 dark:text-gray-500 py-8">
-                <p class="text-sm">No activity scripts available</p>
-              </div>
-            </template>
-          </div>
+                </div>
+              </template>
+            </div>
+          </template>
+          <template x-if="activityScripts.length === 0">
+            <div class="text-center text-gray-400 dark:text-gray-500 py-8">
+              <p class="text-sm">No activity scripts available</p>
+            </div>
+          </template>
+        </div>
 
-          <!-- Agents Sub-tab Content -->
-          <div x-show="activeLibraryTab === 'agents'" class="space-y-2">
-            <template x-if="agents.length > 0">
-              <div class="space-y-2">
-                <template x-for="agent in agents" :key="agent.name">
-                  <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 transition"
-                    :class="{'border-l-4 border-l-purple-500 dark:border-l-purple-400': agent.name === agentName}">
-                    <div class="flex items-start justify-between">
-                      <div class="flex-1">
-                        <div class="flex items-center gap-2">
-                          <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="agent.name"></h4>
-                          <span x-show="agent.name === agentName" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
-                            Active
-                          </span>
-                        </div>
-                        <p class="text-xs text-gray-600 dark:text-gray-400 mt-1" x-text="agent.description || 'No description'"></p>
+        <!-- ========================================
+             AGENTS TAB
+             ======================================== -->
+        <!-- Agents tab -->
+        <div x-show="activeTab === 'agents'" class="p-4 space-y-2">
+          <template x-if="agents.length > 0">
+            <div class="space-y-2">
+              <template x-for="agent in agents" :key="agent.name">
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 transition"
+                  :class="{'border-l-4 border-l-purple-500 dark:border-l-purple-400': agent.name === agentName}">
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2">
+                        <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="agent.name"></h4>
+                        <span x-show="agent.name === agentName" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+                          Active
+                        </span>
                       </div>
+                      <p class="text-xs text-gray-600 dark:text-gray-400 mt-1" x-text="agent.description || 'No description'"></p>
                     </div>
                   </div>
-                </template>
-              </div>
-            </template>
-            <template x-if="agents.length === 0">
-              <div class="text-center text-gray-400 dark:text-gray-500 py-8">
-                <p class="text-sm">No agents available</p>
-              </div>
-            </template>
-          </div>
+                </div>
+              </template>
+            </div>
+          </template>
+          <template x-if="agents.length === 0">
+            <div class="text-center text-gray-400 dark:text-gray-500 py-8">
+              <p class="text-sm">No agents available</p>
+            </div>
+          </template>
         </div>
 
         </div>

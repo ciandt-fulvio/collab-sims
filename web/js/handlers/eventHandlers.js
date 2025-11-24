@@ -207,9 +207,9 @@ export function handlePlanEvent(context, event) {
     // New plan - add it to the array
     context.plans.push(event);
 
-    // Auto-switch to plan tab when a new plan starts (only during live streaming)
-    if (context.isStreaming && context.activeTab !== 'plan') {
-      context.activeTab = 'plan';
+    // Auto-switch to task tab when a new plan starts (only during live streaming)
+    if (context.isStreaming && context.activeTab !== 'task') {
+      context.activeTab = 'task';
     }
   } else {
     // Update to existing plan - replace the current plan

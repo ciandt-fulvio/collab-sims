@@ -39,8 +39,7 @@ export function simsApp() {
 
 
     // UI state
-    activeTab: 'plan',
-    activeLibraryTab: 'project',  // project, activities, or agents
+    activeTab: 'project',
     prompt: '',
     partialText: '',
 
@@ -442,12 +441,6 @@ export function simsApp() {
       } catch (err) {
         console.error('Failed to load library resources:', err);
       }
-    },
-
-    // Select library tab (project, activities, or agents)
-    selectLibraryTab(tab) {
-      this.activeLibraryTab = tab;
-      this.selectedResource = null;  // Clear selection when switching tabs
     },
 
     // Get tool group by ID
