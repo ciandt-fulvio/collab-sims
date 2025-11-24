@@ -208,4 +208,13 @@ sessions_data/
 *.old
 
 # SQLData
-data/
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+data/activity_results/
+
+# Allow MD configuration files
+!data/projects/*.md
+!data/project_types/*.md
+!data/activity_scripts/*.md
+!data/agents/*.md

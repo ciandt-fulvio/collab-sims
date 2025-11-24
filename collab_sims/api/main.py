@@ -17,6 +17,7 @@ from .middleware import setup_cors
 from .routes import (
     approvals_router,
     execute_router,
+    library_router,
     sessions_router,
 )
 
@@ -49,6 +50,7 @@ setup_cors(app)
 app.include_router(execute_router)           # Single-turn execution
 app.include_router(sessions_router)          # Multi-turn sessions
 app.include_router(approvals_router)         # Approval workflow
+app.include_router(library_router)           # Library (projects, types, scripts, agents)
 
 
 @app.get("/")

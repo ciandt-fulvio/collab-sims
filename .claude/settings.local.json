@@ -11,7 +11,10 @@
       "Bash(bash:*)",
       "Bash(pkill:*)",
       "Bash(/tmp/test_session_resume_ui.sh:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Read:**",
+      "Write:**",
+      "Edit:**"
     ],
     "deny": [],
     "ask": []
