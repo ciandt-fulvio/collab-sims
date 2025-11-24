@@ -58,6 +58,20 @@ export function simsApp() {
     editedProjectContent: '',// Edited project content (buffer)
     isSavingProject: false,  // Saving state
 
+    // Activities state
+    selectedActivity: null,  // Currently selected activity for viewing/editing
+    activityContent: '',     // Current activity markdown content
+    isEditingActivity: false,// Edit mode for activity
+    editedActivityContent: '',// Edited activity content (buffer)
+    isSavingActivity: false, // Saving state
+
+    // Agents state
+    selectedAgent: null,     // Currently selected agent for viewing
+    agentContent: '',        // Current agent markdown content
+    isEditingAgent: false,   // Edit mode for agent
+    editedAgentContent: '',  // Edited agent content (buffer)
+    isSavingAgent: false,    // Saving state
+
     // Component composition
     ...metricsPanel(),
     ...planPanel(),
@@ -495,6 +509,114 @@ export function simsApp() {
         alert('Failed to save project: ' + err.message);
       } finally {
         this.isSavingProject = false;
+      }
+    },
+
+    // Select and load activity content
+    async selectActivity(activityName) {
+      this.selectedActivity = activityName;
+      this.isEditingActivity = false;
+
+      try {
+        const response = await this.api.getActivityScript(activityName);
+        this.activityContent = response.content || '';
+      } catch (err) {
+        console.error('Failed to load activity content:', err);
+        this.activityContent = '';
+      }
+    },
+
+    // Clear activity selection
+    clearActivitySelection() {
+      this.selectedActivity = null;
+      this.activityContent = '';
+      this.isEditingActivity = false;
+    },
+
+    // Enter edit mode for activity
+    editActivity() {
+      this.editedActivityContent = this.activityContent;
+      this.isEditingActivity = true;
+    },
+
+    // Cancel edit mode for activity
+    cancelEditActivity() {
+      this.isEditingActivity = false;
+      this.editedActivityContent = '';
+    },
+
+    // Save activity content
+    async saveActivity() {
+      if (!this.selectedActivity) {
+        console.warn('No activity selected');
+        return;
+      }
+
+      this.isSavingActivity = true;
+      try {
+        await this.api.updateActivityScript(this.selectedActivity, this.editedActivityContent);
+        this.activityContent = this.editedActivityContent;
+        this.isEditingActivity = false;
+        console.log('Activity saved successfully');
+      } catch (err) {
+        console.error('Failed to save activity:', err);
+        alert('Failed to save activity: ' + err.message);
+      } finally {
+        this.isSavingActivity = false;
+      }
+    },
+
+    // Select and load agent content
+    async selectAgent(agentName) {
+      this.selectedAgent = agentName;
+      this.isEditingAgent = false;
+
+      try {
+        const response = await this.api.getAgent(agentName);
+        this.agentContent = response.content || '';
+      } catch (err) {
+        console.error('Failed to load agent content:', err);
+        this.agentContent = '';
+      }
+    },
+
+    // Clear agent selection
+    clearAgentSelection() {
+      this.selectedAgent = null;
+      this.agentContent = '';
+      this.isEditingAgent = false;
+    },
+
+    // Enter edit mode for agent
+    editAgent() {
+      this.editedAgentContent = this.agentContent;
+      this.isEditingAgent = true;
+    },
+
+    // Cancel edit mode for agent
+    cancelEditAgent() {
+      this.isEditingAgent = false;
+      this.editedAgentContent = '';
+    },
+
+    // Save agent content
+    async saveAgent() {
+      if (!this.selectedAgent) {
+        console.warn('No agent selected');
+        return;
+      }
+
+      this.isSavingAgent = true;
+      try {
+        await this.api.updateAgent(this.selectedAgent, this.editedAgentContent);
+        this.agentContent = this.editedAgentContent;
+        this.isEditingAgent = false;
+        console.log('Agent saved successfully');
+      } catch (err) {
+        console.error('Failed to save agent:', err);
+        alert('Failed to save agent: ' + err.message);
+      } finally {
+        this.isSavingAgent = false;
       }
     },
 
