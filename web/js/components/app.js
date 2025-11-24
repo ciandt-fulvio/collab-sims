@@ -3,10 +3,10 @@
  * Refactored to use modular imports for maintainability
  */
 
-import { SimsAPI } from '../services/api.js?v=4';
-import { formatToolInput, formatToolOutput } from '../utils/toolFormatters.js?v=4';
-import { escapeHtml, renderMarkdown, getEventSummary } from '../utils/rendering.js?v=4';
-import { dispatchEvent } from '../handlers/eventHandlers.js?v=4';
+import { SimsAPI } from '../services/api.js?v=6';
+import { formatToolInput, formatToolOutput } from '../utils/toolFormatters.js?v=6';
+import { escapeHtml, renderMarkdown, getEventSummary } from '../utils/rendering.js?v=6';
+import { dispatchEvent } from '../handlers/eventHandlers.js?v=6';
 import {
   getCurrentToolGroup,
   getToolGroup
@@ -140,6 +140,7 @@ export function simsApp() {
         this.currentToolGroupId = null;
         this.seenMessages.clear();
         this.seenEventIds.clear();
+        this.sessionNameCaptured = false;  // Reset for new session
 
         // Reset metrics
         this.metrics = {
@@ -168,6 +169,11 @@ export function simsApp() {
         const session = await this.api.getSession(sessionId);
         this.projectName = session.project_name || null;
         this.agentName = session.agent_name || null;
+        this.sessionName = session.session_name || null;  // Load existing session name
+        // If session already has a name, mark as captured to prevent overwrite
+        if (this.sessionName) {
+          this.sessionNameCaptured = true;
+        }
         console.log('🟢 Session loaded:', session);
 
         // Load library resources for MD viewer tabs

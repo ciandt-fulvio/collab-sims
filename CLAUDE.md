@@ -85,4 +85,4 @@ Veja [README.md](README.md) para comandos completos.
 
 - Sempre que vc fizer um plano, guarde ele de forma que eu possa consultar depois. de um nome, uma descrição curta, dia e hora, depois o plano em si
 - Sempre que for fazer um commit, rode o ruff fix
-- A cada 3~4 commits, faca um teste de integracao
+- A cada 30 minutos, faca um teste de integracao
