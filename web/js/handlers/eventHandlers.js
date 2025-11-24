@@ -38,6 +38,18 @@ export function handleQueryEvent(context, event) {
     context.addMessage('user', event.prompt, null, event.timestamp, event.event_id);
   }
 
+  // Capture first message for session name (only once, only during live streaming)
+  if (event.prompt && context.isStreaming && !context.sessionNameCaptured && context.messages.length <= 1) {
+    const sessionName = event.prompt.substring(0, 30).trim();
+    context.api.updateSessionName(context.sessionId, sessionName)
+      .then(() => {
+        context.sessionName = sessionName;
+        context.sessionNameCaptured = true;
+        console.log('Session name updated:', sessionName);
+      })
+      .catch(err => console.error('Failed to update session name:', err));
+  }
+
   // Reset current query token estimates when starting new query
   context.currentQueryInputTokens = 0;
   context.currentQueryOutputTokens = 0;

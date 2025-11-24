@@ -26,6 +26,8 @@ export function simsApp() {
     sessionId: null,
     projectName: null,  // project name for this session
     agentName: null,    // agent name if specified
+    sessionName: null,  // session name (from first message)
+    sessionNameCaptured: false,  // flag to capture only once
     isStreaming: false,
     isInitializing: true,
     _initCalled: false,  // Guard flag to prevent double initialization
