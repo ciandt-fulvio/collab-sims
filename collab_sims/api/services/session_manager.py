@@ -102,13 +102,19 @@ class SessionManager:
             for session_data in active_sessions:
                 session_id = session_data["session_id"]
                 try:
-                    # Extract metadata and config
-                    metadata = session_data.get("metadata", {})
-                    session_type = metadata.get("session_type", "worker")
+                    # Extract fields from database
+                    project_name = session_data.get("project_name")
+                    if not project_name:
+                        logger.warning(f"   ⚠️  Session {session_id} has no project_name, skipping restore")
+                        continue
+
+                    agent_name = session_data.get("agent_name")
+                    session_name = session_data.get("session_name")
                     user_id = session_data.get("user_id")
+                    metadata = session_data.get("metadata", {})
 
                     # Create session config from stored metadata
-                    config_dict = {k: v for k, v in metadata.items() if k != "session_type"}
+                    config_dict = {k: v for k, v in metadata.items()}
                     if user_id:
                         config_dict["user_id"] = user_id
 
@@ -117,6 +123,8 @@ class SessionManager:
 
                     # Create session configuration
                     session_config = SessionConfig(
+                        project_name=project_name,
+                        agent_name=agent_name,
                         include_partial_messages=config_dict.get("include_partial_messages", True),
                         user_id=user_id,
                     )
@@ -143,6 +151,9 @@ class SessionManager:
                     # Store session data in memory
                     self._sessions[session_id] = {
                         "session_id": session_id,
+                        "project_name": project_name,
+                        "agent_name": agent_name,
+                        "session_name": session_name,
                         "tracker": stream_tracker,
                         "claude_session": claude_session,
                         "config": config_dict,
@@ -153,7 +164,6 @@ class SessionManager:
                         "execution_state": "idle",
                         "current_query_id": None,
                         "query_count": query_count,
-                        "session_type": session_type,
                     }
 
                     restored_count += 1
@@ -205,15 +215,17 @@ class SessionManager:
 
     async def create_session(
         self,
-        config: dict[str, Any] | None = None,
-        session_type: str = "worker"
+        project_name: str,
+        agent_name: str | None = None,
+        config: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """
         Create a new multi-turn session.
 
         Args:
+            project_name: Project name (references MD file in data/projects/) - REQUIRED
+            agent_name: Agent persona to use (references MD file in data/agents/)
             config: Optional session configuration
-            session_type: Type of session (worker/scout)
 
         Returns:
             Session metadata
@@ -228,19 +240,21 @@ class SessionManager:
         # Create trackers for this session
         stream_tracker = StreamTracker()
 
-        # Create session in database
+        # Create session in database with project_name and agent_name
         await self.db_tracker.repository.create_session(
             session_id=session_id,
+            project_name=project_name,
+            agent_name=agent_name,
+            session_name=None,  # Will be auto-generated from first prompt
             user_id=config.get("user_id") if config else None,
             created_at=created_at,
-            metadata={
-                **(config or {}),
-                "session_type": session_type
-            }
+            metadata=config or {}
         )
 
         # Create CollabSimsSession for real Claude integration
         session_config = SessionConfig(
+            project_name=project_name,
+            agent_name=agent_name,
             include_partial_messages=config.get("include_partial_messages", True) if config else True,
             user_id=config.get("user_id") if config else None,
         )
@@ -264,6 +278,9 @@ class SessionManager:
         # Store session data in memory
         self._sessions[session_id] = {
             "session_id": session_id,
+            "project_name": project_name,
+            "agent_name": agent_name,
+            "session_name": None,  # Will be set on first query
             "tracker": stream_tracker,
             "claude_session": claude_session,  # Store the real session
             "config": config or {},
@@ -272,10 +289,9 @@ class SessionManager:
             "execution_state": "idle",  # Query execution state: "idle" | "executing"
             "current_query_id": None,  # ID of currently executing query (if any)
             "query_count": 0,
-            "session_type": session_type,
         }
 
-        logger.info(f"Created session {session_id} (type: {session_type}) with real Claude SDK")
+        logger.info(f"Created session {session_id} for project '{project_name}' with agent '{agent_name or 'default'}'")
 
         return self._get_session_metadata(session_id)
 
@@ -326,6 +342,17 @@ class SessionManager:
         claude_session: CollabSimsSession = session_data["claude_session"]
 
         try:
+            # Auto-generate session_name from first prompt (first 50 chars)
+            if session_data["session_name"] is None and session_data["query_count"] == 0:
+                session_name = prompt[:50].strip()
+                session_data["session_name"] = session_name
+                # Save to database
+                await self.db_tracker.repository.update_session_name(
+                    session_id=session_id,
+                    session_name=session_name
+                )
+                logger.debug(f"Auto-generated session_name for {session_id}: {session_name}")
+
             # Execute real query using Claude SDK and collect all events
             events = []
             async for event in claude_session.query(prompt):

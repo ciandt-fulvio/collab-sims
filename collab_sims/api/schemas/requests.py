@@ -26,14 +26,25 @@ class ExecuteRequest(BaseModel):
 
 
 class SessionCreateRequest(BaseModel):
-    """Request to create a new multi-turn session with optional approval configuration.
+    """Request to create a new multi-turn session for a project.
 
-    The config field accepts:
-    - user_id (str): User identifier for tracking
-    - tags (list): Tags for categorization
-    - metadata (dict): Arbitrary metadata
-    - approval_config (ApprovalConfig): Tool approval settings
+    Required:
+    - project_name: Name of the project (references MD file in data/projects/)
+
+    Optional:
+    - agent_name: Agent persona to use (references MD file in data/agents/)
+    - config: Additional session configuration (user_id, tags, approval_config, etc.)
     """
+
+    project_name: str = Field(
+        ...,
+        description="Project name (required) - references MD file in data/projects/"
+    )
+
+    agent_name: str | None = Field(
+        default=None,
+        description="Agent persona to use (optional) - references MD file in data/agents/"
+    )
 
     config: dict[str, Any] | None = Field(
         default=None,
@@ -46,15 +57,12 @@ class SessionCreateRequest(BaseModel):
         )
     )
 
-    session_type: str = Field(
-        default="worker",
-        description="Type of session: 'worker' or 'scout'"
-    )
-
     model_config = {
         "json_schema_extra": {
             "examples": [
                 {
+                    "project_name": "design-sprint-q1",
+                    "agent_name": "facilitator",
                     "config": {
                         "user_id": "user123",
                         "tags": ["production"],
@@ -69,6 +77,8 @@ class SessionCreateRequest(BaseModel):
                     }
                 },
                 {
+                    "project_name": "research-ux",
+                    "agent_name": "researcher",
                     "config": {
                         "user_id": "user456",
                         "approval_config": {

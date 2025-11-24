@@ -21,21 +21,25 @@ router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 @router.post("", response_model=SessionResponse, status_code=201)
 async def create_session(request: SessionCreateRequest):
     """
-    Create a new multi-turn conversation session.
+    Create a new multi-turn conversation session for a project.
 
     The session maintains context across multiple queries,
     allowing Claude to remember previous interactions.
+
+    Required: project_name
+    Optional: agent_name, config
     """
     import logging
     logger = logging.getLogger(__name__)
-    logger.warning(f"🔵 create_session endpoint called with config: {request.config}")
+    logger.info(f"🔵 create_session endpoint called for project '{request.project_name}' with agent '{request.agent_name}'")
 
     try:
         session_data = await session_manager.create_session(
-            config=request.config,
-            session_type=request.session_type
+            project_name=request.project_name,
+            agent_name=request.agent_name,
+            config=request.config
         )
-        logger.warning(f"🟢 create_session completed: {session_data['session_id']} (type: {request.session_type})")
+        logger.info(f"🟢 create_session completed: {session_data['session_id']} for project '{request.project_name}'")
         return SessionResponse(**session_data)
     except Exception as e:
         logger.error(f"🔴 create_session failed: {e}")

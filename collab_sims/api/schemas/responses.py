@@ -25,6 +25,9 @@ class SessionResponse(BaseModel):
     """Information about a session"""
 
     session_id: str = Field(..., description="Unique session identifier")
+    project_name: str = Field(..., description="Project name")
+    agent_name: str | None = Field(default=None, description="Agent persona used")
+    session_name: str | None = Field(default=None, description="Session name (auto-generated from first prompt)")
     created_at: str = Field(..., description="ISO formatted creation timestamp")
     config: dict[str, Any] = Field(default_factory=dict, description="Session configuration")
     status: str = Field(..., description="Session status (active, closed)")
