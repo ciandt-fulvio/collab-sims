@@ -32,7 +32,7 @@ class TestBashCommandExecution:
         """
         agent = CollabSims()
         session = await agent.create_session(
-            SessionConfig(working_dir=str(temp_work_dir))
+            SessionConfig(project_name="test-project", working_dir=str(temp_work_dir))
         )
 
         events = []
@@ -72,7 +72,7 @@ class TestBashCommandExecution:
 
         agent = CollabSims()
         session = await agent.create_session(
-            SessionConfig(working_dir=str(temp_work_dir))
+            SessionConfig(project_name="test-project", working_dir=str(temp_work_dir))
         )
 
         events = []
@@ -105,7 +105,7 @@ class TestBashCommandExecution:
         """
         agent = CollabSims()
         session = await agent.create_session(
-            SessionConfig(working_dir=str(temp_work_dir))
+            SessionConfig(project_name="test-project", working_dir=str(temp_work_dir))
         )
 
         test_message = "HelloFromCollabSims123"
@@ -139,7 +139,7 @@ class TestBashCommandExecution:
         """
         agent = CollabSims()
         session = await agent.create_session(
-            SessionConfig(working_dir=str(temp_work_dir))
+            SessionConfig(project_name="test-project", working_dir=str(temp_work_dir))
         )
 
         filename = "test_created_file.txt"
@@ -170,7 +170,7 @@ class TestBashCommandExecution:
         """
         agent = CollabSims()
         session = await agent.create_session(
-            SessionConfig(working_dir=str(temp_work_dir))
+            SessionConfig(project_name="test-project", working_dir=str(temp_work_dir))
         )
 
         events = []
@@ -204,7 +204,7 @@ class TestBashCommandToolEvents:
         """Test that bash command generates ToolUseEvent."""
         agent = CollabSims()
         session = await agent.create_session(
-            SessionConfig(working_dir=str(temp_work_dir))
+            SessionConfig(project_name="test-project", working_dir=str(temp_work_dir))
         )
 
         events = []
@@ -233,7 +233,7 @@ class TestBashCommandToolEvents:
         """Test that bash command generates ToolResultEvent."""
         agent = CollabSims()
         session = await agent.create_session(
-            SessionConfig(working_dir=str(temp_work_dir))
+            SessionConfig(project_name="test-project", working_dir=str(temp_work_dir))
         )
 
         events = []

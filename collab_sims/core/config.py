@@ -75,7 +75,7 @@ class SessionConfig:
         ... )
     """
 
-    project_name: str  # REQUIRED
+    project_name: str = "default-project"  # Required for API, default for simple usage
     agent_name: str | None = None
     user_id: str | None = None
     tags: list[str] = field(default_factory=list)

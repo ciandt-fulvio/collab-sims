@@ -83,7 +83,7 @@ class TestAgentSessionManagement:
         """Test creating a session with Claude SDK."""
         agent = CollabSims()
         session = await agent.create_session(
-            SessionConfig(user_id="test-user")
+            SessionConfig(project_name="test-project", user_id="test-user")
         )
 
         assert session is not None
@@ -96,7 +96,7 @@ class TestAgentSessionManagement:
     async def test_session_query_generates_events(self):
         """Test that session queries generate proper events."""
         agent = CollabSims()
-        session = await agent.create_session()
+        session = await agent.create_session(SessionConfig(project_name="test-project"))
 
         events = []
         async for event in session.query("Say hello"):
@@ -115,7 +115,7 @@ class TestAgentSessionManagement:
         """Test using session as async context manager."""
         agent = CollabSims()
 
-        async with await agent.create_session() as session:
+        async with await agent.create_session(SessionConfig(project_name="test-project")) as session:
             events = []
             async for event in session.query("Hello"):
                 events.append(event)
@@ -140,7 +140,7 @@ class TestAgentBashIntegration:
         """
         agent = CollabSims()
         session = await agent.create_session(
-            SessionConfig(working_dir=str(temp_work_dir))
+            SessionConfig(project_name="test-project", working_dir=str(temp_work_dir))
         )
 
         events = []
@@ -176,7 +176,7 @@ class TestAgentBashIntegration:
 
         agent = CollabSims()
         session = await agent.create_session(
-            SessionConfig(working_dir=str(temp_work_dir))
+            SessionConfig(project_name="test-project", working_dir=str(temp_work_dir))
         )
 
         events = []
@@ -216,7 +216,7 @@ class TestAgentEventStreaming:
     async def test_events_stream_in_real_time(self):
         """Test that events are yielded as they occur, not buffered."""
         agent = CollabSims()
-        session = await agent.create_session()
+        session = await agent.create_session(SessionConfig(project_name="test-project"))
 
         event_count = 0
         first_event_received = False
@@ -249,7 +249,7 @@ class TestAgentErrorHandling:
         # The agent should handle this by creating it or raising a clear error
         try:
             session = await agent.create_session(
-                SessionConfig(working_dir="/tmp/collab-sims-test-nonexistent-" + str(os.getpid()))
+                SessionConfig(project_name="test-project", working_dir="/tmp/collab-sims-test-nonexistent-" + str(os.getpid()))
             )
 
             # If successful, should be connected

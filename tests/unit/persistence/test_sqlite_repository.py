@@ -75,7 +75,7 @@ class TestSQLiteRepositorySessionOperations:
         user_id = "user-456"
         created_at = datetime.now()
 
-        await repo.create_session(session_id, user_id, created_at)
+        await repo.create_session(session_id, user_id, created_at, project_name="test-project")
 
         # Verify session was created
         session = await repo.get_session(session_id)
@@ -91,7 +91,7 @@ class TestSQLiteRepositorySessionOperations:
         metadata = {"role": "worker", "tags": ["dev", "test"]}
         created_at = datetime.now()
 
-        await repo.create_session(session_id, None, created_at, metadata)
+        await repo.create_session(session_id, None, created_at, project_name="test-project", metadata=metadata)
 
         session = await repo.get_session(session_id)
         assert session["metadata"] == metadata
@@ -99,7 +99,7 @@ class TestSQLiteRepositorySessionOperations:
     async def test_update_session_status(self, repo):
         """Test updating session status."""
         session_id = "test-session-789"
-        await repo.create_session(session_id, None, datetime.now())
+        await repo.create_session(session_id, None, datetime.now(), project_name="test-project")
 
         # Update status
         await repo.update_session(session_id, status="closed")
@@ -110,7 +110,7 @@ class TestSQLiteRepositorySessionOperations:
     async def test_update_session_query_count(self, repo):
         """Test updating session query count."""
         session_id = "test-session-101"
-        await repo.create_session(session_id, None, datetime.now())
+        await repo.create_session(session_id, None, datetime.now(), project_name="test-project")
 
         await repo.update_session(session_id, query_count=5)
 
@@ -120,7 +120,7 @@ class TestSQLiteRepositorySessionOperations:
     async def test_update_session_closed_at(self, repo):
         """Test updating session closed_at timestamp."""
         session_id = "test-session-102"
-        await repo.create_session(session_id, None, datetime.now())
+        await repo.create_session(session_id, None, datetime.now(), project_name="test-project")
 
         closed_at = datetime.now()
         await repo.update_session(session_id, closed_at=closed_at)
@@ -136,7 +136,7 @@ class TestSQLiteRepositorySessionOperations:
     async def test_delete_session(self, repo):
         """Test deleting a session."""
         session_id = "test-session-delete"
-        await repo.create_session(session_id, None, datetime.now())
+        await repo.create_session(session_id, None, datetime.now(), project_name="test-project")
 
         await repo.delete_session(session_id)
 
@@ -163,7 +163,7 @@ class TestSQLiteRepositorySessionListing:
         ]
 
         for session_id, user_id, status, created_at in sessions:
-            await repo.create_session(session_id, user_id, created_at)
+            await repo.create_session(session_id, user_id, created_at, project_name="test-project")
             if status != "active":
                 await repo.update_session(session_id, status=status)
 
@@ -223,7 +223,7 @@ class TestSQLiteRepositoryEventOperations:
         await repo.initialize()
 
         # Create test session
-        await repo.create_session("test-session", "user-1", datetime.now())
+        await repo.create_session("test-session", "user-1", datetime.now(), project_name="test-project")
 
         yield repo
         await repo.close()
@@ -366,7 +366,7 @@ class TestSQLiteRepositoryCascadeDeletion:
         """Test that deleting session also deletes its events."""
         # Create session and add events
         session_id = "test-cascade"
-        await repo.create_session(session_id, None, datetime.now())
+        await repo.create_session(session_id, None, datetime.now(), project_name="test-project")
 
         timestamp = datetime.now()
         for i in range(3):

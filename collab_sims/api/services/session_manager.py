@@ -114,7 +114,7 @@ class SessionManager:
                     metadata = session_data.get("metadata", {})
 
                     # Create session config from stored metadata
-                    config_dict = {k: v for k, v in metadata.items()}
+                    config_dict = dict(metadata)
                     if user_id:
                         config_dict["user_id"] = user_id
 

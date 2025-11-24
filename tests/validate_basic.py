@@ -41,6 +41,7 @@ async def test_sqlite_persistence():
             session_id=session_id,
             user_id="test-user",
             created_at=datetime.now(),
+            project_name="test-project",
             metadata={"test": "data"}
         )
 
