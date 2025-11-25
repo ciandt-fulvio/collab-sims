@@ -571,10 +571,10 @@ export function simsApp() {
       alert(`View result: ${execution.filename}\n\nPath: ${execution.path}\n\nThis will open in a modal viewer (future enhancement)`);
     },
 
-    // View agent details (placeholder for future modal)
+    // View agent details using document modal
     viewAgentDetails(agent) {
       console.log('View agent details:', agent.name);
-      alert(`Agent: ${agent.name}\n\nDescription: ${agent.description || 'No description'}\n\nThis will open in a modal viewer (future enhancement)`);
+      this.openDocument('agent', agent.name);
     },
 
     // Get tool group by ID
