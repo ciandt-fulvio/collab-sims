@@ -487,12 +487,6 @@ export function simsApp() {
       try {
         const response = await this.api.getProjectProcessProgress(this.projectName);
         this.processProgress = response;
-        // Auto-expand first stage
-        if (response?.stages?.length > 0) {
-          this.expandedStages.add(response.stages[0].id);
-          // Force reactivity
-          this.expandedStages = new Set(this.expandedStages);
-        }
       } catch (err) {
         console.error('Failed to load process progress:', err);
         this.processProgress = null;
