@@ -24,7 +24,8 @@ export function simsApp() {
 
     // Session state
     sessionId: null,
-    projectName: null,  // project name for this session
+    projectName: null,  // project name (ID) for this session
+    projectTitle: null,  // project title (display name) from project metadata
     projectType: null,  // project type (loaded from project metadata)
     agentName: null,    // agent name if specified
     sessionName: null,  // session name (from first message)
@@ -168,13 +169,15 @@ export function simsApp() {
         this.agentName = session.agent_name || null;
         this.sessionName = session.session_name || null;  // Load existing session name
 
-        // Load project type if project name exists
+        // Load project metadata if project name exists
         if (this.projectName) {
           try {
             const projectData = await this.api.getProject(this.projectName);
+            this.projectTitle = projectData.title || null;
             this.projectType = projectData.type || null;
           } catch (e) {
-            console.warn('Failed to load project type:', e);
+            console.warn('Failed to load project metadata:', e);
+            this.projectTitle = null;
             this.projectType = null;
           }
         }
