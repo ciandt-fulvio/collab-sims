@@ -5,14 +5,14 @@ from pydantic import BaseModel
 
 from collab_sims.core.loaders.activity_script_loader import ActivityScriptLoader
 from collab_sims.core.loaders.agent_loader import AgentLoader
+from collab_sims.core.loaders.process_type_loader import ProcessTypeLoader
 from collab_sims.core.loaders.project_loader import ProjectLoader
-from collab_sims.core.loaders.project_type_loader import ProjectTypeLoader
 
 router = APIRouter(prefix="/api/library", tags=["library"])
 
 # Initialize loaders
 project_loader = ProjectLoader()
-project_type_loader = ProjectTypeLoader()
+process_type_loader = ProcessTypeLoader()
 activity_script_loader = ActivityScriptLoader()
 agent_loader = AgentLoader()
 
@@ -122,46 +122,41 @@ async def update_project(name: str, request: ProjectUpdateRequest):
     return {"message": "Project updated successfully", "name": name}
 
 
-# ===== Project Types =====
+# ===== Process Types =====
 
 
-@router.get("/project-types")
-async def list_project_types():
-    """List all available project types.
+@router.get("/process-types")
+async def list_process_types():
+    """List all available process types.
 
     Returns:
-        List of project type metadata dictionaries
+        List of process type metadata dictionaries
     """
-    types = project_type_loader.list_project_types()
-    return {"project_types": types, "count": len(types)}
+    types = process_type_loader.list_process_types()
+    return {"process_types": types, "count": len(types)}
 
 
-@router.get("/project-types/{name}")
-async def get_project_type(name: str):
-    """Get a specific project type by name.
+@router.get("/process-types/{process_type_id}")
+async def get_process_type(process_type_id: str):
+    """Get a specific process type by ID.
 
     Args:
-        name: Project type name (without .md extension)
+        process_type_id: Process type ID (without .yaml extension)
 
     Returns:
-        Project type metadata and full content
+        Process type data with stages and activities
 
     Raises:
-        HTTPException: If project type not found
+        HTTPException: If process type not found
     """
-    doc = project_type_loader.get_project_type(name)
+    data = process_type_loader.get_process_type(process_type_id)
 
-    if doc is None:
+    if data is None:
         raise HTTPException(
-            status_code=404, detail=f"Project type '{name}' not found"
+            status_code=404, detail=f"Process type '{process_type_id}' not found"
         )
 
-    return {
-        "name": name,
-        "frontmatter": doc.frontmatter,
-        "content": doc.content,
-        "raw_content": doc.raw_content,
-    }
+    return data
 
 
 # ===== Activity Scripts =====

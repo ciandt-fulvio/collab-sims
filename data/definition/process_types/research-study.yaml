@@ -1,0 +1,59 @@
+id: research-study
+title: "Research Study"
+summary: "Structured process for conducting user research and generating insights."
+
+agents:
+  - agents/researcher.md
+  - agents/facilitator.md
+
+stages:
+  - id: stage-planning
+    title: "Planning"
+    description: "Define research objectives and methodology."
+
+    activities:
+      - id: activity-research-plan
+        title: "Research Plan"
+        required: true
+        path: activity_scripts/how-might-we.md
+        description: "Define research questions and methodology."
+
+        definition_of_done:
+          - "Research objectives clearly defined."
+          - "Target audience identified."
+          - "Methodology selected (interviews, surveys, etc.)."
+          - "Timeline and resources planned."
+
+  - id: stage-research
+    title: "Research"
+    description: "Conduct research activities and collect data."
+
+    activities:
+      - id: activity-data-collection
+        title: "Data Collection"
+        required: true
+        path: activity_scripts/design-criteria.md
+        description: "Execute research plan and gather insights."
+
+        definition_of_done:
+          - "Participant recruitment completed."
+          - "Research sessions conducted."
+          - "Raw data documented."
+          - "Key observations noted."
+
+  - id: stage-analysis
+    title: "Analysis"
+    description: "Analyze data and synthesize findings."
+
+    activities:
+      - id: activity-synthesis
+        title: "Synthesis"
+        required: true
+        path: activity_scripts/prototyping.md
+        description: "Analyze data and generate actionable insights."
+
+        definition_of_done:
+          - "Data analyzed and patterns identified."
+          - "Key insights documented."
+          - "Recommendations formulated."
+          - "Findings report created."

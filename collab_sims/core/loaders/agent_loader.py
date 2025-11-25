@@ -11,7 +11,7 @@ from collab_sims.core.loaders.md_parser import (
 class AgentLoader:
     """Loader for agent markdown files."""
 
-    def __init__(self, base_path: str | Path = "data/agents"):
+    def __init__(self, base_path: str | Path = "data/definition/agents"):
         """Initialize the agent loader.
 
         Args:

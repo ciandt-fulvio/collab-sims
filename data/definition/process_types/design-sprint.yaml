@@ -1,0 +1,59 @@
+id: design-sprint
+title: "Design Sprint"
+summary: "5-day process for solving problems through design, prototyping and testing with users."
+
+agents:
+  - agents/facilitator.md
+  - agents/andre-dev-resistente.md
+  - agents/researcher.md
+
+stages:
+  - id: stage-understand
+    title: "Understand"
+    description: "Map the problem space and gather existing knowledge."
+
+    activities:
+      - id: activity-hmw
+        title: "How Might We"
+        required: true
+        path: activity_scripts/how-might-we.md
+        description: "Transform problems into opportunities using HMW questions."
+
+        definition_of_done:
+          - "Key problems identified and documented."
+          - "HMW questions generated for each problem."
+          - "Top 3-5 HMW questions prioritized."
+
+  - id: stage-diverge
+    title: "Diverge"
+    description: "Generate multiple solutions and ideas."
+
+    activities:
+      - id: activity-design-criteria
+        title: "Design Criteria"
+        required: true
+        path: activity_scripts/design-criteria.md
+        description: "Define MUST, SHOULD, and DON'T criteria for solutions."
+
+        definition_of_done:
+          - "MUST criteria defined (1-10 items)."
+          - "SHOULD criteria defined (0-5 items)."
+          - "DON'T criteria defined (1-5 items)."
+          - "Team consensus on criteria priorities."
+
+  - id: stage-prototype
+    title: "Prototype"
+    description: "Build a realistic prototype to test."
+
+    activities:
+      - id: activity-prototyping
+        title: "Prototyping"
+        required: true
+        path: activity_scripts/prototyping.md
+        description: "Create a testable prototype in one day."
+
+        definition_of_done:
+          - "Prototype scope defined."
+          - "Key hypotheses to test identified."
+          - "Interactive prototype built."
+          - "Testing script prepared."

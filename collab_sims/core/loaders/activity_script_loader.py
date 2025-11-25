@@ -11,7 +11,7 @@ from collab_sims.core.loaders.md_parser import (
 class ActivityScriptLoader:
     """Loader for activity script markdown files."""
 
-    def __init__(self, base_path: str | Path = "data/activity_scripts"):
+    def __init__(self, base_path: str | Path = "data/definition/activity_scripts"):
         """Initialize the activity script loader.
 
         Args:

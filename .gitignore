@@ -211,10 +211,14 @@ sessions_data/
 data/*.db
 data/*.sqlite
 data/*.sqlite3
-data/activity_results/
 
-# Allow MD configuration files
-!data/projects/*.md
-!data/project_types/*.md
-!data/activity_scripts/*.md
-!data/agents/*.md
+# Execution results (generated at runtime)
+data/execution/activity_results/
+
+# Allow definition files (tracked in git)
+!data/definition/process_types/*.yaml
+!data/definition/activity_scripts/*.md
+!data/definition/agents/*.md
+
+# Allow project files (tracked in git)
+!data/execution/projects/*.md

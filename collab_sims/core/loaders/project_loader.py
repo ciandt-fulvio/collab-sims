@@ -11,7 +11,7 @@ from collab_sims.core.loaders.md_parser import (
 class ProjectLoader:
     """Loader for project markdown files."""
 
-    def __init__(self, base_path: str | Path = "data/projects"):
+    def __init__(self, base_path: str | Path = "data/execution/projects"):
         """Initialize the project loader.
 
         Args:
