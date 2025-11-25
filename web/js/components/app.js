@@ -20,6 +20,11 @@ import { approvalsPanel } from './chat/approvalsPanel.js?v=12';
 // Template imports
 import { documentModalTemplate } from './chat/tabs/documentModal.js?v=1';
 import { metricsPanelTemplate } from './chat/tabs/metricsPanelTemplate.js?v=1';
+import { eventsTabTemplate } from './chat/tabs/eventsTab.js?v=1';
+import { activitiesTabTemplate } from './chat/tabs/activitiesTab.js?v=1';
+import { taskTabTemplate } from './chat/tabs/taskTab.js?v=1';
+import { projectTabTemplate } from './chat/tabs/projectTab.js?v=1';
+import { agentsTabTemplate } from './chat/tabs/agentsTab.js?v=1';
 
 export function simsApp() {
   return {
@@ -80,6 +85,11 @@ export function simsApp() {
     // Template functions
     documentModalTemplate,
     metricsPanelTemplate,
+    eventsTabTemplate,
+    activitiesTabTemplate,
+    taskTabTemplate,
+    projectTabTemplate,
+    agentsTabTemplate,
 
     // Track seen message events to prevent duplicates
     seenMessages: new Set(),
