@@ -434,6 +434,34 @@ export class SimsAPI {
     return await response.json();
   }
 
+  async updateDefinitionOfDone(projectName, stageId, activityId, itemIndex, checked, expectedLastModified) {
+    const response = await fetch(`${this.baseURL}/api/library/projects/${projectName}/dod`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        stage_id: stageId,
+        activity_id: activityId,
+        item_index: itemIndex,
+        checked: checked,
+        expected_last_modified: expectedLastModified,
+      }),
+    });
+
+    if (response.status === 409) {
+      const error = new Error('CONFLICT: Project modified by another user');
+      error.status = 409;
+      throw error;
+    }
+
+    if (!response.ok) {
+      throw new Error(`Failed to update DoD: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
   // ===== Document API Methods =====
 
   async loadDocument(docType, docName, projectName = null) {
