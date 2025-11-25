@@ -167,6 +167,9 @@ class SQLiteRepository(SessionRepository):
             query += " AND project_name = ?"
             params.append(project_name)
 
+        # Exclude sessions with 0 queries (created but never used)
+        query += " AND query_count > 0"
+
         query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
         params.extend([limit, offset])
 

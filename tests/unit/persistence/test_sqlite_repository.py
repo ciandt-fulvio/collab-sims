@@ -164,6 +164,8 @@ class TestSQLiteRepositorySessionListing:
 
         for session_id, user_id, status, created_at in sessions:
             await repo.create_session(session_id, user_id, created_at, project_name="test-project")
+            # Add at least 1 query to each session so they pass the query_count > 0 filter
+            await repo.update_session(session_id, query_count=1)
             if status != "active":
                 await repo.update_session(session_id, status=status)
 
