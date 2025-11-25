@@ -396,7 +396,6 @@ def update_dod_checkbox(
     checkbox_abs_end = dod_start + target_checkbox.end()
 
     # Extract the text
-    current_checked = target_checkbox.group(1) == "x"
     text = target_checkbox.group(2)
 
     # Build new checkbox line

@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from collab_sims.core.loaders.activity_result_loader import ActivityResultLoader
 from collab_sims.core.loaders.activity_script_loader import ActivityScriptLoader
 from collab_sims.core.loaders.agent_loader import AgentLoader
-from collab_sims.core.loaders.md_parser import parse_markdown_string
+from collab_sims.core.loaders.md_parser import MarkdownDocument, parse_markdown_string
 from collab_sims.core.loaders.process_type_loader import ProcessTypeLoader
 from collab_sims.core.loaders.project_loader import ProjectLoader
 from collab_sims.core.loaders.project_structure_parser import Activity as ActivityModel
@@ -57,7 +57,7 @@ class UpdateDoDRequest(BaseModel):
 # ===== Helper Functions =====
 
 
-def generate_project_with_structure(doc: "MarkdownDocument", process_type: dict) -> str:
+def generate_project_with_structure(doc: MarkdownDocument, process_type: dict) -> str:
     """
     Generate a complete project markdown file by embedding the process_type structure.
 
