@@ -437,8 +437,8 @@
                               @change="toggleVerification(msg.id, verIndex, $event.target.checked)"
                             >
                             <div class="flex-1">
-                              <p class="text-sm text-gray-900 dark:text-gray-100 group-hover:text-gray-700 dark:group-hover:text-gray-300" x-text="typeof verification === 'string' ? verification : (verification.title || verification.text || verification)"></p>
-                              <p x-show="typeof verification === 'object' && verification.description" class="text-xs text-gray-600 dark:text-gray-400" x-text="verification.description"></p>
+                              <p class="text-sm text-gray-900 dark:text-gray-100 group-hover:text-gray-700 dark:group-hover:text-gray-300" x-text="typeof verification === 'string' ? verification : (verification?.title || verification?.text || JSON.stringify(verification))"></p>
+                              <p x-show="typeof verification === 'object' && verification?.description" class="text-xs text-gray-600 dark:text-gray-400" x-text="verification.description"></p>
                             </div>
                           </label>
                         </template>

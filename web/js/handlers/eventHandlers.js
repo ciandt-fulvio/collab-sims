@@ -369,6 +369,12 @@ export function handleErrorEvent(context, event) {
  */
 export function handleActivityCardEvent(context, event) {
   console.log('Activity card event:', event.activity_title);
+  console.log('🔍 DEBUG - verifications raw:', event.verifications);
+  console.log('🔍 DEBUG - verifications type:', typeof event.verifications);
+  if (event.verifications) {
+    console.log('🔍 DEBUG - first verification:', event.verifications[0]);
+    console.log('🔍 DEBUG - first verification type:', typeof event.verifications[0]);
+  }
 
   // Add the activity card event to messages for rendering
   // The card will be rendered by the chat HTML template
