@@ -26,7 +26,7 @@ stages:
 
   - id: stage-diverge
     title: "Diverge"
-    description: "Generate multiple solutions and ideas."
+    description: "Generate multiple solutions and ideas"
 
     activities:
       - id: activity-design-criteria

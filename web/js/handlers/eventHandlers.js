@@ -4,6 +4,30 @@
  */
 
 /**
+ * Truncate text at word/punctuation boundary, avoiding breaking words.
+ * Tries to stay close to max_length characters but will cut at spaces or
+ * punctuation marks instead of breaking words.
+ */
+function truncateSessionName(text, maxLength = 30) {
+  if (!text || text.length <= maxLength) {
+    return text.trim();
+  }
+
+  // Pattern for spaces and punctuation
+  const punctuationPattern = /[\s.,!?;:\'"()\[\]{}\-–—]/;
+
+  // Look backward from maxLength to find a space or punctuation
+  for (let i = maxLength; i >= 0; i--) {
+    if (punctuationPattern.test(text[i])) {
+      return text.substring(0, i).trim();
+    }
+  }
+
+  // If no punctuation found, return up to maxLength
+  return text.substring(0, maxLength).trim();
+}
+
+/**
  * Estimate token count from text
  * Uses rough approximation: 1 token ≈ 4 characters
  * This matches OpenAI's rule of thumb for English text
@@ -48,7 +72,7 @@ export function handleQueryEvent(context, event) {
   });
 
   if (event.prompt && context.isStreaming && !context.sessionNameCaptured && context.messages.length <= 1) {
-    const sessionName = event.prompt.substring(0, 30).trim();
+    const sessionName = truncateSessionName(event.prompt);
     console.log('📝 Capturing session name:', sessionName);
     context.api.updateSessionName(context.sessionId, sessionName)
       .then(() => {

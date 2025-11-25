@@ -14,6 +14,7 @@ from claude_agent_sdk import ClaudeAgentOptions
 # Import from collab_sims core
 from ...core import CollabSimsSession, SessionConfig
 from ...core.events import AgentEvent
+from ...core.utils import truncate_session_name
 from ...persistence import SQLiteRepository
 from ...trackers import DatabaseTracker, StreamTracker
 from .approval_manager import ApprovalManager
@@ -24,6 +25,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class QueryTask:
     """Represents a running query in background"""
+
     query_id: str
     session_id: str
     prompt: str
@@ -85,8 +87,7 @@ class SessionManager:
         try:
             # Get all active sessions from database
             active_sessions = await self.db_tracker.repository.list_sessions(
-                status="active",
-                limit=1000
+                status="active", limit=1000
             )
 
             if not active_sessions:
@@ -105,7 +106,9 @@ class SessionManager:
                     # Extract fields from database
                     project_name = session_data.get("project_name")
                     if not project_name:
-                        logger.warning(f"   ⚠️  Session {session_id} has no project_name, skipping restore")
+                        logger.warning(
+                            f"   ⚠️  Session {session_id} has no project_name, skipping restore"
+                        )
                         continue
 
                     agent_name = session_data.get("agent_name")
@@ -133,7 +136,7 @@ class SessionManager:
                     claude_session = CollabSimsSession(
                         options=ClaudeAgentOptions(
                             permission_mode="bypassPermissions",
-                            include_partial_messages=session_config.include_partial_messages
+                            include_partial_messages=session_config.include_partial_messages,
                         ),
                         config=session_config,
                         trackers=[self.db_tracker, stream_tracker],
@@ -158,8 +161,8 @@ class SessionManager:
                         "claude_session": claude_session,
                         "config": config_dict,
                         "created_at": session_data.get("created_at", datetime.now()).isoformat()
-                                     if isinstance(session_data.get("created_at"), datetime)
-                                     else session_data.get("created_at", datetime.now().isoformat()),
+                        if isinstance(session_data.get("created_at"), datetime)
+                        else session_data.get("created_at", datetime.now().isoformat()),
                         "status": "active",
                         "execution_state": "idle",
                         "current_query_id": None,
@@ -167,7 +170,9 @@ class SessionManager:
                     }
 
                     restored_count += 1
-                    logger.debug(f"   ✅ Resumed session {session_id[:12]} (queries: {query_count})")
+                    logger.debug(
+                        f"   ✅ Resumed session {session_id[:12]} (queries: {query_count})"
+                    )
 
                 except Exception as e:
                     failed_count += 1
@@ -175,9 +180,7 @@ class SessionManager:
                     # Mark failed session as closed
                     try:
                         await self.db_tracker.repository.update_session(
-                            session_id=session_id,
-                            status="closed",
-                            closed_at=datetime.now()
+                            session_id=session_id, status="closed", closed_at=datetime.now()
                         )
                     except Exception:
                         pass
@@ -203,7 +206,8 @@ class SessionManager:
         if self._cleanup_task is None:
             # Don't start cleanup task during tests
             import os
-            if os.environ.get('PYTEST_CURRENT_TEST'):
+
+            if os.environ.get("PYTEST_CURRENT_TEST"):
                 return
 
             try:
@@ -214,10 +218,7 @@ class SessionManager:
                 pass
 
     async def create_session(
-        self,
-        project_name: str,
-        agent_name: str | None = None,
-        config: dict[str, Any] | None = None
+        self, project_name: str, agent_name: str | None = None, config: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """
         Create a new multi-turn session.
@@ -248,20 +249,22 @@ class SessionManager:
             session_name=None,  # Will be auto-generated from first prompt
             user_id=config.get("user_id") if config else None,
             created_at=created_at,
-            metadata=config or {}
+            metadata=config or {},
         )
 
         # Create CollabSimsSession for real Claude integration
         session_config = SessionConfig(
             project_name=project_name,
             agent_name=agent_name,
-            include_partial_messages=config.get("include_partial_messages", True) if config else True,
+            include_partial_messages=config.get("include_partial_messages", True)
+            if config
+            else True,
             user_id=config.get("user_id") if config else None,
         )
 
         options = ClaudeAgentOptions(
             permission_mode="bypassPermissions",  # Use approval_manager instead
-            include_partial_messages=session_config.include_partial_messages
+            include_partial_messages=session_config.include_partial_messages,
         )
 
         claude_session = CollabSimsSession(
@@ -291,7 +294,9 @@ class SessionManager:
             "query_count": 0,
         }
 
-        logger.info(f"Created session {session_id} for project '{project_name}' with agent '{agent_name or 'default'}'")
+        logger.info(
+            f"Created session {session_id} for project '{project_name}' with agent '{agent_name or 'default'}'"
+        )
 
         return self._get_session_metadata(session_id)
 
@@ -342,14 +347,13 @@ class SessionManager:
         claude_session: CollabSimsSession = session_data["claude_session"]
 
         try:
-            # Auto-generate session_name from first prompt (first 50 chars)
+            # Auto-generate session_name from first prompt (up to 30 chars, respecting word boundaries)
             if session_data["session_name"] is None and session_data["query_count"] == 0:
-                session_name = prompt[:50].strip()
+                session_name = truncate_session_name(prompt)
                 session_data["session_name"] = session_name
                 # Save to database
                 await self.db_tracker.repository.update_session_name(
-                    session_id=session_id,
-                    session_name=session_name
+                    session_id=session_id, session_name=session_name
                 )
                 logger.debug(f"Auto-generated session_name for {session_id}: {session_name}")
 
@@ -439,14 +443,14 @@ class SessionManager:
         session_data = self._sessions[session_id]
 
         # Transition: idle -> executing
-        logger.info(f"🔄 Session {session_id[:12]} transitioning: idle -> executing (query: {query_id})")
+        logger.info(
+            f"🔄 Session {session_id[:12]} transitioning: idle -> executing (query: {query_id})"
+        )
         session_data["execution_state"] = "executing"
         session_data["current_query_id"] = query_id
 
         # Create background task
-        task = asyncio.create_task(
-            self._execute_query_background(prompt, query_id, session_id)
-        )
+        task = asyncio.create_task(self._execute_query_background(prompt, query_id, session_id))
 
         # Track the query
         self._active_queries[query_id] = QueryTask(
@@ -473,21 +477,21 @@ class SessionManager:
         from dataclasses import asdict, is_dataclass
 
         # Handle timestamp - it may already be a string (from AgentEvent default)
-        timestamp = getattr(event, 'timestamp', datetime.now())
+        timestamp = getattr(event, "timestamp", datetime.now())
         if isinstance(timestamp, datetime):
             timestamp = timestamp.isoformat()
 
         event_dict = {
-            "type": event.type.value if hasattr(event.type, 'value') else str(event.type),
-            "event_id": getattr(event, 'event_id', str(uuid.uuid4())),
+            "type": event.type.value if hasattr(event.type, "value") else str(event.type),
+            "event_id": getattr(event, "event_id", str(uuid.uuid4())),
             "timestamp": timestamp,
             "session_id": session_id,
         }
 
         # Add event-specific fields
-        if hasattr(event, '__dict__'):
+        if hasattr(event, "__dict__"):
             for key, value in event.__dict__.items():
-                if key not in ['type', 'event_id', 'timestamp'] and not key.startswith('_'):
+                if key not in ["type", "event_id", "timestamp"] and not key.startswith("_"):
                     # Convert datetime objects to ISO format
                     if isinstance(value, datetime):
                         event_dict[key] = value.isoformat()
@@ -495,7 +499,12 @@ class SessionManager:
                     elif is_dataclass(value) and not isinstance(value, type):
                         event_dict[key] = asdict(value)
                     # Convert lists of dataclass objects
-                    elif isinstance(value, list) and value and is_dataclass(value[0]) and not isinstance(value[0], type):
+                    elif (
+                        isinstance(value, list)
+                        and value
+                        and is_dataclass(value[0])
+                        and not isinstance(value[0], type)
+                    ):
                         event_dict[key] = [asdict(item) for item in value]
                     # Skip non-serializable objects
                     elif not callable(value):
@@ -596,6 +605,7 @@ class SessionManager:
         except Exception as e:
             # Log full exception details for debugging
             import traceback
+
             logger.error(f"Error executing query {query_id}: {e}")
             logger.error(f"Exception type: {type(e).__name__}")
             logger.error(f"Traceback:\n{traceback.format_exc()}")
@@ -607,12 +617,12 @@ class SessionManager:
 
             # Broadcast error event
             error_event = {
-                'type': 'error',
-                'error': str(e),
-                'error_type': type(e).__name__,
-                'timestamp': datetime.now().isoformat(),
-                'session_id': session_id,
-                'event_id': str(uuid.uuid4()),
+                "type": "error",
+                "error": str(e),
+                "error_type": type(e).__name__,
+                "timestamp": datetime.now().isoformat(),
+                "session_id": session_id,
+                "event_id": str(uuid.uuid4()),
             }
             await self._broadcast_event(session_id, error_event)
 
@@ -623,7 +633,9 @@ class SessionManager:
                 self._sessions[session_id]["execution_state"] = "idle"
                 self._sessions[session_id]["current_query_id"] = None
 
-    async def _simulate_agent_response_streaming(self, prompt: str, session_id: str) -> list[dict[str, Any]]:
+    async def _simulate_agent_response_streaming(
+        self, prompt: str, session_id: str
+    ) -> list[dict[str, Any]]:
         """Simulate streaming agent response with partial messages"""
         events = []
 
@@ -746,7 +758,7 @@ class SessionManager:
             yield {
                 "type": "error",
                 "error": f"Session {session_id} not found",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
             return
 
@@ -767,11 +779,7 @@ class SessionManager:
                     yield event
 
             except Exception as e:
-                yield {
-                    "type": "error",
-                    "error": str(e),
-                    "timestamp": datetime.now().isoformat()
-                }
+                yield {"type": "error", "error": str(e), "timestamp": datetime.now().isoformat()}
         else:
             # Empty prompt - just subscribe to existing events
             async for event in self.subscribe_to_session_events(session_id):
@@ -916,7 +924,9 @@ class SessionManager:
         # Disconnect Claude sessions but keep them as 'active' in database
         session_ids = list(self._sessions.keys())
         if session_ids:
-            logger.debug(f"Disconnecting {len(session_ids)} active sessions (keeping as 'active' for resume)")
+            logger.debug(
+                f"Disconnecting {len(session_ids)} active sessions (keeping as 'active' for resume)"
+            )
             for session_id in session_ids:
                 try:
                     session_data = self._sessions[session_id]
@@ -938,7 +948,7 @@ class SessionManager:
         tasks_to_cancel = []
         for query_id in list(self._active_queries.keys()):
             query_info = self._active_queries[query_id]
-            if hasattr(query_info, 'task') and not query_info.task.done():
+            if hasattr(query_info, "task") and not query_info.task.done():
                 query_info.task.cancel()
                 tasks_to_cancel.append(query_info.task)
 

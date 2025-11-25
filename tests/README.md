@@ -28,9 +28,6 @@ pytest -m unit -n auto
 # Todos os testes em paralelo (~4x mais rápido)
 pytest -n auto
 
-# Apenas testes de integração
-pytest -m integration -n auto
-
 # Com cobertura
 pytest -n auto --cov=collab_sims --cov-report=term-missing
 ```
