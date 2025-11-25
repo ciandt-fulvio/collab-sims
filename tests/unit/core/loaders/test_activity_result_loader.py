@@ -36,7 +36,6 @@ class TestGetActivityResult:
 
             # Create sample activity result file using versioned naming
             result_content = """---
-status: completed
 participants: "Alice, Bob"
 session_id: "test-123"
 version: 1
@@ -63,7 +62,6 @@ This is a test activity result.
         result = loader.get_activity_result("test-project", "test-activity_v1")
 
         assert result is not None
-        assert result.frontmatter.get("status") == "completed"
         assert "Alice, Bob" in result.frontmatter.get("participants", "")
 
     def test_load_result_with_md_extension(self, temp_results_dir: Path):
@@ -78,7 +76,6 @@ This is a test activity result.
         result = loader.get_activity_result("test-project", "test-activity_v1.md")
 
         assert result is not None
-        assert result.frontmatter.get("status") == "completed"
 
     def test_load_nonexistent_result_returns_none(self, temp_results_dir: Path):
         """Test that loading a nonexistent result returns None."""
@@ -111,21 +108,18 @@ class TestListActivityResults:
 
             # Create multiple activity results using versioned naming
             content1 = """---
-status: completed
 participants: "Team A"
 version: 1
 ---
 # Activity 1
 """
             content2 = """---
-status: in_progress
 participants: "Team B"
 version: 1
 ---
 # Activity 2
 """
             content3 = """---
-status: completed
 participants: "Team A"
 version: 2
 ---
@@ -222,21 +216,18 @@ class TestListActivityResultsWithVersioning:
 
             # Create versioned activity results (the correct pattern)
             content1 = """---
-status: completed
 participants: "Team A"
 version: 1
 ---
 # How Might We v1
 """
             content2 = """---
-status: completed
 participants: "Team A"
 version: 2
 ---
 # How Might We v2
 """
             content3 = """---
-status: in_progress
 participants: "Team B"
 version: 1
 ---
@@ -248,7 +239,6 @@ version: 1
 
             # Create old-style file with timestamp (should be ignored or handled differently)
             old_content = """---
-status: completed
 ---
 # Old Style
 """
@@ -318,7 +308,6 @@ status: completed
         project_dir.mkdir(parents=True)
 
         content_with_date = """---
-status: completed
 date: 2025-11-25
 version: 1
 ---
@@ -340,7 +329,6 @@ version: 1
         project_dir.mkdir(parents=True)
 
         content_with_created_at = """---
-status: completed
 created_at: 2025-11-26
 version: 1
 ---
@@ -372,7 +360,6 @@ class TestSaveActivityResult:
         loader = ActivityResultLoader(base_path=temp_results_dir)
 
         content = """---
-status: completed
 ---
 
 # Test Result
@@ -391,7 +378,6 @@ status: completed
         loader = ActivityResultLoader(base_path=temp_results_dir)
 
         content = """---
-status: completed
 ---
 
 # Test Result

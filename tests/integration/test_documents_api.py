@@ -39,7 +39,6 @@ class TestDocumentsAPI:
 
             # Create sample activity result file
             result_content = """---
-status: completed
 participants: "Alice, Bob"
 session_id: "test-123"
 ---
@@ -75,7 +74,6 @@ This is a test activity result for API testing.
         assert data["name"] == "test-activity_2025-01-15"
         assert data["type"] == "activity_result"
         assert "Test Activity Result" in data["content"]
-        assert data["frontmatter"]["status"] == "completed"
 
     def test_get_activity_result_requires_project_name(self, client: TestClient):
         """Test that project_name is required for activity_result type."""

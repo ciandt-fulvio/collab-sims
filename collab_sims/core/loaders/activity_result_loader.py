@@ -61,7 +61,6 @@ class ActivityResultLoader:
                     "activity_script": activity_script,
                     "version": version_num,
                     "created_at": created_at,
-                    "status": doc.frontmatter.get("status", "completed"),
                     "metadata": doc.frontmatter,
                     "path": str(md_file.relative_to(self.base_path)),
                 }

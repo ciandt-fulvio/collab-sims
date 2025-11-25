@@ -14,26 +14,9 @@ export function escapeHtml(text) {
 /**
  * Render markdown to HTML using marked.js
  * Applies syntax highlighting with highlight.js
- * Treats YAML frontmatter specially with compact monospaced styling
  */
 export function renderMarkdown(text) {
   if (!text) return '';
-
-  // Check if text starts with YAML frontmatter (--- ... ---)
-  let frontmatterHtml = '';
-  let markdownContent = text;
-
-  const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/;
-  const match = text.match(frontmatterRegex);
-
-  if (match) {
-    const frontmatterYaml = match[1];
-    markdownContent = match[2];
-
-    // Render frontmatter as compact monospaced block
-    const escapedYaml = escapeHtml(frontmatterYaml);
-    frontmatterHtml = `<div class="frontmatter-block">${escapedYaml.replace(/\n/g, '<br>')}</div>`;
-  }
 
   // Configure marked options
   marked.setOptions({
@@ -59,8 +42,7 @@ export function renderMarkdown(text) {
     }
   });
 
-  const contentHtml = marked.parse(markdownContent);
-  return frontmatterHtml + contentHtml;
+  return marked.parse(text);
 }
 
 /**
