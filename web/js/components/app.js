@@ -3,19 +3,19 @@
  * Refactored to use modular imports for maintainability
  */
 
-import { SimsAPI } from '../services/api.js?v=7';
-import { formatToolInput, formatToolOutput } from '../utils/toolFormatters.js?v=7';
-import { escapeHtml, renderMarkdown, getEventSummary } from '../utils/rendering.js?v=7';
-import { dispatchEvent } from '../handlers/eventHandlers.js?v=7';
+import { SimsAPI } from '../services/api.js?v=8';
+import { formatToolInput, formatToolOutput } from '../utils/toolFormatters.js?v=8';
+import { escapeHtml, renderMarkdown, getEventSummary } from '../utils/rendering.js?v=8';
+import { dispatchEvent } from '../handlers/eventHandlers.js?v=8';
 import {
   getCurrentToolGroup,
   getToolGroup
-} from '../state/sessionState.js?v=4';
-import { initTheme, toggleTheme as toggleThemeUtil } from '../utils/theme.js?v=4';
-import { metricsPanel } from './chat/metricsPanel.js?v=4';
-import { planPanel } from './chat/planPanel.js?v=4';
-import { eventsPanel } from './chat/eventsPanel.js?v=4';
-import { approvalsPanel } from './chat/approvalsPanel.js?v=4';
+} from '../state/sessionState.js?v=8';
+import { initTheme, toggleTheme as toggleThemeUtil } from '../utils/theme.js?v=8';
+import { metricsPanel } from './chat/metricsPanel.js?v=8';
+import { planPanel } from './chat/planPanel.js?v=8';
+import { eventsPanel } from './chat/eventsPanel.js?v=8';
+import { approvalsPanel } from './chat/approvalsPanel.js?v=8';
 
 export function simsApp() {
   return {
@@ -569,6 +569,55 @@ export function simsApp() {
     viewActivityResult(execution) {
       console.log('View result:', execution.path);
       alert(`View result: ${execution.filename}\n\nPath: ${execution.path}\n\nThis will open in a modal viewer (future enhancement)`);
+    },
+
+    // View activity outputs - navigates to Activities tab and expands the activity
+    viewActivityOutputs(activity) {
+      console.log('View activity outputs:', activity.title);
+
+      // Add a system message with a link to outputs
+      const message = `📋 ${activity.title}`;
+      this.addMessage('system', message);
+
+      // Store the activity script to expand in Activities tab
+      this._targetActivityScript = activity.script;
+
+      // Load activity results if not already loaded
+      if (!this.activityResults) {
+        this.loadActivityResults().then(() => {
+          this._navigateToActivityInTab();
+        });
+      } else {
+        this._navigateToActivityInTab();
+      }
+
+      // Switch to Activities tab
+      this.activeTab = 'activities';
+    },
+
+    // Helper to navigate to specific activity in Activities tab
+    _navigateToActivityInTab() {
+      if (!this._targetActivityScript) return;
+
+      const targetScript = this._targetActivityScript;
+      this._targetActivityScript = null;
+
+      // Collapse all activity groups
+      this.expandedActivityGroups.clear();
+
+      // Expand the target activity group
+      this.expandedActivityGroups.add(targetScript);
+
+      // Force reactivity
+      this.expandedActivityGroups = new Set(this.expandedActivityGroups);
+
+      // Scroll to the Activities tab content
+      this.$nextTick(() => {
+        const activitiesTab = document.querySelector('[x-show="activeTab === \'activities\'"]');
+        if (activitiesTab) {
+          activitiesTab.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
     },
 
     // View agent details using document modal
