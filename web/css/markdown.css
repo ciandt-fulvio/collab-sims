@@ -16,24 +16,24 @@
   color: #f0f0f0;
 }
 
-/* Headings */
+/* Headings - Compact style similar to ChatGPT */
 .markdown-content h1,
 .markdown-content h2,
 .markdown-content h3,
 .markdown-content h4,
 .markdown-content h5,
 .markdown-content h6 {
-  margin-top: 24px;
-  margin-bottom: 16px;
+  margin-top: 16px;
+  margin-bottom: 8px;
   font-weight: 600;
-  line-height: 1.25;
+  line-height: 1.3;
   color: inherit;
 }
 
 .markdown-content h1 {
-  font-size: 2em;
-  padding-bottom: 0.3em;
-  border-bottom: 1px solid #b0b0b0;
+  font-size: 1.3em;
+  padding-bottom: 0.2em;
+  border-bottom: 1px solid #d0d7de;
 }
 
 .dark .markdown-content h1 {
@@ -41,9 +41,9 @@
 }
 
 .markdown-content h2 {
-  font-size: 1.5em;
-  padding-bottom: 0.3em;
-  border-bottom: 1px solid #b0b0b0;
+  font-size: 1.15em;
+  padding-bottom: 0.2em;
+  border-bottom: 1px solid #d0d7de;
 }
 
 .dark .markdown-content h2 {
@@ -51,7 +51,7 @@
 }
 
 .markdown-content h3 {
-  font-size: 1.25em;
+  font-size: 1.05em;
 }
 
 .markdown-content h4 {
@@ -59,11 +59,11 @@
 }
 
 .markdown-content h5 {
-  font-size: 0.875em;
+  font-size: 0.95em;
 }
 
 .markdown-content h6 {
-  font-size: 0.85em;
+  font-size: 0.9em;
   color: #57606a;
 }
 
@@ -71,10 +71,10 @@
   color: #8b949e;
 }
 
-/* Paragraphs */
+/* Paragraphs - More compact spacing */
 .markdown-content p {
   margin-top: 0;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 /* Links */
@@ -91,12 +91,12 @@
   color: #58a6ff;
 }
 
-/* Lists */
+/* Lists - More compact spacing */
 .markdown-content ul,
 .markdown-content ol {
   margin-top: 0;
-  margin-bottom: 16px;
-  padding-left: 2em;
+  margin-bottom: 10px;
+  padding-left: 1.5em;
 }
 
 .markdown-content ul ul,
@@ -108,11 +108,11 @@
 }
 
 .markdown-content li {
-  margin-top: 0.25em;
+  margin-top: 0.15em;
 }
 
 .markdown-content li + li {
-  margin-top: 0.25em;
+  margin-top: 0.15em;
 }
 
 .markdown-content ul {
