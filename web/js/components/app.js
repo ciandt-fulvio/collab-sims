@@ -3,10 +3,10 @@
  * Refactored to use modular imports for maintainability
  */
 
-import { SimsAPI } from '../services/api.js?v=6';
-import { formatToolInput, formatToolOutput } from '../utils/toolFormatters.js?v=6';
-import { escapeHtml, renderMarkdown, getEventSummary } from '../utils/rendering.js?v=6';
-import { dispatchEvent } from '../handlers/eventHandlers.js?v=6';
+import { SimsAPI } from '../services/api.js?v=7';
+import { formatToolInput, formatToolOutput } from '../utils/toolFormatters.js?v=7';
+import { escapeHtml, renderMarkdown, getEventSummary } from '../utils/rendering.js?v=7';
+import { dispatchEvent } from '../handlers/eventHandlers.js?v=7';
 import {
   getCurrentToolGroup,
   getToolGroup
