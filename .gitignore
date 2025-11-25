@@ -202,6 +202,9 @@ docs/.doctrees/
 # Session data (if storing locally)
 sessions_data/
 
+# Data directory
+/data/
+
 # Backup files
 *.bak
 *.backup

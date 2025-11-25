@@ -83,7 +83,7 @@ Veja [README.md](README.md) para comandos completos.
 
 ## Atenção:
 
-- Sempre que vc fizer um plano, guarde ele de forma que eu possa consultar depois. de um nome, uma descrição curta, dia e hora, depois o plano em si
+- Sempre que vc fizer um plano, guarde ele de forma que eu possa consultar depois. Ele deve ser armazenado em ./docs/plans/ com um arquivo markdown com o formato YYYYMMDD_nome_curto.md 
 - Sempre que for fazer um commit, rode o ruff fix
 - Quando vc terminar todos os commits de uma serie de pedidos, faça um push. Faça um teste de integração antes de um push (pytest -n auto)
 - use o script ./manage_servers.sh para iniciar e parar os servidores, evite os scripts ./run_*.sh

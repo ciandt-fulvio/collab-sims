@@ -22,7 +22,9 @@ def truncate_session_name(text: str, max_length: int = 30) -> str:
     Returns:
         Truncated text, cut at a word/punctuation boundary
     """
-    if not text or len(text) <= max_length:
+    if not text:
+        return text if text is None else ""
+    if len(text) <= max_length:
         return text.strip()
 
     # Pattern for spaces and punctuation
