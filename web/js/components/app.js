@@ -3,19 +3,19 @@
  * Refactored to use modular imports for maintainability
  */
 
-import { SimsAPI } from '../services/api.js?v=9';
-import { formatToolInput, formatToolOutput } from '../utils/toolFormatters.js?v=9';
-import { escapeHtml, renderMarkdown, getEventSummary } from '../utils/rendering.js?v=9';
-import { dispatchEvent } from '../handlers/eventHandlers.js?v=9';
+import { SimsAPI } from '../services/api.js?v=10';
+import { formatToolInput, formatToolOutput } from '../utils/toolFormatters.js?v=10';
+import { escapeHtml, renderMarkdown, getEventSummary } from '../utils/rendering.js?v=10';
+import { dispatchEvent } from '../handlers/eventHandlers.js?v=10';
 import {
   getCurrentToolGroup,
   getToolGroup
-} from '../state/sessionState.js?v=9';
-import { initTheme, toggleTheme as toggleThemeUtil } from '../utils/theme.js?v=9';
-import { metricsPanel } from './chat/metricsPanel.js?v=9';
-import { planPanel } from './chat/planPanel.js?v=9';
-import { eventsPanel } from './chat/eventsPanel.js?v=9';
-import { approvalsPanel } from './chat/approvalsPanel.js?v=9';
+} from '../state/sessionState.js?v=10';
+import { initTheme, toggleTheme as toggleThemeUtil } from '../utils/theme.js?v=10';
+import { metricsPanel } from './chat/metricsPanel.js?v=10';
+import { planPanel } from './chat/planPanel.js?v=10';
+import { eventsPanel } from './chat/eventsPanel.js?v=10';
+import { approvalsPanel } from './chat/approvalsPanel.js?v=10';
 
 export function simsApp() {
   return {
@@ -246,6 +246,8 @@ export function simsApp() {
           console.log('🟢 Session is idle and ready for new queries');
           // ✅ Ensure streaming is disabled for idle sessions
           this.isStreaming = false;
+          // ✅ Always maintain SSE connection for real-time events (like activity cards)
+          this.maintainSSEConnection();
         }
 
         // Focus input field
@@ -639,6 +641,28 @@ export function simsApp() {
       });
     },
 
+    // Toggle verification checkbox state
+    toggleVerification(messageId, verificationIndex, checked) {
+      // Find the message
+      const message = this.messages.find(m => m.id === messageId);
+      if (!message || !message.activityData || !message.activityData.verifications) {
+        return;
+      }
+
+      // Update checkbox state
+      if (message.activityData.verifications[verificationIndex]) {
+        message.activityData.verifications[verificationIndex].checked = checked;
+      }
+
+      console.log('Verification toggled:', {
+        activity: message.activityData.activity_title,
+        verification: message.activityData.verifications[verificationIndex].title,
+        checked
+      });
+
+      // TODO: Send state to backend for persistence
+    },
+
     // View agent details using document modal
     viewAgentDetails(agent) {
       console.log('View agent details:', agent.name);
@@ -661,6 +685,39 @@ export function simsApp() {
     // Delegate to imported tool formatters
     formatToolInput,   // Direct assignment from import
     formatToolOutput,  // Direct assignment from import
+
+    // Maintain SSE connection for real-time events (without starting a query)
+    async maintainSSEConnection() {
+      if (!this.sessionId) return;
+
+      console.log('🔄 Establishing SSE connection for real-time events');
+
+      try {
+        // Connect to SSE stream with empty prompt (subscribe only mode)
+        const stream = this.api.createEventStream(this.sessionId, '');
+
+        stream
+          .on('message', (event) => {
+            this.handleEvent(event);
+          })
+          .on('error', (error) => {
+            console.error('SSE connection error:', error);
+            // Try to reconnect after 5 seconds
+            setTimeout(() => {
+              if (this.sessionId && !this.isStreaming) {
+                this.maintainSSEConnection();
+              }
+            }, 5000);
+          })
+          .on('end', () => {
+            console.log('🟢 SSE stream ended');
+          });
+
+        await stream.start();
+      } catch (error) {
+        console.error('Failed to establish SSE connection:', error);
+      }
+    },
 
     // Reconnect to active session via SSE (no polling!)
     async reconnectToActiveSession() {

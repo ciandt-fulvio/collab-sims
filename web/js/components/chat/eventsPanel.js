@@ -15,6 +15,7 @@ export function eventsPanel() {
 
     // Event type filters (all enabled by default except partial_message)
     eventTypeFilters: {
+      session_start: true,
       query: true,
       message: true,
       partial_message: false,
@@ -26,6 +27,7 @@ export function eventsPanel() {
       error: true,
       approval_request: true,
       approval_response: true,
+      activity_card: true,
       system: true,
     },
 
