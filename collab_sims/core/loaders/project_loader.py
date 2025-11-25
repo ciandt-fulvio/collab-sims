@@ -30,7 +30,18 @@ class ProjectLoader:
             return []
 
         projects = []
-        for md_file in self.base_path.glob("*.md"):
+        # Projects are now in subdirectories: projects/{project_name}/{project_name}.md
+        # We only want the main project file, not activity results
+        for project_dir in self.base_path.iterdir():
+            if not project_dir.is_dir():
+                continue
+
+            project_name = project_dir.name
+            md_file = project_dir / f"{project_name}.md"
+
+            if not md_file.exists():
+                continue
+
             try:
                 doc = parse_markdown_with_frontmatter(md_file)
                 project_data = {
@@ -57,7 +68,8 @@ class ProjectLoader:
         Returns:
             MarkdownDocument if found, None otherwise
         """
-        file_path = self.base_path / f"{name}.md"
+        # Projects are now in subdirectories: projects/{name}/{name}.md
+        file_path = self.base_path / name / f"{name}.md"
 
         if not file_path.exists():
             return None
@@ -79,8 +91,10 @@ class ProjectLoader:
             True if successful, False otherwise
         """
         try:
-            self.base_path.mkdir(parents=True, exist_ok=True)
-            file_path = self.base_path / f"{name}.md"
+            # Projects are now in subdirectories: projects/{name}/{name}.md
+            project_dir = self.base_path / name
+            project_dir.mkdir(parents=True, exist_ok=True)
+            file_path = project_dir / f"{name}.md"
             file_path.write_text(content, encoding="utf-8")
             return True
         except Exception as e:

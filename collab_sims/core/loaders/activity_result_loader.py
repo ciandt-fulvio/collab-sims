@@ -12,11 +12,11 @@ from collab_sims.core.loaders.md_parser import (
 class ActivityResultLoader:
     """Loader for activity result markdown files."""
 
-    def __init__(self, base_path: str | Path = "data/execution/activity_results"):
+    def __init__(self, base_path: str | Path = "data/execution/projects"):
         """Initialize the activity result loader.
 
         Args:
-            base_path: Base directory containing activity result files
+            base_path: Base directory containing project directories with activity result files
         """
         self.base_path = Path(base_path)
 
@@ -36,6 +36,10 @@ class ActivityResultLoader:
 
         results = []
         for md_file in project_path.glob("*.md"):
+            # Skip the main project file (e.g., project_name.md)
+            if md_file.stem == project_name:
+                continue
+
             try:
                 # Parse filename: {activity-script}_v{number}.md
                 match = re.match(r"^(.+?)_v(\d+)\.md$", md_file.name)

@@ -34,6 +34,15 @@ class TestGetActivityResult:
             project_dir = tmppath / "test-project"
             project_dir.mkdir(parents=True)
 
+            # Create main project file (should be skipped by activity result loader)
+            project_content = """---
+name: "test-project"
+type: "design-sprint"
+---
+# Test Project
+"""
+            (project_dir / "test-project.md").write_text(project_content)
+
             # Create sample activity result file using versioned naming
             result_content = """---
 participants: "Alice, Bob"
@@ -105,6 +114,14 @@ class TestListActivityResults:
 
             project_dir = tmppath / "multi-project"
             project_dir.mkdir(parents=True)
+
+            # Create main project file (should be skipped)
+            project_content = """---
+name: "multi-project"
+---
+# Multi Project
+"""
+            (project_dir / "multi-project.md").write_text(project_content)
 
             # Create multiple activity results using versioned naming
             content1 = """---
@@ -213,6 +230,14 @@ class TestListActivityResultsWithVersioning:
 
             project_dir = tmppath / "versioned-project"
             project_dir.mkdir(parents=True)
+
+            # Create main project file (should be skipped)
+            project_content = """---
+name: "versioned-project"
+---
+# Versioned Project
+"""
+            (project_dir / "versioned-project.md").write_text(project_content)
 
             # Create versioned activity results (the correct pattern)
             content1 = """---

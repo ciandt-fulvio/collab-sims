@@ -117,6 +117,236 @@ Veja [database.md](database.md) para detalhes do schema.
 7. ApprovalResponseEvent notifica resultado
 ```
 
+## Project Structure & Activity Management
+
+### Self-Contained Projects
+
+Projects no CollabSims são **self-contained** - cada projeto embute sua estrutura de processo completa no próprio arquivo markdown, eliminando dependências externas em runtime.
+
+#### Arquitetura
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ Project Markdown File                                   │
+│ ─────────────────────────────────────────────────────── │
+│ ---                                                      │
+│ title: Meu Projeto                                      │
+│ type: design-sprint  # Template usado na criação        │
+│ updated_at: 2025-01-18T15:30:00Z  # Optimistic locking │
+│ ---                                                      │
+│                                                          │
+│ ## Process Structure  # Estrutura embutida              │
+│                                                          │
+│ ### Stage 1: Understand                                 │
+│ **Description:** Understanding phase                    │
+│                                                          │
+│ #### Activity: How Might We                            │
+│ **ID:** activity-hmw                                    │
+│ **Required:** Yes                                       │
+│ **Path:** activities/how-might-we.md                   │
+│                                                          │
+│ **Definition of Done:**  # Estado persistido aqui       │
+│ - [x] Problems identified                              │
+│ - [ ] HMW questions created                            │
+│                                                          │
+│ **Activity Results:**  # Execuções concluídas          │
+│ - how-might-we_v01.md (2025-01-15)                     │
+│                                                          │
+│ ---                                                      │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### Componentes
+
+**1. Parser Module** (`collab_sims/core/loaders/project_structure_parser.py`)
+
+Responsável por extrair e serializar estruturas de processo em markdown:
+
+```python
+# Parse: Markdown → Dataclasses
+structure = parse_project_structure(markdown_content)
+
+# Serialize: Dataclasses → Markdown
+markdown = serialize_project_structure(structure)
+
+# Update DoD: Atualiza checkbox específico
+updated = update_dod_checkbox(
+    markdown_content=content,
+    stage_id="stage-understand",
+    activity_id="activity-hmw",
+    item_index=0,
+    checked=True
+)
+
+# Update timestamp: Para optimistic locking
+updated = update_frontmatter_timestamp(content)
+```
+
+**Data Classes:**
+- `ProjectStructure` - Estrutura completa do projeto
+- `Stage` - Estágio com múltiplas atividades
+- `Activity` - Atividade com DoD e resultados
+- `DefinitionOfDoneItem` - Checkbox item (text + checked)
+- `ActivityResult` - Referência a arquivo de resultado
+
+**2. Process Types** (`library/process_types/`)
+
+Process types são **templates** usados apenas na criação de novos projetos. Uma vez criado, o projeto não depende mais do process_type original:
+
+```python
+# Na criação (POST /api/library/projects)
+1. Lê process_type YAML (template)
+2. Expande estrutura completa
+3. Embute no corpo do markdown
+4. Salva projeto
+
+# Em runtime (GET /api/library/projects/{name}/process-progress)
+1. Lê apenas o arquivo do projeto
+2. Parser extrai estrutura do markdown
+3. Retorna estrutura com status
+```
+
+**Vantagens:**
+- ✅ Projetos são portable (não dependem de YAMLs externos)
+- ✅ Histórico completo no próprio arquivo
+- ✅ Process types podem evoluir sem afetar projetos existentes
+- ✅ Estado de DoD persiste no projeto
+
+#### Fluxo de Dados
+
+**Criação de Projeto:**
+```
+1. Cliente → POST /api/library/projects
+   {
+     "name": "meu-projeto",
+     "content": "---\ntype: design-sprint\n---\n..."
+   }
+
+2. Backend:
+   a) Extrai type do frontmatter
+   b) Lê process_type YAML (template)
+   c) Serializa estrutura completa
+   d) Embute no markdown após frontmatter
+   e) Salva arquivo em library/projects/
+
+3. Resposta: Projeto criado com estrutura embutida
+```
+
+**Consulta de Progresso:**
+```
+1. Cliente → GET /api/library/projects/{name}/process-progress
+
+2. Backend:
+   a) Lê arquivo do projeto
+   b) Parser extrai estrutura do markdown
+   c) Calcula completion_count, activity.completed
+   d) Retorna estrutura com status
+
+3. Resposta:
+   {
+     "stages": [...],
+     "updated_at": "2025-01-18T15:30:00Z"
+   }
+```
+
+**Update de Definition of Done:**
+```
+1. Cliente → PATCH /api/library/projects/{name}/dod
+   {
+     "stage_id": "stage-understand",
+     "activity_id": "activity-hmw",
+     "item_index": 0,
+     "checked": true,
+     "expected_last_modified": "2025-01-18T15:30:00Z"  # Optimistic lock
+   }
+
+2. Backend:
+   a) Lê arquivo do projeto
+   b) Valida expected_last_modified com updated_at
+      → Se diferente: 409 Conflict (prevenção de conflito)
+   c) update_dod_checkbox() modifica markdown
+   d) update_frontmatter_timestamp() atualiza updated_at
+   e) Salva arquivo atualizado
+
+3. Resposta:
+   {
+     "success": true,
+     "new_last_modified": "2025-01-18T15:45:00Z"
+   }
+```
+
+#### Optimistic Locking
+
+Para prevenir conflitos em updates concorrentes, usamos **optimistic locking** baseado em timestamp:
+
+```python
+# Cliente envia timestamp que conhece
+PATCH /api/library/projects/meu-projeto/dod
+{
+  "expected_last_modified": "2025-01-18T15:30:00Z",
+  ...
+}
+
+# Backend valida
+if file_updated_at != expected_last_modified:
+    raise HTTPException(409, "Conflict: file was modified")
+
+# Update bem-sucedido retorna novo timestamp
+{
+  "new_last_modified": "2025-01-18T15:45:00Z"
+}
+```
+
+**Comportamento no Cliente:**
+- Cliente mantém `updated_at` recebido na última leitura
+- Envia esse valor em updates subsequentes
+- Se receber 409: recarrega projeto e pede usuário resolver conflito
+
+#### Parsing de Markdown
+
+O parser usa regex para extrair estruturas do markdown:
+
+**Estrutura esperada:**
+```markdown
+## Process Structure
+
+### Stage N: Title
+**Description:** Stage description
+
+#### Activity: Activity Title
+**ID:** activity-id
+**Required:** Yes/No
+**Path:** path/to/script.md
+**Description:** Activity description
+
+**Definition of Done:**
+- [ ] Unchecked item
+- [x] Checked item
+
+**Activity Results:**
+- filename.md (2025-01-15)
+
+---
+```
+
+**Patterns importantes:**
+- `\Z` para end-of-string (não `$` com MULTILINE)
+- Lookahead `(?=^\*\*|^---|\Z)` para capturar múltiplos checkboxes
+- Captura de checkboxes: `^- \[([ x])\] (.+?)$`
+
+#### Testes
+
+Cobertura completa em `tests/unit/core/loaders/test_project_structure_parser.py`:
+
+- ✅ Parse de estruturas (vazia, single stage, múltiplos stages)
+- ✅ Serialização (roundtrip preserva dados)
+- ✅ Update de DoD checkboxes (checked/unchecked)
+- ✅ Update de timestamps (frontmatter)
+- ✅ Validação de erros (stage/activity/item não encontrados)
+- ✅ Conversão para dicionário (API responses)
+
+Ver também: [api.md](api.md) para detalhes dos endpoints.
+
 ## Padrões de Arquitetura
 
 ### Event-Driven Architecture

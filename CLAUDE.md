@@ -57,7 +57,7 @@ pip install -e .
 ## Estrutura do Projeto
 
 ```
-collab-sims/
+/Users/fulvio/Projects/collab-sims/
 ├── collab_sims/          # Backend Python
 │   ├── api/              # FastAPI routes e services
 │   ├── core/             # Lógica principal (Agent, Session)
@@ -88,4 +88,5 @@ Veja [README.md](README.md) para comandos completos.
 - Sempre que um bug for corrigido, crie um teste que reproduza o bug e depois corrija o bug
 - Quando vc terminar todos os commits de uma serie de pedidos, faça um push. Faça um teste de integração antes de um push (pytest -n auto)
 - use o script ./manage_servers.sh para iniciar e parar os servidores, evite os scripts ./run_*.sh
+- NUNCA altere um teste automatizado 
 

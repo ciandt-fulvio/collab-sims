@@ -37,6 +37,15 @@ class TestDocumentsAPI:
             project_dir = tmppath / "test-project"
             project_dir.mkdir(parents=True)
 
+            # Create main project file (should be skipped by activity result loader)
+            project_content = """---
+name: "test-project"
+type: "design-sprint"
+---
+# Test Project
+"""
+            (project_dir / "test-project.md").write_text(project_content)
+
             # Create sample activity result file
             result_content = """---
 participants: "Alice, Bob"

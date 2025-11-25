@@ -391,6 +391,132 @@ Atualiza o conteúdo de um projeto.
 
 ---
 
+#### `POST /api/library/projects`
+
+Cria um novo projeto com estrutura de processo incorporada.
+
+**Comportamento:** Quando um projeto é criado, o sistema carrega o `process_type` especificado no frontmatter e incorpora toda sua estrutura (stages, activities, definition of done) no arquivo do projeto, tornando-o auto-contido e independente do process_type em runtime.
+
+**Request:**
+```json
+{
+  "name": "meu-projeto",
+  "content": "---\ntitle: Meu Projeto\ntype: design-sprint\n---\n\n# Meu Projeto\n\nDescrição do projeto..."
+}
+```
+
+**Response:** (200 OK)
+```json
+{
+  "message": "Project created successfully",
+  "name": "meu-projeto",
+  "process_type": "design-sprint"
+}
+```
+
+**Notas:**
+- O campo `type` no frontmatter deve referenciar um process_type válido
+- O conteúdo retornado incluirá a estrutura completa incorporada
+- O frontmatter será enriquecido com `process_type_id` e `process_type_title`
+
+---
+
+#### `GET /api/library/projects/{name}/process-progress`
+
+Obtém a estrutura do processo e progresso para um projeto específico.
+
+**Comportamento:** Parseia a estrutura incorporada do arquivo markdown do projeto (não depende mais de process_types em runtime) e enriquece com status de conclusão baseado em activity results.
+
+**Response:**
+```json
+{
+  "stages": [
+    {
+      "id": "stage-understand",
+      "title": "Understand",
+      "description": "Map the problem space",
+      "completion_count": 2,
+      "total_activities": 3,
+      "activities": [
+        {
+          "id": "activity-hmw",
+          "title": "How Might We",
+          "required": true,
+          "path": "activity_scripts/how-might-we.md",
+          "description": "Transform problems into opportunities",
+          "definition_of_done": [
+            {
+              "text": "Key problems identified",
+              "checked": true
+            },
+            {
+              "text": "HMW questions generated",
+              "checked": false
+            }
+          ],
+          "activity_results": [
+            {
+              "filename": "how-might-we_v01.md",
+              "date": "2025-01-15"
+            }
+          ],
+          "completed": true
+        }
+      ]
+    }
+  ],
+  "updated_at": "2025-01-18T15:30:00Z"
+}
+```
+
+**Notas:**
+- `definition_of_done`: Lista de itens com estado de check
+- `completed`: true se houver activity_results para a atividade
+- `updated_at`: Timestamp da última modificação do projeto (usado para optimistic locking)
+
+---
+
+#### `PATCH /api/library/projects/{name}/dod`
+
+Atualiza o estado de um checkbox de Definition of Done.
+
+**Comportamento:** Usa optimistic locking para prevenir conflitos em atualizações concorrentes. Retorna 409 Conflict se o timestamp não corresponder.
+
+**Request:**
+```json
+{
+  "stage_id": "stage-understand",
+  "activity_id": "activity-hmw",
+  "item_index": 0,
+  "checked": true,
+  "expected_last_modified": "2025-01-18T15:30:00Z"
+}
+```
+
+**Response:** (200 OK)
+```json
+{
+  "message": "Definition of Done updated successfully",
+  "name": "meu-projeto",
+  "updated_at": "2025-01-18T15:31:00Z"
+}
+```
+
+**Response (409 Conflict):**
+```json
+{
+  "detail": "Project has been modified by another user. Expected timestamp: 2025-01-18T15:30:00Z, current: 2025-01-18T15:30:45Z"
+}
+```
+
+**Notas:**
+- `item_index`: Índice do item na lista definition_of_done (0-based)
+- `expected_last_modified`: Timestamp da última leitura (optimistic locking)
+- Retorna novo `updated_at` para próximas atualizações
+- Em caso de conflito (409), o cliente deve recarregar os dados antes de tentar novamente
+
+---
+
 #### `GET /api/library/agents`
 
 Lista todos os agentes disponíveis na biblioteca.
