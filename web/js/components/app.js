@@ -63,6 +63,9 @@ export function simsApp() {
     loadingActivityResults: false,
     expandedActivityGroups: new Set(),
 
+    // Document editor state
+    openDocuments: [],  // Array of { docType, docName, projectName, content, frontmatter, versions, isEditing, originalContent }
+
     // Component composition
     ...metricsPanel(),
     ...planPanel(),
@@ -654,6 +657,149 @@ export function simsApp() {
         console.error('Failed to reconnect to SSE stream:', error);
         this.isStreaming = false;
         this.stopDurationTimer();
+      }
+    },
+
+    // ===== Document Editor Methods =====
+
+    // Open a document for viewing/editing
+    async openDocument(docType, docName, projectName = null) {
+      try {
+        console.log('📄 Opening document:', { docType, docName, projectName });
+
+        // Check if document is already open
+        const existingIndex = this.openDocuments.findIndex(
+          doc => doc.docType === docType && doc.docName === docName && doc.projectName === projectName
+        );
+
+        if (existingIndex !== -1) {
+          console.log('Document already open, scrolling to it');
+          // Scroll to existing document
+          this.$nextTick(() => {
+            const element = document.getElementById(`doc-${existingIndex}`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          });
+          return;
+        }
+
+        // Load document from API
+        const docData = await this.api.loadDocument(docType, docName, projectName);
+
+        // Add to open documents
+        this.openDocuments.push({
+          docType,
+          docName,
+          projectName,
+          content: docData.content,
+          frontmatter: docData.frontmatter,
+          versions: docData.versions || [],
+          isEditing: false,
+          originalContent: docData.content,
+        });
+
+        // Scroll to new document
+        this.$nextTick(() => {
+          this.scrollToBottom();
+        });
+
+        console.log('✅ Document opened successfully');
+      } catch (error) {
+        console.error('Failed to open document:', error);
+        alert(`Failed to open document: ${error.message}`);
+      }
+    },
+
+    // Close a document
+    closeDocument(index) {
+      if (index >= 0 && index < this.openDocuments.length) {
+        const doc = this.openDocuments[index];
+
+        // Check if there are unsaved changes
+        if (doc.isEditing && doc.content !== doc.originalContent) {
+          if (!confirm('You have unsaved changes. Are you sure you want to close this document?')) {
+            return;
+          }
+        }
+
+        this.openDocuments.splice(index, 1);
+        console.log('📄 Document closed');
+      }
+    },
+
+    // Toggle between view and edit mode
+    toggleDocumentEdit(index) {
+      if (index >= 0 && index < this.openDocuments.length) {
+        const doc = this.openDocuments[index];
+        doc.isEditing = !doc.isEditing;
+
+        // If switching to edit mode, focus the textarea
+        if (doc.isEditing) {
+          this.$nextTick(() => {
+            const textarea = document.querySelector(`#doc-${index} textarea`);
+            if (textarea) {
+              textarea.focus();
+            }
+          });
+        }
+      }
+    },
+
+    // Save document (overwrite)
+    async saveDocumentContent(index) {
+      if (index < 0 || index >= this.openDocuments.length) return;
+
+      const doc = this.openDocuments[index];
+
+      try {
+        console.log('💾 Saving document:', doc.docName);
+        await this.api.saveDocument(doc.docType, doc.docName, doc.content, doc.projectName);
+
+        // Update original content to match saved content
+        doc.originalContent = doc.content;
+
+        // Switch back to view mode
+        doc.isEditing = false;
+
+        console.log('✅ Document saved successfully');
+
+        // Show success message
+        this.addMessage('system', `📄 Document "${doc.docName}" saved successfully`);
+      } catch (error) {
+        console.error('Failed to save document:', error);
+        alert(`Failed to save document: ${error.message}`);
+      }
+    },
+
+    // Save document as new version
+    async saveDocumentAsVersion(index) {
+      if (index < 0 || index >= this.openDocuments.length) return;
+
+      const doc = this.openDocuments[index];
+
+      try {
+        console.log('💾 Saving document as new version:', doc.docName);
+        const response = await this.api.saveDocumentVersion(doc.docType, doc.docName, doc.content, doc.projectName);
+
+        // Update versions list
+        if (response.filename) {
+          doc.versions.push(response.filename);
+        }
+
+        // Update original content to match saved content
+        doc.originalContent = doc.content;
+
+        // Switch back to view mode
+        doc.isEditing = false;
+
+        console.log('✅ New version created:', response.filename);
+
+        // Show success message
+        this.addMessage('system', `📄 New version created: ${response.filename}`);
+      } catch (error) {
+        console.error('Failed to save document version:', error);
+        alert(`Failed to save document version: ${error.message}`);
       }
     },
 
