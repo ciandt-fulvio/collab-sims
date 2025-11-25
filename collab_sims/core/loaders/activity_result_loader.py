@@ -129,3 +129,86 @@ class ActivityResultLoader:
         except Exception as e:
             print(f"Error loading activity result {filename}: {e}")
             return None
+
+    def get_versions(self, project_name: str, base_name: str) -> list[str]:
+        """Find all versioned files for a base name.
+
+        Args:
+            project_name: Project name
+            base_name: Base filename without extension (e.g., 'design-criteria')
+
+        Returns:
+            List of version filenames (e.g., ['design-criteria_v01.md', 'design-criteria_v02.md'])
+        """
+        result_dir = self.base_path / project_name
+        if not result_dir.exists():
+            return []
+
+        pattern = f"{base_name}_v*.md"
+        version_files = sorted(result_dir.glob(pattern))
+        return [f.name for f in version_files]
+
+    def get_next_version_name(self, project_name: str, base_name: str) -> str:
+        """Generate next version filename.
+
+        Args:
+            project_name: Project name
+            base_name: Base filename without extension
+
+        Returns:
+            Next version filename (e.g., 'design-criteria_v03.md')
+        """
+        versions = self.get_versions(project_name, base_name)
+
+        if not versions:
+            return f"{base_name}_v01.md"
+
+        # Extract version numbers
+        version_nums = []
+        for v in versions:
+            match = re.search(r"_v(\d+)\.md$", v)
+            if match:
+                version_nums.append(int(match.group(1)))
+
+        next_num = max(version_nums) + 1 if version_nums else 1
+        return f"{base_name}_v{next_num:02d}.md"
+
+    def save_version(self, project_name: str, base_name: str, content: str) -> str:
+        """Save new version of document.
+
+        Args:
+            project_name: Project name
+            base_name: Base filename without extension
+            content: Full markdown content (including frontmatter)
+
+        Returns:
+            New filename (e.g., 'design-criteria_v03.md')
+        """
+        new_filename = self.get_next_version_name(project_name, base_name)
+        file_path = self.base_path / project_name / new_filename
+
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.write_text(content, encoding="utf-8")
+
+        return new_filename
+
+    def save_activity_result(self, project_name: str, filename: str, content: str) -> bool:
+        """Save or update an activity result document.
+
+        Args:
+            project_name: Project name
+            filename: Result filename
+            content: Full markdown content (including frontmatter)
+
+        Returns:
+            True if successful, False otherwise
+        """
+        file_path = self.base_path / project_name / filename
+
+        try:
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.write_text(content, encoding="utf-8")
+            return True
+        except Exception as e:
+            print(f"Error saving activity result {filename}: {e}")
+            return False
