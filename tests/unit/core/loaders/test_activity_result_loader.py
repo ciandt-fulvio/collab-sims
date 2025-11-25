@@ -309,6 +309,50 @@ status: completed
         assert hmw_group is not None
         assert len(hmw_group["executions"]) == 2
 
+    def test_date_field_mapped_to_created_at(self, temp_versioned_dir: Path):
+        """Test that 'date' field in frontmatter is mapped to 'created_at'."""
+        loader = ActivityResultLoader(base_path=temp_versioned_dir)
+
+        # Create a file with 'date' field
+        project_dir = temp_versioned_dir / "test-date-project"
+        project_dir.mkdir(parents=True)
+
+        content_with_date = """---
+status: completed
+date: 2025-11-25
+version: 1
+---
+# Test with date field
+"""
+        (project_dir / "test-activity_v1.md").write_text(content_with_date)
+
+        results = loader.list_activity_results("test-date-project")
+
+        assert len(results) == 1
+        assert results[0]["created_at"] == "2025-11-25"
+
+    def test_created_at_field_fallback(self, temp_versioned_dir: Path):
+        """Test that 'created_at' field is used if 'date' is not present."""
+        loader = ActivityResultLoader(base_path=temp_versioned_dir)
+
+        # Create a file with 'created_at' field
+        project_dir = temp_versioned_dir / "test-created-at-project"
+        project_dir.mkdir(parents=True)
+
+        content_with_created_at = """---
+status: completed
+created_at: 2025-11-26
+version: 1
+---
+# Test with created_at field
+"""
+        (project_dir / "test-activity_v1.md").write_text(content_with_created_at)
+
+        results = loader.list_activity_results("test-created-at-project")
+
+        assert len(results) == 1
+        assert results[0]["created_at"] == "2025-11-26"
+
 
 class TestSaveActivityResult:
     """Tests for save_activity_result method."""

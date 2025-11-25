@@ -50,11 +50,17 @@ class ActivityResultLoader:
                 # Parse markdown document
                 doc = parse_markdown_with_frontmatter(md_file)
 
+                # Get date from frontmatter (try 'date' first, then 'created_at')
+                created_at = doc.frontmatter.get("date", doc.frontmatter.get("created_at", ""))
+                # Convert datetime.date to string if needed (YAML parser converts YYYY-MM-DD to date objects)
+                if hasattr(created_at, "isoformat"):
+                    created_at = created_at.isoformat()
+
                 result_data = {
                     "filename": md_file.name,
                     "activity_script": activity_script,
                     "version": version_num,
-                    "created_at": doc.frontmatter.get("created_at", ""),
+                    "created_at": created_at,
                     "status": doc.frontmatter.get("status", "completed"),
                     "metadata": doc.frontmatter,
                     "path": str(md_file.relative_to(self.base_path)),
