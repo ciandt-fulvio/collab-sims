@@ -904,7 +904,6 @@
                     <svg class="w-4 h-4 transition-transform text-gray-500" :class="{'rotate-90': isStageExpanded(stage.id)}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
-                    <span class="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-bold flex items-center justify-center" x-text="stageIndex + 1"></span>
                     <div class="text-left">
                       <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100" x-text="stage.title"></h4>
                       <p class="text-xs text-gray-500 dark:text-gray-400" x-text="stage.description"></p>
@@ -1022,6 +1021,9 @@
                           <div class="flex items-start justify-between mb-2">
                             <div class="flex-1">
                               <div class="flex items-center gap-2 mb-1">
+                                <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                  Execution #<span x-text="group.executions.length - index"></span>
+                                </span>
                                 <span class="px-1.5 py-0.5 rounded text-xs font-medium" :class="{'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400': execution.status === 'completed', 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400': execution.status === 'running', 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400': execution.status === 'error'}" x-text="execution.status || 'unknown'"></span>
                               </div>
                               <div class="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
