@@ -66,18 +66,40 @@ export function projectTabTemplate() {
             <!-- Activities -->
             <div x-show="isStageExpanded(stage.id)" x-collapse class="px-4 pb-4 space-y-2">
               <template x-for="activity in stage.activities || []" :key="activity.id">
-                <div @click="viewActivityOutputs(activity)" class="flex items-start gap-3 p-3 rounded bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/50 transition" :class="{'border-l-4 border-l-green-500 dark:border-l-green-400': activity.completed, 'border-l-4 border-l-gray-300 dark:border-l-gray-600': !activity.completed}">
-                  <div class="flex-shrink-0 mt-0.5">
-                    <span x-show="activity.completed" class="text-green-500 dark:text-green-400 text-lg">✓</span>
-                    <span x-show="!activity.completed" class="text-gray-300 dark:text-gray-600 text-lg">○</span>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 mb-1">
-                      <h5 class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="activity.title"></h5>
-                      <span x-show="activity.required" class="px-1.5 py-0.5 rounded text-xs font-medium bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400">Required</span>
-                      <span x-show="!activity.required" class="px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">Optional</span>
+                <div class="rounded bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700" :class="{'border-l-4 border-l-green-500 dark:border-l-green-400': activity.completed, 'border-l-4 border-l-gray-300 dark:border-l-gray-600': !activity.completed}">
+                  <!-- Activity Header (Clickable) -->
+                  <div @click="viewActivityOutputs(activity)" class="flex items-start gap-3 p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/50 transition">
+                    <div class="flex-shrink-0 mt-0.5">
+                      <span x-show="activity.completed" class="text-green-500 dark:text-green-400 text-lg">✓</span>
+                      <span x-show="!activity.completed" class="text-gray-300 dark:text-gray-600 text-lg">○</span>
                     </div>
-                    <p class="text-xs text-gray-600 dark:text-gray-400" x-text="activity.description"></p>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 mb-1">
+                        <h5 class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="activity.title"></h5>
+                        <span x-show="activity.required" class="px-1.5 py-0.5 rounded text-xs font-medium bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400">Required</span>
+                        <span x-show="!activity.required" class="px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">Optional</span>
+                      </div>
+                      <p class="text-xs text-gray-600 dark:text-gray-400" x-text="activity.description"></p>
+                    </div>
+                  </div>
+
+                  <!-- Definition of Done -->
+                  <div x-show="activity.definition_of_done && activity.definition_of_done.length > 0" class="px-3 pb-3 pt-1 border-t border-gray-200 dark:border-gray-700">
+                    <h6 class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Definition of Done</h6>
+                    <div class="space-y-1.5">
+                      <template x-for="(dodItem, dodIndex) in activity.definition_of_done || []" :key="dodIndex">
+                        <label class="flex items-start gap-2 cursor-pointer group" @click.stop>
+                          <input
+                            type="checkbox"
+                            :checked="dodItem.checked"
+                            @change="toggleDoDItem(stage.id, activity.id, dodIndex, dodItem.checked, $event)"
+                            :disabled="updatingDoD"
+                            class="mt-0.5 rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-500 focus:ring-green-500 dark:focus:ring-green-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                          <span class="text-xs text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100" :class="{'line-through text-gray-500 dark:text-gray-500': dodItem.checked}" x-text="dodItem.text"></span>
+                        </label>
+                      </template>
+                    </div>
                   </div>
                 </div>
               </template>

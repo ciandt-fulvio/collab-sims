@@ -376,8 +376,10 @@ async def get_project_process_progress(name: str):
                     for r in activity_result_map[activity.id]
                 ]
 
-    # Return as dictionary
-    return structure.to_dict()
+    # Return as dictionary with updated_at timestamp
+    result = structure.to_dict()
+    result["updated_at"] = project_doc.frontmatter.get("updated_at", "")
+    return result
 
 
 @router.get("/projects/{name}/activity-results")

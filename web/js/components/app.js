@@ -23,7 +23,7 @@ import { metricsPanelTemplate } from './chat/tabs/metricsPanelTemplate.js?v=1';
 import { eventsTabTemplate } from './chat/tabs/eventsTab.js?v=1';
 import { activitiesTabTemplate } from './chat/tabs/activitiesTab.js?v=1';
 import { taskTabTemplate } from './chat/tabs/taskTab.js?v=1';
-import { projectTabTemplate } from './chat/tabs/projectTab.js?v=1';
+import { projectTabTemplate } from './chat/tabs/projectTab.js?v=2';
 import { agentsTabTemplate } from './chat/tabs/agentsTab.js?v=1';
 
 export function simsApp() {
@@ -66,6 +66,8 @@ export function simsApp() {
     processProgress: null,
     loadingProcessProgress: false,
     expandedStages: new Set(),
+    projectUpdatedAt: null,  // Project's last modified timestamp for optimistic locking
+    updatingDoD: false,  // Flag to disable checkboxes during DoD update
 
     // Activity results state (Activities tab)
     activityResults: null,
@@ -507,9 +509,11 @@ export function simsApp() {
       try {
         const response = await this.api.getProjectProcessProgress(this.projectName);
         this.processProgress = response;
+        this.projectUpdatedAt = response.updated_at || null;
       } catch (err) {
         console.error('Failed to load process progress:', err);
         this.processProgress = null;
+        this.projectUpdatedAt = null;
       } finally {
         this.loadingProcessProgress = false;
       }
@@ -589,6 +593,57 @@ export function simsApp() {
     viewActivityResult(execution) {
       console.log('View result:', execution.path);
       alert(`View result: ${execution.filename}\n\nPath: ${execution.path}\n\nThis will open in a modal viewer (future enhancement)`);
+    },
+
+    // Toggle Definition of Done checkbox
+    async toggleDoDItem(stageId, activityId, itemIndex, currentChecked, event) {
+      // Prevent checkbox from toggling until API call completes
+      event.preventDefault();
+
+      if (!this.projectName) {
+        console.error('No project name available');
+        return;
+      }
+
+      if (!this.projectUpdatedAt) {
+        alert('Project timestamp not available. Please refresh the page.');
+        await this.loadProcessProgress();
+        return;
+      }
+
+      // Set updating flag to disable all checkboxes
+      this.updatingDoD = true;
+
+      try {
+        const response = await this.api.updateDefinitionOfDone(
+          this.projectName,
+          stageId,
+          activityId,
+          itemIndex,
+          !currentChecked,  // Toggle the checked state
+          this.projectUpdatedAt
+        );
+
+        // Update the timestamp from response
+        this.projectUpdatedAt = response.updated_at;
+
+        // Reload process progress to get updated state
+        await this.loadProcessProgress();
+
+        console.log('DoD updated successfully:', response);
+      } catch (err) {
+        console.error('Failed to update DoD:', err);
+
+        if (err.status === 409 || err.message.includes('CONFLICT')) {
+          // Conflict - project was modified by another user
+          alert('The project has been modified by another user. Refreshing...');
+          await this.loadProcessProgress();
+        } else {
+          alert(`Failed to update Definition of Done: ${err.message}`);
+        }
+      } finally {
+        this.updatingDoD = false;
+      }
     },
 
     // View activity outputs - sends activity card event to backend
