@@ -372,6 +372,36 @@ export class SimsAPI {
     return await response.json();
   }
 
+  async getProjectProcessProgress(projectName) {
+    const response = await fetch(`${this.baseURL}/api/library/projects/${projectName}/process-progress`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get project process progress: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async getProjectActivityResults(projectName) {
+    const response = await fetch(`${this.baseURL}/api/library/projects/${projectName}/activity-results`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get project activity results: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
   async createProject(name, content) {
     const response = await fetch(`${this.baseURL}/api/library/projects`, {
       method: 'POST',

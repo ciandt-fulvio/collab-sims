@@ -49,21 +49,17 @@ export function simsApp() {
     // Library resources (for MD viewer tabs)
     projects: [],
     agents: [],
-    activityScripts: [],
     selectedResource: null,  // For viewing/editing in MD viewer
 
-    // MD Viewer/Editor state
-    projectContent: '',      // Current project markdown content
-    isEditingProject: false, // Edit mode for project
-    editedProjectContent: '',// Edited project content (buffer)
-    isSavingProject: false,  // Saving state
+    // Process progress state (Project tab)
+    processProgress: null,
+    loadingProcessProgress: false,
+    expandedStages: new Set(),
 
-    // Activities state
-    selectedActivity: null,  // Currently selected activity for viewing/editing
-    activityContent: '',     // Current activity markdown content
-    isEditingActivity: false,// Edit mode for activity
-    editedActivityContent: '',// Edited activity content (buffer)
-    isSavingActivity: false, // Saving state
+    // Activity results state (Activities tab)
+    activityResults: null,
+    loadingActivityResults: false,
+    selectedActivityGroup: null,
 
     // Agents state
     selectedAgent: null,     // Currently selected agent for viewing
@@ -456,120 +452,102 @@ export function simsApp() {
     // Load library resources for MD viewer tabs
     async loadLibraryResources() {
       try {
-        const [projectsRes, agentsRes, scriptsRes] = await Promise.all([
+        const [projectsRes, agentsRes] = await Promise.all([
           this.api.listProjects(),
           this.api.listAgents(),
-          this.api.listActivityScripts()
         ]);
         this.projects = projectsRes.projects || [];
         this.agents = agentsRes.agents || [];
-        this.activityScripts = scriptsRes.activity_scripts || [];
       } catch (err) {
         console.error('Failed to load library resources:', err);
       }
     },
 
-    // Load project markdown content
-    async loadProjectContent() {
+    // Load process progress for Project tab
+    async loadProcessProgress() {
       if (!this.projectName) {
         console.warn('No project name available');
         return;
       }
 
+      this.loadingProcessProgress = true;
       try {
-        const response = await this.api.getProject(this.projectName);
-        this.projectContent = response.content || '';
+        const response = await this.api.getProjectProcessProgress(this.projectName);
+        this.processProgress = response;
+        // Auto-expand first stage
+        if (response?.stages?.length > 0) {
+          this.expandedStages.add(response.stages[0].id);
+          // Force reactivity
+          this.expandedStages = new Set(this.expandedStages);
+        }
       } catch (err) {
-        console.error('Failed to load project content:', err);
-        this.projectContent = '';
+        console.error('Failed to load process progress:', err);
+        this.processProgress = null;
+      } finally {
+        this.loadingProcessProgress = false;
       }
     },
 
-    // Enter edit mode for project
-    editProject() {
-      this.editedProjectContent = this.projectContent;
-      this.isEditingProject = true;
-    },
-
-    // Cancel edit mode
-    cancelEditProject() {
-      this.isEditingProject = false;
-      this.editedProjectContent = '';
-    },
-
-    // Save project content
-    async saveProject() {
+    // Load activity results for Activities tab
+    async loadActivityResults() {
       if (!this.projectName) {
         console.warn('No project name available');
         return;
       }
 
-      this.isSavingProject = true;
+      this.loadingActivityResults = true;
       try {
-        await this.api.updateProject(this.projectName, this.editedProjectContent);
-        this.projectContent = this.editedProjectContent;
-        this.isEditingProject = false;
-        console.log('Project saved successfully');
+        const response = await this.api.getProjectActivityResults(this.projectName);
+        this.activityResults = response;
       } catch (err) {
-        console.error('Failed to save project:', err);
-        alert('Failed to save project: ' + err.message);
+        console.error('Failed to load activity results:', err);
+        this.activityResults = null;
       } finally {
-        this.isSavingProject = false;
+        this.loadingActivityResults = false;
       }
     },
 
-    // Select and load activity content
-    async selectActivity(activityName) {
-      this.selectedActivity = activityName;
-      this.isEditingActivity = false;
-
-      try {
-        const response = await this.api.getActivityScript(activityName);
-        this.activityContent = response.content || '';
-      } catch (err) {
-        console.error('Failed to load activity content:', err);
-        this.activityContent = '';
+    // Stage expansion toggle
+    toggleStageExpansion(stageId) {
+      if (this.expandedStages.has(stageId)) {
+        this.expandedStages.delete(stageId);
+      } else {
+        this.expandedStages.add(stageId);
       }
+      // Force reactivity
+      this.expandedStages = new Set(this.expandedStages);
     },
 
-    // Clear activity selection
-    clearActivitySelection() {
-      this.selectedActivity = null;
-      this.activityContent = '';
-      this.isEditingActivity = false;
+    isStageExpanded(stageId) {
+      return this.expandedStages.has(stageId);
     },
 
-    // Enter edit mode for activity
-    editActivity() {
-      this.editedActivityContent = this.activityContent;
-      this.isEditingActivity = true;
+    // Progress calculation helpers
+    calculateTotalActivities(processProgress) {
+      if (!processProgress?.stages) return 0;
+      return processProgress.stages.reduce((total, stage) => {
+        return total + (stage.activities?.length || 0);
+      }, 0);
     },
 
-    // Cancel edit mode for activity
-    cancelEditActivity() {
-      this.isEditingActivity = false;
-      this.editedActivityContent = '';
+    calculateTotalCompleted(processProgress) {
+      if (!processProgress?.stages) return 0;
+      return processProgress.stages.reduce((total, stage) => {
+        return total + (stage.completion_count || 0);
+      }, 0);
     },
 
-    // Save activity content
-    async saveActivity() {
-      if (!this.selectedActivity) {
-        console.warn('No activity selected');
-        return;
-      }
+    calculateProgressPercentage(processProgress) {
+      const total = this.calculateTotalActivities(processProgress);
+      if (total === 0) return 0;
+      const completed = this.calculateTotalCompleted(processProgress);
+      return Math.round((completed / total) * 100);
+    },
 
-      this.isSavingActivity = true;
-      try {
-        await this.api.updateActivityScript(this.selectedActivity, this.editedActivityContent);
-        this.activityContent = this.editedActivityContent;
-        this.isEditingActivity = false;
-        console.log('Activity saved successfully');
-      } catch (err) {
-        console.error('Failed to save activity:', err);
-        alert('Failed to save activity: ' + err.message);
-      } finally {
-        this.isSavingActivity = false;
-      }
+    // View activity result (placeholder for future modal)
+    viewActivityResult(execution) {
+      console.log('View result:', execution.path);
+      alert(`View result: ${execution.filename}\n\nPath: ${execution.path}\n\nThis will open in a modal viewer (future enhancement)`);
     },
 
     // Select and load agent content

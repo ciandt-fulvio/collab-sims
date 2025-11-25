@@ -999,12 +999,12 @@
         </div>
 
         <!-- ========================================
-             PROJECT TAB
+             PROJECT TAB - Process Progress
              ======================================== -->
         <!-- Project tab -->
         <div
           x-show="activeTab === 'project'"
-          x-init="$watch('activeTab', value => { if (value === 'project' && projectName && !projectContent) loadProjectContent() })"
+          x-init="$watch('activeTab', value => { if (value === 'project' && projectName && !processProgress) loadProcessProgress() })"
           class="p-4 space-y-3"
         >
           <!-- Project Header -->
@@ -1015,78 +1015,145 @@
               </svg>
               <span x-text="projectName"></span>
             </h3>
-            <button
-              x-show="!isEditingProject"
-              @click="editProject()"
-              class="px-3 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-900/50 transition"
-            >
-              Edit
-            </button>
+            <span x-show="processProgress" class="text-xs px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" x-text="processProgress?.title"></span>
           </div>
 
-          <!-- View Mode -->
-          <div x-show="projectName && !isEditingProject" class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-            <div
-              class="markdown-content text-sm text-gray-900 dark:text-gray-100"
-              x-html="renderMarkdown(projectContent || '_No content yet_')"
-            ></div>
-          </div>
-
-          <!-- Edit Mode -->
-          <div x-show="projectName && isEditingProject" class="space-y-3">
-            <textarea
-              x-model="editedProjectContent"
-              rows="20"
-              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 font-mono"
-              placeholder="Enter project markdown content..."
-            ></textarea>
-
-            <!-- Edit Actions -->
-            <div class="flex gap-2">
-              <button
-                @click="saveProject()"
-                :disabled="isSavingProject"
-                class="px-4 py-2 text-sm bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span x-show="!isSavingProject">Save</span>
-                <span x-show="isSavingProject">Saving...</span>
-              </button>
-              <button
-                @click="cancelEditProject()"
-                :disabled="isSavingProject"
-                class="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancel
-              </button>
+          <!-- Loading -->
+          <div x-show="loadingProcessProgress" class="text-center text-gray-400 dark:text-gray-500 py-8">
+            <div class="inline-flex space-x-2 mb-4">
+              <div class="w-3 h-3 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce"></div>
+              <div class="w-3 h-3 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+              <div class="w-3 h-3 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
             </div>
+            <p class="text-sm">Loading process progress...</p>
+          </div>
+
+          <!-- Process Progress -->
+          <div x-show="processProgress && !loadingProcessProgress" class="space-y-4">
+            <!-- Overall Progress -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+              <div class="flex justify-between text-sm mb-2 text-gray-900 dark:text-gray-100">
+                <span class="font-semibold">Overall Progress</span>
+                <span x-text="`${calculateTotalCompleted(processProgress)}/${calculateTotalActivities(processProgress)} activities`"></span>
+              </div>
+              <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div class="bg-green-600 dark:bg-green-500 h-2 rounded-full transition-all duration-300" :style="`width: ${calculateProgressPercentage(processProgress)}%`"></div>
+              </div>
+            </div>
+
+            <!-- Stages -->
+            <template x-for="(stage, stageIndex) in processProgress?.stages || []" :key="stage.id">
+              <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <button @click="toggleStageExpansion(stage.id)" class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                  <div class="flex items-center gap-3">
+                    <svg class="w-4 h-4 transition-transform text-gray-500" :class="{'rotate-90': isStageExpanded(stage.id)}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                    <span class="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-bold flex items-center justify-center" x-text="stageIndex + 1"></span>
+                    <div class="text-left">
+                      <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100" x-text="stage.title"></h4>
+                      <p class="text-xs text-gray-500 dark:text-gray-400" x-text="stage.description"></p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                      <span x-text="stage.completion_count || 0"></span>/<span x-text="stage.total_activities || 0"></span>
+                    </span>
+                    <div class="w-16 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div class="h-full bg-green-500 dark:bg-green-400 transition-all" :style="`width: ${((stage.completion_count || 0) / (stage.total_activities || 1)) * 100}%`"></div>
+                    </div>
+                  </div>
+                </button>
+
+                <!-- Activities -->
+                <div x-show="isStageExpanded(stage.id)" x-collapse class="px-4 pb-4 space-y-2">
+                  <template x-for="activity in stage.activities || []" :key="activity.id">
+                    <div class="flex items-start gap-3 p-3 rounded bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700" :class="{'border-l-4 border-l-green-500 dark:border-l-green-400': activity.completed, 'border-l-4 border-l-gray-300 dark:border-l-gray-600': !activity.completed}">
+                      <div class="flex-shrink-0 mt-0.5">
+                        <span x-show="activity.completed" class="text-green-500 dark:text-green-400 text-lg">✓</span>
+                        <span x-show="!activity.completed" class="text-gray-300 dark:text-gray-600 text-lg">○</span>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                          <h5 class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="activity.title"></h5>
+                          <span x-show="activity.required" class="px-1.5 py-0.5 rounded text-xs font-medium bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400">Required</span>
+                          <span x-show="!activity.required" class="px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">Optional</span>
+                        </div>
+                        <p class="text-xs text-gray-600 dark:text-gray-400" x-text="activity.description"></p>
+                        <div x-show="activity.completed && activity.result_files?.length > 0" class="mt-2">
+                          <template x-for="resultFile in activity.result_files || []" :key="resultFile">
+                            <div class="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                              </svg>
+                              <span x-text="resultFile"></span>
+                            </div>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
           </div>
 
           <!-- No Project Message -->
           <div x-show="!projectName" class="text-center text-gray-400 dark:text-gray-500 py-8">
             <p class="text-sm">No project associated with this session</p>
           </div>
+
+          <!-- No Process Type Message -->
+          <div x-show="projectName && !processProgress && !loadingProcessProgress" class="text-center text-gray-400 dark:text-gray-500 py-8">
+            <p class="text-sm">This project does not have a process type defined</p>
+          </div>
         </div>
 
         <!-- ========================================
-             ACTIVITIES TAB
+             ACTIVITIES TAB - Execution Results
              ======================================== -->
         <!-- Activities tab -->
-        <div x-show="activeTab === 'activities'" class="p-4 space-y-3">
-          <!-- Show list when no activity selected -->
-          <div x-show="!selectedActivity">
-            <template x-if="activityScripts.length > 0">
+        <div x-show="activeTab === 'activities'" x-init="$watch('activeTab', value => { if (value === 'activities' && projectName && !activityResults) loadActivityResults() })" class="p-4 space-y-3">
+          <!-- Header -->
+          <div x-show="projectName" class="flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+              <svg class="w-4 h-4 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+              <span>Activity Execution Results</span>
+            </h3>
+            <span x-show="activityResults" class="text-xs text-gray-500 dark:text-gray-400" x-text="`${activityResults?.activity_groups?.length || 0} types`"></span>
+          </div>
+
+          <!-- Loading -->
+          <div x-show="loadingActivityResults" class="text-center text-gray-400 dark:text-gray-500 py-8">
+            <div class="inline-flex space-x-2 mb-4">
+              <div class="w-3 h-3 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce"></div>
+              <div class="w-3 h-3 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+              <div class="w-3 h-3 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+            </div>
+            <p class="text-sm">Loading activity results...</p>
+          </div>
+
+          <!-- Activity Groups List -->
+          <div x-show="activityResults && !loadingActivityResults && !selectedActivityGroup" class="space-y-2">
+            <template x-if="activityResults?.activity_groups?.length > 0">
               <div class="space-y-2">
-                <template x-for="script in activityScripts" :key="script.name">
-                  <div
-                    @click="selectActivity(script.name)"
-                    class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 hover:border-yellow-300 dark:hover:border-yellow-600 transition cursor-pointer"
-                  >
+                <template x-for="group in activityResults.activity_groups || []" :key="group.activity_script">
+                  <div @click="selectedActivityGroup = group" class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-yellow-300 dark:hover:border-yellow-600 transition cursor-pointer">
                     <div class="flex items-start justify-between">
                       <div class="flex-1">
-                        <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="script.name"></h4>
-                        <p class="text-xs text-gray-600 dark:text-gray-400 mt-1" x-text="script.description || 'No description'"></p>
+                        <div class="flex items-center gap-2 mb-1">
+                          <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="group.activity_title || group.activity_script"></h4>
+                          <span class="px-2 py-0.5 rounded text-xs font-medium bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400">
+                            <span x-text="group.executions?.length || 0"></span> execution<span x-show="group.executions?.length !== 1">s</span>
+                          </span>
+                        </div>
+                        <p class="text-xs text-gray-600 dark:text-gray-400">
+                          Latest: <span x-text="group.executions?.[0]?.created_at || 'N/A'"></span>
+                        </p>
                       </div>
-                      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                       </svg>
                     </div>
@@ -1094,74 +1161,73 @@
                 </template>
               </div>
             </template>
-            <template x-if="activityScripts.length === 0">
+            <template x-if="!activityResults?.activity_groups || activityResults.activity_groups.length === 0">
               <div class="text-center text-gray-400 dark:text-gray-500 py-8">
-                <p class="text-sm">No activity scripts available</p>
+                <p class="text-sm">No activity executions found for this project</p>
               </div>
             </template>
           </div>
 
-          <!-- Show viewer/editor when activity selected -->
-          <div x-show="selectedActivity" class="space-y-3">
-            <!-- Activity Header -->
+          <!-- Activity Group Detail -->
+          <div x-show="selectedActivityGroup" class="space-y-3">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <button
-                  @click="clearActivitySelection()"
-                  class="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-                  title="Back to list"
-                >
+                <button @click="selectedActivityGroup = null" class="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" title="Back to list">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                   </svg>
                 </button>
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300" x-text="selectedActivity"></h3>
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300" x-text="selectedActivityGroup?.activity_title || selectedActivityGroup?.activity_script"></h3>
               </div>
-              <button
-                x-show="!isEditingActivity"
-                @click="editActivity()"
-                class="px-3 py-1 text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded hover:bg-yellow-200 dark:hover:bg-yellow-900/50 transition"
-              >
-                Edit
-              </button>
+              <span class="text-xs text-gray-500 dark:text-gray-400">
+                <span x-text="selectedActivityGroup?.executions?.length || 0"></span> execution<span x-show="selectedActivityGroup?.executions?.length !== 1">s</span>
+              </span>
             </div>
 
-            <!-- View Mode -->
-            <div x-show="!isEditingActivity" class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-              <div
-                class="markdown-content text-sm text-gray-900 dark:text-gray-100"
-                x-html="renderMarkdown(activityContent || '_No content yet_')"
-              ></div>
+            <!-- Execution List -->
+            <div class="space-y-2">
+              <template x-for="(execution, index) in selectedActivityGroup?.executions || []" :key="execution.filename">
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                  <div class="flex items-start justify-between mb-2">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          Execution #<span x-text="selectedActivityGroup.executions.length - index"></span>
+                        </span>
+                        <span class="px-1.5 py-0.5 rounded text-xs font-medium" :class="{'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400': execution.status === 'completed', 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400': execution.status === 'running', 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400': execution.status === 'error'}" x-text="execution.status || 'unknown'"></span>
+                      </div>
+                      <div class="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
+                        <div class="flex items-center gap-1">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                          <span x-text="execution.created_at"></span>
+                        </div>
+                        <div x-show="execution.metadata?.participants" class="flex items-center gap-1">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                          </svg>
+                          <span x-text="execution.metadata.participants"></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+                    <button @click="viewActivityResult(execution)" class="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                      <span>View result document</span>
+                    </button>
+                  </div>
+                </div>
+              </template>
             </div>
+          </div>
 
-            <!-- Edit Mode -->
-            <div x-show="isEditingActivity" class="space-y-3">
-              <textarea
-                x-model="editedActivityContent"
-                rows="20"
-                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 dark:focus:ring-yellow-400 font-mono"
-                placeholder="Enter activity markdown content..."
-              ></textarea>
-
-              <!-- Edit Actions -->
-              <div class="flex gap-2">
-                <button
-                  @click="saveActivity()"
-                  :disabled="isSavingActivity"
-                  class="px-4 py-2 text-sm bg-yellow-600 dark:bg-yellow-500 text-white rounded-lg hover:bg-yellow-700 dark:hover:bg-yellow-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <span x-show="!isSavingActivity">Save</span>
-                  <span x-show="isSavingActivity">Saving...</span>
-                </button>
-                <button
-                  @click="cancelEditActivity()"
-                  :disabled="isSavingActivity"
-                  class="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
+          <!-- No Project Message -->
+          <div x-show="!projectName" class="text-center text-gray-400 dark:text-gray-500 py-8">
+            <p class="text-sm">No project associated with this session</p>
           </div>
         </div>
 

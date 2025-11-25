@@ -3,6 +3,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from collab_sims.core.loaders.activity_result_loader import ActivityResultLoader
 from collab_sims.core.loaders.activity_script_loader import ActivityScriptLoader
 from collab_sims.core.loaders.agent_loader import AgentLoader
 from collab_sims.core.loaders.process_type_loader import ProcessTypeLoader
@@ -14,6 +15,7 @@ router = APIRouter(prefix="/api/library", tags=["library"])
 project_loader = ProjectLoader()
 process_type_loader = ProcessTypeLoader()
 activity_script_loader = ActivityScriptLoader()
+activity_result_loader = ActivityResultLoader()
 agent_loader = AgentLoader()
 
 
@@ -120,6 +122,107 @@ async def update_project(name: str, request: ProjectUpdateRequest):
         )
 
     return {"message": "Project updated successfully", "name": name}
+
+
+@router.get("/projects/{name}/process-progress")
+async def get_project_process_progress(name: str):
+    """Get process type progress for a specific project.
+
+    Combines:
+    - Process type definition (YAML) based on project's type field
+    - Completion status for each activity (based on activity result files)
+
+    Args:
+        name: Project name
+
+    Returns:
+        Process type data enriched with completion status
+
+    Raises:
+        HTTPException: If project or process type not found
+    """
+    # Load project to get type
+    project_doc = project_loader.get_project(name)
+    if project_doc is None:
+        raise HTTPException(status_code=404, detail=f"Project '{name}' not found")
+
+    process_type_id = project_doc.frontmatter.get("type")
+    if not process_type_id:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Project '{name}' has no process type defined",
+        )
+
+    # Load process type
+    process_type = process_type_loader.get_process_type(process_type_id)
+    if process_type is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Process type '{process_type_id}' not found",
+        )
+
+    # Load activity results to determine completion
+    results = activity_result_loader.list_activity_results(name)
+
+    # Create set of completed activity IDs
+    completed_activities = set()
+    activity_result_files = {}  # Map activity_id -> list of result files
+
+    for result in results:
+        activity_script = result.get("activity_script")
+        if activity_script:
+            # Try to match to activity IDs in process type
+            for stage in process_type.get("stages", []):
+                for activity in stage.get("activities", []):
+                    # Match by activity script path
+                    if activity.get("path", "").endswith(f"{activity_script}.md"):
+                        activity_id = activity.get("id")
+                        completed_activities.add(activity_id)
+                        if activity_id not in activity_result_files:
+                            activity_result_files[activity_id] = []
+                        activity_result_files[activity_id].append(
+                            result.get("filename")
+                        )
+
+    # Enrich process type with completion data
+    for stage in process_type.get("stages", []):
+        completion_count = 0
+        for activity in stage.get("activities", []):
+            activity_id = activity.get("id")
+            activity["completed"] = activity_id in completed_activities
+            activity["result_files"] = activity_result_files.get(activity_id, [])
+            if activity["completed"]:
+                completion_count += 1
+
+        stage["completion_count"] = completion_count
+        stage["total_activities"] = len(stage.get("activities", []))
+
+    return process_type
+
+
+@router.get("/projects/{name}/activity-results")
+async def get_project_activity_results(name: str):
+    """Get all activity execution results for a project.
+
+    Args:
+        name: Project name
+
+    Returns:
+        Activity results grouped by activity script
+
+    Raises:
+        HTTPException: If project not found
+    """
+    # Verify project exists
+    project_doc = project_loader.get_project(name)
+    if project_doc is None:
+        raise HTTPException(status_code=404, detail=f"Project '{name}' not found")
+
+    # Load and group activity results
+    results = activity_result_loader.list_activity_results(name)
+    grouped = activity_result_loader.group_by_activity(results)
+
+    return {"project_name": name, "activity_groups": grouped}
 
 
 # ===== Process Types =====
