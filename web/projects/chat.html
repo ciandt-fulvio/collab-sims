@@ -968,17 +968,6 @@
           "
           class="p-4 space-y-3"
         >
-          <!-- Project Header -->
-          <div x-show="projectName" class="flex items-center justify-between">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-              <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
-              </svg>
-              <span x-text="projectName"></span>
-            </h3>
-            <span x-show="processProgress" class="text-xs px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" x-text="processProgress?.title"></span>
-          </div>
-
           <!-- Loading -->
           <div x-show="loadingProcessProgress" class="text-center text-gray-400 dark:text-gray-500 py-8">
             <div class="inline-flex space-x-2 mb-4">
