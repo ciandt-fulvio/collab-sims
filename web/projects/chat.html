@@ -7,9 +7,20 @@
 
   <!-- Tailwind CSS with dark mode -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- DaisyUI Component Library -->
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
+
   <script>
     tailwind.config = {
-      darkMode: 'class'
+      darkMode: 'class',
+      daisyui: {
+        themes: ["light", "dark"],
+        darkTheme: "dark",
+        base: true,
+        styled: true,
+        utils: true,
+      }
     }
   </script>
 
@@ -521,97 +532,6 @@
             </div>
           </div>
 
-          <!-- ========================================
-               DOCUMENT EDITOR COMPONENTS
-               ======================================== -->
-          <!-- Open documents -->
-          <template x-for="(doc, index) in openDocuments" :key="`doc-${index}`">
-            <div
-              :id="`doc-${index}`"
-              class="border-2 border-purple-300 dark:border-purple-700 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 shadow-md"
-            >
-              <!-- Document Header -->
-              <div class="flex items-center justify-between mb-3 pb-2 border-b border-purple-200 dark:border-purple-800">
-                <div class="flex items-center gap-2">
-                  <span class="text-2xl">📄</span>
-                  <div>
-                    <h3 class="font-semibold text-gray-900 dark:text-white" x-text="doc.docName"></h3>
-                    <p class="text-xs text-gray-600 dark:text-gray-400" x-text="doc.docType"></p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-2">
-                  <!-- Edit/View toggle button -->
-                  <button
-                    @click="toggleDocumentEdit(index)"
-                    class="px-3 py-1 text-sm bg-purple-600 dark:bg-purple-700 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition"
-                    x-text="doc.isEditing ? 'View' : 'Edit'"
-                  ></button>
-                  <!-- Close button -->
-                  <button
-                    @click="closeDocument(index)"
-                    class="p-1 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition"
-                    title="Close document"
-                  >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Document Content (View Mode) -->
-              <div
-                x-show="!doc.isEditing"
-                class="prose prose-sm dark:prose-invert max-w-none bg-white dark:bg-gray-800 rounded-lg p-4 max-h-96 overflow-y-auto"
-              >
-                <div class="markdown-content" x-html="renderMarkdown(doc.content)"></div>
-              </div>
-
-              <!-- Document Content (Edit Mode) -->
-              <div x-show="doc.isEditing" class="space-y-3">
-                <textarea
-                  x-model="doc.content"
-                  class="w-full h-96 px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 font-mono text-sm resize-none"
-                  placeholder="Edit document content..."
-                ></textarea>
-
-                <!-- Action Buttons -->
-                <div class="flex items-center gap-2">
-                  <button
-                    @click="saveDocumentContent(index)"
-                    class="px-4 py-2 bg-green-600 dark:bg-green-700 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition text-sm font-medium"
-                  >
-                    💾 Save
-                  </button>
-                  <button
-                    @click="saveDocumentAsVersion(index)"
-                    class="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition text-sm font-medium"
-                  >
-                    📋 Salvar nova versão
-                  </button>
-                  <div class="text-xs text-gray-500 dark:text-gray-400 ml-auto">
-                    <span x-show="doc.content !== doc.originalContent" class="text-orange-600 dark:text-orange-400">● Unsaved changes</span>
-                    <span x-show="doc.content === doc.originalContent" class="text-green-600 dark:text-green-400">✓ Saved</span>
-                  </div>
-                </div>
-
-                <!-- Versions List -->
-                <div x-show="doc.versions && doc.versions.length > 0" class="mt-3 pt-3 border-t border-purple-200 dark:border-purple-800">
-                  <div class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                    Versions (<span x-text="doc.versions.length"></span>)
-                  </div>
-                  <div class="flex flex-wrap gap-1">
-                    <template x-for="version in doc.versions" :key="version">
-                      <span
-                        class="px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs font-mono"
-                        x-text="version"
-                      ></span>
-                    </template>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </template>
         </div>
 
         <!-- Input -->
@@ -1441,7 +1361,130 @@
         <!-- End Real Content -->
       </div>
     </div>
+
+    <!-- ========================================
+         DOCUMENT EDITOR MODAL (DaisyUI)
+         ======================================== -->
+    <div
+      x-show="showDocumentModal"
+      x-cloak
+      class="modal modal-open"
+      @keydown.escape.window="closeDocumentModal()"
+      @click.self="closeDocumentModal()"
+    >
+      <div class="modal-box w-11/12 max-w-5xl bg-base-200" @click.stop>
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between mb-4">
+          <!-- Left: Document info -->
+          <div class="flex items-center gap-3">
+            <div class="avatar placeholder">
+              <div class="bg-primary text-primary-content rounded-lg w-10">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <h3 class="font-bold text-lg" x-text="activeDocument?.docName || 'Document'"></h3>
+              <p class="text-sm opacity-60">
+                <span x-text="activeDocument?.docType || ''"></span>
+                <span x-show="activeDocument?.projectName"> · <span x-text="activeDocument?.projectName"></span></span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Right: Action buttons -->
+          <div class="flex items-center gap-2">
+            <!-- Save as Version (only in edit mode, enabled when has changes) -->
+            <button
+              x-show="activeDocument?.isEditing"
+              @click="saveDocumentAsVersion()"
+              :disabled="activeDocument?.content === activeDocument?.originalContent"
+              class="btn btn-outline btn-sm gap-1"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path>
+              </svg>
+              New Version
+            </button>
+
+            <!-- Save (only in edit mode, enabled when has changes) -->
+            <button
+              x-show="activeDocument?.isEditing"
+              @click="saveDocumentContent()"
+              :disabled="activeDocument?.content === activeDocument?.originalContent"
+              class="btn btn-success btn-sm gap-1"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Save
+            </button>
+
+            <!-- Divider -->
+            <div class="divider divider-horizontal"></div>
+
+            <!-- Edit/Preview toggle -->
+            <button
+              @click="toggleDocumentEdit()"
+              :class="activeDocument?.isEditing ? 'btn-ghost' : 'btn-primary'"
+              class="btn btn-sm gap-1"
+            >
+              <svg x-show="!activeDocument?.isEditing" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+              <svg x-show="activeDocument?.isEditing" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+              <span x-text="activeDocument?.isEditing ? 'Preview' : 'Edit'"></span>
+            </button>
+
+            <!-- Close button -->
+            <button
+              @click="closeDocumentModal()"
+              class="btn btn-sm btn-circle btn-ghost"
+              title="Close (Esc)"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="max-h-[70vh] overflow-y-auto">
+          <!-- View Mode -->
+          <div
+            x-show="activeDocument && !activeDocument.isEditing"
+            class="prose max-w-none"
+          >
+            <div class="markdown-content" x-html="renderMarkdown(activeDocument?.content || '')"></div>
+          </div>
+
+          <!-- Edit Mode -->
+          <div x-show="activeDocument && activeDocument.isEditing" class="space-y-4">
+            <textarea
+              id="document-modal-textarea"
+              x-model="activeDocument.content"
+              class="textarea textarea-bordered w-full h-[60vh] font-mono text-sm"
+              placeholder="Edit document content..."
+            ></textarea>
+
+            <!-- Versions List -->
+            <div x-show="activeDocument?.versions?.length > 0" class="divider">Versions</div>
+            <div x-show="activeDocument?.versions?.length > 0" class="flex flex-wrap gap-2">
+              <template x-for="version in activeDocument?.versions || []" :key="version">
+                <div class="badge badge-outline font-mono" x-text="version"></div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+  <!-- End x-data scope -->
 
   <!-- Bootstrap Alpine.js with ES6 modules -->
   <script type="module" src="../js/alpine-bootstrap.js?v=4"></script>

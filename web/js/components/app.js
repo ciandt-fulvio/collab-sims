@@ -63,8 +63,9 @@ export function simsApp() {
     loadingActivityResults: false,
     expandedActivityGroups: new Set(),
 
-    // Document editor state
-    openDocuments: [],  // Array of { docType, docName, projectName, content, frontmatter, versions, isEditing, originalContent }
+    // Document editor modal state
+    showDocumentModal: false,
+    activeDocument: null,  // { docType, docName, projectName, content, frontmatter, versions, isEditing, originalContent }
 
     // Component composition
     ...metricsPanel(),
@@ -660,35 +661,37 @@ export function simsApp() {
       }
     },
 
-    // ===== Document Editor Methods =====
+    // ===== Document Editor Modal Methods =====
 
-    // Open a document for viewing/editing
+    // Open a document in the modal for viewing/editing
     async openDocument(docType, docName, projectName = null) {
       try {
-        console.log('📄 Opening document:', { docType, docName, projectName });
+        console.log('📄 Opening document in modal:', { docType, docName, projectName });
 
-        // Check if document is already open
-        const existingIndex = this.openDocuments.findIndex(
-          doc => doc.docType === docType && doc.docName === docName && doc.projectName === projectName
-        );
-
-        if (existingIndex !== -1) {
-          console.log('Document already open, scrolling to it');
-          // Scroll to existing document
-          this.$nextTick(() => {
-            const element = document.getElementById(`doc-${existingIndex}`);
-            if (element) {
-              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-          });
+        // Check if same document is already open
+        if (this.activeDocument &&
+            this.activeDocument.docType === docType &&
+            this.activeDocument.docName === docName &&
+            this.activeDocument.projectName === projectName) {
+          console.log('Document already open in modal');
+          this.showDocumentModal = true;
           return;
+        }
+
+        // Check for unsaved changes in currently open document
+        if (this.activeDocument &&
+            this.activeDocument.isEditing &&
+            this.activeDocument.content !== this.activeDocument.originalContent) {
+          if (!confirm('You have unsaved changes in the current document. Discard and open new document?')) {
+            return;
+          }
         }
 
         // Load document from API
         const docData = await this.api.loadDocument(docType, docName, projectName);
 
-        // Add to open documents
-        this.openDocuments.push({
+        // Set as active document
+        this.activeDocument = {
           docType,
           docName,
           projectName,
@@ -697,60 +700,60 @@ export function simsApp() {
           versions: docData.versions || [],
           isEditing: false,
           originalContent: docData.content,
-        });
+        };
 
-        // Scroll to new document
-        this.$nextTick(() => {
-          this.scrollToBottom();
-        });
+        // Show the modal
+        this.showDocumentModal = true;
 
-        console.log('✅ Document opened successfully');
+        console.log('✅ Document opened in modal successfully');
       } catch (error) {
         console.error('Failed to open document:', error);
         alert(`Failed to open document: ${error.message}`);
       }
     },
 
-    // Close a document
-    closeDocument(index) {
-      if (index >= 0 && index < this.openDocuments.length) {
-        const doc = this.openDocuments[index];
-
-        // Check if there are unsaved changes
-        if (doc.isEditing && doc.content !== doc.originalContent) {
-          if (!confirm('You have unsaved changes. Are you sure you want to close this document?')) {
-            return;
-          }
-        }
-
-        this.openDocuments.splice(index, 1);
-        console.log('📄 Document closed');
+    // Close the document modal
+    closeDocumentModal() {
+      if (!this.activeDocument) {
+        this.showDocumentModal = false;
+        return;
       }
+
+      // Check if there are unsaved changes
+      if (this.activeDocument.isEditing &&
+          this.activeDocument.content !== this.activeDocument.originalContent) {
+        if (!confirm('You have unsaved changes. Are you sure you want to close this document?')) {
+          return;
+        }
+      }
+
+      this.showDocumentModal = false;
+      this.activeDocument = null;
+      console.log('📄 Document modal closed');
     },
 
-    // Toggle between view and edit mode
-    toggleDocumentEdit(index) {
-      if (index >= 0 && index < this.openDocuments.length) {
-        const doc = this.openDocuments[index];
-        doc.isEditing = !doc.isEditing;
+    // Toggle between view and edit mode in modal
+    toggleDocumentEdit() {
+      if (!this.activeDocument) return;
 
-        // If switching to edit mode, focus the textarea
-        if (doc.isEditing) {
-          this.$nextTick(() => {
-            const textarea = document.querySelector(`#doc-${index} textarea`);
-            if (textarea) {
-              textarea.focus();
-            }
-          });
-        }
+      this.activeDocument.isEditing = !this.activeDocument.isEditing;
+
+      // If switching to edit mode, focus the textarea
+      if (this.activeDocument.isEditing) {
+        this.$nextTick(() => {
+          const textarea = document.querySelector('#document-modal-textarea');
+          if (textarea) {
+            textarea.focus();
+          }
+        });
       }
     },
 
     // Save document (overwrite)
-    async saveDocumentContent(index) {
-      if (index < 0 || index >= this.openDocuments.length) return;
+    async saveDocumentContent() {
+      if (!this.activeDocument) return;
 
-      const doc = this.openDocuments[index];
+      const doc = this.activeDocument;
 
       try {
         console.log('💾 Saving document:', doc.docName);
@@ -773,10 +776,10 @@ export function simsApp() {
     },
 
     // Save document as new version
-    async saveDocumentAsVersion(index) {
-      if (index < 0 || index >= this.openDocuments.length) return;
+    async saveDocumentAsVersion() {
+      if (!this.activeDocument) return;
 
-      const doc = this.openDocuments[index];
+      const doc = this.activeDocument;
 
       try {
         console.log('💾 Saving document as new version:', doc.docName);
