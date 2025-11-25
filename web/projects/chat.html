@@ -299,7 +299,7 @@
           </div>
 
           <!-- Messages and Tools -->
-          <template x-for="msg in messages" :key="msg.id">
+          <template x-for="(msg, msgIndex) in messages" :key="msg.id">
             <div>
               <!-- Regular Messages (user/assistant) -->
               <div
@@ -406,8 +406,8 @@
                 class="flex justify-start my-2"
               >
                 <div class="rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm max-w-3xl w-full">
-                  <!-- Card Header -->
-                  <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                  <!-- Card Header (always visible) -->
+                  <div class="px-4 py-3" :class="{ 'border-b border-gray-200 dark:border-gray-700': msgIndex === messages.length - 1 }">
                     <div class="flex items-center justify-between">
                       <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100" x-text="msg.activityData?.activity_title"></h3>
                       <span
@@ -419,8 +419,8 @@
                     </div>
                   </div>
 
-                  <!-- Card Body -->
-                  <div class="px-4 py-3 space-y-3">
+                  <!-- Card Body (only visible if last message) -->
+                  <div x-show="msgIndex === messages.length - 1" class="px-4 py-3 space-y-3">
                     <!-- Description -->
                     <p class="text-sm text-gray-700 dark:text-gray-300" x-text="msg.activityData?.activity_description"></p>
 
@@ -428,13 +428,13 @@
                     <div x-show="msg.activityData?.verifications?.length > 0">
                       <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Definition of Done</h4>
                       <div class="space-y-1.5">
-                        <template x-for="(verification, index) in msg.activityData?.verifications || []" :key="index">
+                        <template x-for="(verification, verIndex) in msg.activityData?.verifications || []" :key="verIndex">
                           <label class="flex items-start gap-2 cursor-pointer group">
                             <input
                               type="checkbox"
                               class="mt-0.5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
                               :checked="verification.checked || false"
-                              @change="toggleVerification(msg.id, index, $event.target.checked)"
+                              @change="toggleVerification(msg.id, verIndex, $event.target.checked)"
                             >
                             <div class="flex-1">
                               <p class="text-sm text-gray-900 dark:text-gray-100 group-hover:text-gray-700 dark:group-hover:text-gray-300" x-text="verification.title"></p>
@@ -446,20 +446,8 @@
                     </div>
                   </div>
 
-                  <!-- Card Footer - Action Buttons -->
-                  <div class="px-4 py-2 bg-gray-100 dark:bg-gray-900/30 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2">
-                    <button
-                      @click="console.log('Continuar:', msg.activityData)"
-                      class="px-3 py-1 text-xs bg-gray-600 dark:bg-gray-700 text-white rounded hover:bg-gray-700 dark:hover:bg-gray-600 transition"
-                    >
-                      Continuar
-                    </button>
-                    <button
-                      @click="console.log('Marcar como concluído:', msg.activityData)"
-                      class="px-3 py-1 text-xs bg-gray-600 dark:bg-gray-700 text-white rounded hover:bg-gray-700 dark:hover:bg-gray-600 transition"
-                    >
-                      Marcar como concluído
-                    </button>
+                  <!-- Card Footer - Action Buttons (only visible if last message) -->
+                  <div x-show="msgIndex === messages.length - 1" class="px-4 py-2 bg-gray-100 dark:bg-gray-900/30 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2">
                     <button
                       @click="console.log('Ajuda:', msg.activityData)"
                       class="px-3 py-1 text-xs bg-gray-600 dark:bg-gray-700 text-white rounded hover:bg-gray-700 dark:hover:bg-gray-600 transition"

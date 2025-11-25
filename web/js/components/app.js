@@ -3,19 +3,19 @@
  * Refactored to use modular imports for maintainability
  */
 
-import { SimsAPI } from '../services/api.js?v=10';
-import { formatToolInput, formatToolOutput } from '../utils/toolFormatters.js?v=10';
-import { escapeHtml, renderMarkdown, getEventSummary } from '../utils/rendering.js?v=10';
-import { dispatchEvent } from '../handlers/eventHandlers.js?v=10';
+import { SimsAPI } from '../services/api.js?v=11';
+import { formatToolInput, formatToolOutput } from '../utils/toolFormatters.js?v=11';
+import { escapeHtml, renderMarkdown, getEventSummary } from '../utils/rendering.js?v=11';
+import { dispatchEvent } from '../handlers/eventHandlers.js?v=11';
 import {
   getCurrentToolGroup,
   getToolGroup
-} from '../state/sessionState.js?v=10';
-import { initTheme, toggleTheme as toggleThemeUtil } from '../utils/theme.js?v=10';
-import { metricsPanel } from './chat/metricsPanel.js?v=10';
-import { planPanel } from './chat/planPanel.js?v=10';
-import { eventsPanel } from './chat/eventsPanel.js?v=10';
-import { approvalsPanel } from './chat/approvalsPanel.js?v=10';
+} from '../state/sessionState.js?v=11';
+import { initTheme, toggleTheme as toggleThemeUtil } from '../utils/theme.js?v=11';
+import { metricsPanel } from './chat/metricsPanel.js?v=11';
+import { planPanel } from './chat/planPanel.js?v=11';
+import { eventsPanel } from './chat/eventsPanel.js?v=11';
+import { approvalsPanel } from './chat/approvalsPanel.js?v=11';
 
 export function simsApp() {
   return {
