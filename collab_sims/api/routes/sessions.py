@@ -267,11 +267,14 @@ async def get_session_events(
 
 
 @router.patch("/{session_id}/events/{event_id}")
-async def update_event_data(session_id: str, event_id: int, request: dict):
+async def update_event_data(session_id: str, event_id: str, request: dict):
     """
     Update the data field of an event (e.g., checkbox state in DoD).
 
     Request body: {"data": {...}} - The complete new data object for the event
+
+    Note: event_id can be either the database row ID (int) or the event UUID (string).
+          If UUID is provided, we'll find the corresponding row ID.
     """
     import logging
 
@@ -288,8 +291,29 @@ async def update_event_data(session_id: str, event_id: int, request: dict):
         db_tracker = session_manager.db_tracker
         repository = db_tracker.repository
 
+        # Check if event_id is a UUID (contains hyphens) or a row ID (numeric)
+        if "-" in event_id:
+            # It's a UUID - need to find the row ID
+            # Query events to find the one with matching UUID in data
+            events = await repository.get_events(session_id=session_id, limit=1000)
+            matching_event = None
+            for event in events:
+                if event.get("data", {}).get("event_id") == event_id:
+                    matching_event = event
+                    break
+
+            if not matching_event:
+                raise ValueError(f"Event with UUID {event_id} not found")
+
+            # Use the database row ID
+            db_event_id = str(matching_event["event_id"])
+            logger.info(f"🔍 Found database row ID {db_event_id} for UUID {event_id}")
+        else:
+            # It's already a row ID
+            db_event_id = event_id
+
         # Update event data in database
-        await repository.update_event_data(event_id=str(event_id), data=data)
+        await repository.update_event_data(event_id=db_event_id, data=data)
 
         logger.info(f"🟢 Event {event_id} updated successfully")
         return {"session_id": session_id, "event_id": event_id, "status": "success"}
