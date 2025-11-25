@@ -155,6 +155,22 @@ export class SimsAPI {
     return await response.json();
   }
 
+  async postActivityCard(sessionId, activityData) {
+    const response = await fetch(`${this.baseURL}/api/sessions/${sessionId}/activity`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(activityData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to post activity card: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
   async getPendingApprovals(sessionId) {
     const response = await fetch(`${this.baseURL}/api/sessions/${sessionId}/approvals/pending`, {
       method: 'GET',

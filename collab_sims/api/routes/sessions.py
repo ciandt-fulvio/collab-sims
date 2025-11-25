@@ -289,3 +289,56 @@ async def update_session_name(session_id: str, request: dict):
     except Exception as e:
         logger.error(f"🔴 Failed to update session name: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{session_id}/activity")
+async def post_activity_card(session_id: str, request: dict):
+    """
+    Post an activity card event to the session.
+
+    When user clicks on an activity in the Project tab, this endpoint
+    creates an interactive card in the chat with activity details and action buttons.
+
+    Request body: {
+        "project_name": str,
+        "stage_title": str,
+        "activity_id": str,
+        "activity_title": str,
+        "activity_description": str,
+        "activity_script": str,
+        "activity_required": bool,
+        "activity_completed": bool,
+        "verifications": list[dict]
+    }
+    """
+    import logging
+
+    from ...core.events import ActivityCardEvent
+
+    logger = logging.getLogger(__name__)
+
+    logger.info(f"🔵 Creating activity card for session {session_id}")
+
+    try:
+        # Create activity card event
+        event = ActivityCardEvent(
+            session_id=session_id,
+            project_name=request.get("project_name", ""),
+            stage_title=request.get("stage_title", ""),
+            activity_id=request.get("activity_id", ""),
+            activity_title=request.get("activity_title", ""),
+            activity_description=request.get("activity_description", ""),
+            activity_script=request.get("activity_script", ""),
+            activity_required=request.get("activity_required", False),
+            activity_completed=request.get("activity_completed", False),
+            verifications=request.get("verifications", []),
+        )
+
+        # Emit the event through the session manager
+        await session_manager.emit_activity_card(session_id, event)
+
+        logger.info(f"🟢 Activity card created successfully for session {session_id}")
+        return {"session_id": session_id, "event_id": event.event_id, "status": "success"}
+    except Exception as e:
+        logger.error(f"🔴 Failed to create activity card: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

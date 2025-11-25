@@ -888,6 +888,31 @@ class SessionManager:
 
         logger.info(f"Session {session_id} name updated to: {session_name}")
 
+    async def emit_activity_card(self, session_id: str, event: AgentEvent):
+        """
+        Emit an activity card event to the session's event stream.
+
+        This method broadcasts the activity card to all active SSE subscribers
+        and persists it to the database for session history.
+
+        Args:
+            session_id: Session identifier
+            event: ActivityCardEvent to emit
+        """
+        if session_id not in self._sessions:
+            raise ValueError(f"Session {session_id} not found")
+
+        # Convert event to dict format
+        event_dict = self._agent_event_to_dict(event, session_id)
+
+        # Persist to database
+        await self.db_tracker.on_event(event)
+
+        # Broadcast to SSE subscribers
+        await self._broadcast_event(session_id, event_dict)
+
+        logger.info(f"Activity card event emitted for session {session_id}: {event.activity_title}")
+
     def _normalize_db_session(self, db_session: dict[str, Any]) -> dict[str, Any]:
         """Normalize database session data to match API response format.
 

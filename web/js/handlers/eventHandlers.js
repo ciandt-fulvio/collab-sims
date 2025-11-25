@@ -365,6 +365,36 @@ export function handleErrorEvent(context, event) {
 }
 
 /**
+ * Handle activity card event - displays interactive activity card in chat
+ */
+export function handleActivityCardEvent(context, event) {
+  console.log('Activity card event:', event.activity_title);
+
+  // Add the activity card event to messages for rendering
+  // The card will be rendered by the chat HTML template
+  const cardMessage = {
+    id: event.event_id || `activity-card-${Date.now()}-${Math.random()}`,
+    role: 'activity_card',
+    activityData: {
+      project_name: event.project_name,
+      stage_title: event.stage_title,
+      activity_id: event.activity_id,
+      activity_title: event.activity_title,
+      activity_description: event.activity_description,
+      activity_script: event.activity_script,
+      activity_required: event.activity_required,
+      activity_completed: event.activity_completed,
+      verifications: event.verifications || [],
+    },
+    timestamp: event.timestamp || new Date().toISOString(),
+    event_id: event.event_id,
+  };
+
+  context.messages.push(cardMessage);
+  context.scrollToBottom();
+}
+
+/**
  * Main event dispatcher - routes events to specific handlers
  */
 export function dispatchEvent(context, event) {
@@ -383,6 +413,7 @@ export function dispatchEvent(context, event) {
     'complete': handleCompleteEvent,
     'metrics': handleMetricsEvent,
     'error': handleErrorEvent,
+    'activity_card': handleActivityCardEvent,
   };
 
   // Call specific handler if available

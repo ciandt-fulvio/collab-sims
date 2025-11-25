@@ -399,6 +399,96 @@
                   </div>
                 </div>
               </div>
+
+              <!-- Activity Card -->
+              <div
+                x-show="msg.role === 'activity_card'"
+                class="flex justify-start my-4"
+              >
+                <div class="rounded-lg bg-white dark:bg-gray-800 border-2 border-green-300 dark:border-green-600 shadow-lg max-w-2xl w-full">
+                  <!-- Card Header -->
+                  <div class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 px-4 py-3 border-b border-green-200 dark:border-green-700">
+                    <div class="flex items-start justify-between">
+                      <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100" x-text="msg.activityData?.activity_title"></h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1" x-text="msg.activityData?.stage_title"></p>
+                      </div>
+                      <div class="flex items-center gap-2 ml-4">
+                        <span
+                          x-show="msg.activityData?.activity_required"
+                          class="px-2 py-1 rounded text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                        >
+                          Required
+                        </span>
+                        <span
+                          x-show="!msg.activityData?.activity_required"
+                          class="px-2 py-1 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                        >
+                          Optional
+                        </span>
+                        <span
+                          x-show="msg.activityData?.activity_completed"
+                          class="text-2xl text-green-500 dark:text-green-400"
+                        >
+                          ✓
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Card Body -->
+                  <div class="px-4 py-4 space-y-4">
+                    <!-- Description -->
+                    <div>
+                      <p class="text-sm text-gray-700 dark:text-gray-300" x-text="msg.activityData?.activity_description"></p>
+                    </div>
+
+                    <!-- Verifications -->
+                    <div x-show="msg.activityData?.verifications?.length > 0">
+                      <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Verificações (Poka-Yoke)</h4>
+                      <div class="space-y-2">
+                        <template x-for="verification in msg.activityData?.verifications || []" :key="verification.title">
+                          <div class="flex items-start gap-2">
+                            <span class="text-green-500 dark:text-green-400 mt-0.5">✓</span>
+                            <div class="flex-1">
+                              <p class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="verification.title"></p>
+                              <p class="text-xs text-gray-600 dark:text-gray-400" x-text="verification.description"></p>
+                            </div>
+                          </div>
+                        </template>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Card Footer - Action Buttons -->
+                  <div class="px-4 py-3 bg-gray-50 dark:bg-gray-900/30 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2">
+                    <button
+                      @click="console.log('Continuar:', msg.activityData)"
+                      class="px-3 py-1.5 text-sm bg-green-600 dark:bg-green-700 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition"
+                    >
+                      Continuar
+                    </button>
+                    <button
+                      @click="console.log('Marcar como concluído:', msg.activityData)"
+                      class="px-3 py-1.5 text-sm bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition"
+                    >
+                      Marcar como concluído
+                    </button>
+                    <button
+                      @click="console.log('Ajuda:', msg.activityData)"
+                      class="px-3 py-1.5 text-sm bg-yellow-600 dark:bg-yellow-700 text-white rounded-lg hover:bg-yellow-700 dark:hover:bg-yellow-600 transition"
+                    >
+                      Ajuda
+                    </button>
+                    <button
+                      @click="activeTab = 'activities'; expandedActivityGroups.clear(); expandedActivityGroups.add(msg.activityData?.activity_script); expandedActivityGroups = new Set(expandedActivityGroups)"
+                      class="px-3 py-1.5 text-sm bg-purple-600 dark:bg-purple-700 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition"
+                    >
+                      Ver Outputs
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </template>
 
@@ -1386,6 +1476,6 @@
   <!-- End x-data scope -->
 
   <!-- Bootstrap Alpine.js with ES6 modules -->
-  <script type="module" src="../js/alpine-bootstrap.js?v=5"></script>
+  <script type="module" src="../js/alpine-bootstrap.js?v=6"></script>
 </body>
 </html>

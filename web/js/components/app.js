@@ -3,19 +3,19 @@
  * Refactored to use modular imports for maintainability
  */
 
-import { SimsAPI } from '../services/api.js?v=8';
-import { formatToolInput, formatToolOutput } from '../utils/toolFormatters.js?v=8';
-import { escapeHtml, renderMarkdown, getEventSummary } from '../utils/rendering.js?v=8';
-import { dispatchEvent } from '../handlers/eventHandlers.js?v=8';
+import { SimsAPI } from '../services/api.js?v=9';
+import { formatToolInput, formatToolOutput } from '../utils/toolFormatters.js?v=9';
+import { escapeHtml, renderMarkdown, getEventSummary } from '../utils/rendering.js?v=9';
+import { dispatchEvent } from '../handlers/eventHandlers.js?v=9';
 import {
   getCurrentToolGroup,
   getToolGroup
-} from '../state/sessionState.js?v=8';
-import { initTheme, toggleTheme as toggleThemeUtil } from '../utils/theme.js?v=8';
-import { metricsPanel } from './chat/metricsPanel.js?v=8';
-import { planPanel } from './chat/planPanel.js?v=8';
-import { eventsPanel } from './chat/eventsPanel.js?v=8';
-import { approvalsPanel } from './chat/approvalsPanel.js?v=8';
+} from '../state/sessionState.js?v=9';
+import { initTheme, toggleTheme as toggleThemeUtil } from '../utils/theme.js?v=9';
+import { metricsPanel } from './chat/metricsPanel.js?v=9';
+import { planPanel } from './chat/planPanel.js?v=9';
+import { eventsPanel } from './chat/eventsPanel.js?v=9';
+import { approvalsPanel } from './chat/approvalsPanel.js?v=9';
 
 export function simsApp() {
   return {
@@ -571,28 +571,47 @@ export function simsApp() {
       alert(`View result: ${execution.filename}\n\nPath: ${execution.path}\n\nThis will open in a modal viewer (future enhancement)`);
     },
 
-    // View activity outputs - navigates to Activities tab and expands the activity
-    viewActivityOutputs(activity) {
+    // View activity outputs - sends activity card event to backend
+    async viewActivityOutputs(activity) {
       console.log('View activity outputs:', activity.title);
 
-      // Add a system message with a link to outputs
-      const message = `📋 ${activity.title}`;
-      this.addMessage('system', message);
-
-      // Store the activity script to expand in Activities tab
-      this._targetActivityScript = activity.script;
-
-      // Load activity results if not already loaded
-      if (!this.activityResults) {
-        this.loadActivityResults().then(() => {
-          this._navigateToActivityInTab();
-        });
-      } else {
-        this._navigateToActivityInTab();
+      if (!this.sessionId) {
+        console.warn('No session ID available');
+        return;
       }
 
-      // Switch to Activities tab
-      this.activeTab = 'activities';
+      // Find the stage that contains this activity
+      let stageTitle = '';
+      if (this.processProgress && this.processProgress.stages) {
+        for (const stage of this.processProgress.stages) {
+          if (stage.activities && stage.activities.some(a => a.id === activity.id)) {
+            stageTitle = stage.title;
+            break;
+          }
+        }
+      }
+
+      // Prepare activity data for API
+      const activityData = {
+        project_name: this.projectName || '',
+        stage_title: stageTitle,
+        activity_id: activity.id || '',
+        activity_title: activity.title || '',
+        activity_description: activity.description || '',
+        activity_script: activity.script || '',
+        activity_required: activity.required || false,
+        activity_completed: activity.completed || false,
+        verifications: activity.verifications || [],
+      };
+
+      try {
+        // Call API to post activity card
+        await this.api.postActivityCard(this.sessionId, activityData);
+        console.log('Activity card posted successfully');
+      } catch (error) {
+        console.error('Failed to post activity card:', error);
+        this.addMessage('system', `❌ Failed to load activity: ${error.message}`);
+      }
     },
 
     // Helper to navigate to specific activity in Activities tab

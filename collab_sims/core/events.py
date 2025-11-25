@@ -36,6 +36,9 @@ class EventType(str, Enum):
     # Metrics events
     METRICS = "metrics"
 
+    # Activity events
+    ACTIVITY_CARD = "activity_card"
+
 
 @dataclass
 class AgentEvent:
@@ -263,3 +266,23 @@ class MetricsEvent(AgentEvent):
     input_tokens: int = 0
     output_tokens: int = 0
     total_cost_usd: float | None = None
+
+
+@dataclass
+class ActivityCardEvent(AgentEvent):
+    """Emitted when user clicks on an activity in the Project tab.
+
+    This event displays an interactive card in the chat with activity details
+    and action buttons (Continue, Mark as Complete, Help, View Outputs).
+    """
+
+    type: EventType = EventType.ACTIVITY_CARD
+    project_name: str = ""
+    stage_title: str = ""
+    activity_id: str = ""
+    activity_title: str = ""
+    activity_description: str = ""
+    activity_script: str = ""
+    activity_required: bool = False
+    activity_completed: bool = False
+    verifications: list[dict[str, Any]] = field(default_factory=list)
