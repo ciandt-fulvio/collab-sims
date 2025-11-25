@@ -38,6 +38,7 @@
 
   <!-- Custom styles -->
   <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/markdown.css">
 
   <style>
     [x-cloak] { display: none !important; }
@@ -54,112 +55,6 @@
 
     .pulse-live {
       animation: pulse-glow 2s ease-in-out infinite;
-    }
-
-    /* Markdown content styling */
-    .markdown-content {
-      line-height: 1.6;
-    }
-
-    .markdown-content p {
-      margin: 0.75em 0;
-    }
-
-    .markdown-content p:first-child {
-      margin-top: 0;
-    }
-
-    .markdown-content p:last-child {
-      margin-bottom: 0;
-    }
-
-    .markdown-content h1, .markdown-content h2, .markdown-content h3,
-    .markdown-content h4, .markdown-content h5, .markdown-content h6 {
-      margin-top: 1.5em;
-      margin-bottom: 0.5em;
-      font-weight: 600;
-    }
-
-    .markdown-content h1 { font-size: 1.5em; }
-    .markdown-content h2 { font-size: 1.3em; }
-    .markdown-content h3 { font-size: 1.1em; }
-
-    .markdown-content ul, .markdown-content ol {
-      margin: 0.75em 0;
-      padding-left: 1.5em;
-    }
-
-    .markdown-content li {
-      margin: 0.25em 0;
-    }
-
-    .markdown-content code {
-      background: rgba(0, 0, 0, 0.1);
-      padding: 0.2em 0.4em;
-      border-radius: 3px;
-      font-size: 0.9em;
-      font-family: 'Courier New', monospace;
-    }
-
-    .dark .markdown-content code {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .markdown-content pre {
-      margin: 1em 0;
-      padding: 1em;
-      background: #282c34 !important;
-      border-radius: 6px;
-      overflow-x: auto;
-    }
-
-    .markdown-content pre code {
-      background: transparent !important;
-      padding: 0;
-      border-radius: 0;
-      font-size: 0.875em;
-      display: block;
-      color: #abb2bf;
-    }
-
-    /* Remove line highlighting from highlight.js */
-    .markdown-content pre code .hljs-ln-line {
-      background: transparent !important;
-    }
-
-    /* Ensure syntax highlighting colors are visible */
-    .markdown-content pre code .hljs-keyword { color: #c678dd; }
-    .markdown-content pre code .hljs-string { color: #98c379; }
-    .markdown-content pre code .hljs-number { color: #d19a66; }
-    .markdown-content pre code .hljs-function { color: #61afef; }
-    .markdown-content pre code .hljs-comment { color: #5c6370; font-style: italic; }
-    .markdown-content pre code .hljs-built_in { color: #e5c07b; }
-    .markdown-content pre code .hljs-params { color: #abb2bf; }
-    .markdown-content pre code .hljs-title { color: #61afef; }
-
-    .markdown-content blockquote {
-      margin: 1em 0;
-      padding-left: 1em;
-      border-left: 3px solid rgba(0, 0, 0, 0.2);
-      color: rgba(0, 0, 0, 0.6);
-    }
-
-    .dark .markdown-content blockquote {
-      border-left-color: rgba(255, 255, 255, 0.2);
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    .markdown-content a {
-      color: #3b82f6;
-      text-decoration: underline;
-    }
-
-    .dark .markdown-content a {
-      color: #60a5fa;
-    }
-
-    .markdown-content strong {
-      font-weight: 600;
     }
 
     /* Custom scrollbar styling */
