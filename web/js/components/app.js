@@ -173,8 +173,8 @@ export function simsApp() {
         if (this.projectName) {
           try {
             const projectData = await this.api.getProject(this.projectName);
-            this.projectTitle = projectData.title || null;
-            this.projectType = projectData.type || null;
+            this.projectTitle = projectData.frontmatter?.title || null;
+            this.projectType = projectData.frontmatter?.type || null;
           } catch (e) {
             console.warn('Failed to load project metadata:', e);
             this.projectTitle = null;
