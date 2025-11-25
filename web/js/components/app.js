@@ -17,6 +17,10 @@ import { planPanel } from './chat/planPanel.js?v=12';
 import { eventsPanel } from './chat/eventsPanel.js?v=12';
 import { approvalsPanel } from './chat/approvalsPanel.js?v=12';
 
+// Template imports
+import { documentModalTemplate } from './chat/tabs/documentModal.js?v=1';
+import { metricsPanelTemplate } from './chat/tabs/metricsPanelTemplate.js?v=1';
+
 export function simsApp() {
   return {
     // API client
@@ -72,6 +76,10 @@ export function simsApp() {
     ...planPanel(),
     ...eventsPanel(),
     ...approvalsPanel(),
+
+    // Template functions
+    documentModalTemplate,
+    metricsPanelTemplate,
 
     // Track seen message events to prevent duplicates
     seenMessages: new Set(),
