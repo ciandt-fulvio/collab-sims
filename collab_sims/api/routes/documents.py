@@ -34,7 +34,8 @@ class DocumentResponse(BaseModel):
 
     name: str
     type: str
-    content: str
+    content: str  # Markdown content without frontmatter
+    raw_content: str  # Full content including frontmatter (for editing)
     frontmatter: dict
     versions: list[str]
 
@@ -82,7 +83,8 @@ async def get_document(doc_type: str, name: str, project_name: str | None = None
     return DocumentResponse(
         name=name,
         type=doc_type,
-        content=doc.raw_content,
+        content=doc.content,  # Content without frontmatter
+        raw_content=doc.raw_content,  # Full content with frontmatter for editing
         frontmatter=doc.frontmatter,
         versions=versions,
     )

@@ -695,11 +695,12 @@ export function simsApp() {
           docType,
           docName,
           projectName,
-          content: docData.content,
+          content: docData.content,  // Content without frontmatter (for display)
+          rawContent: docData.raw_content,  // Full content with frontmatter (for editing)
           frontmatter: docData.frontmatter,
           versions: docData.versions || [],
           isEditing: false,
-          originalContent: docData.content,
+          originalRawContent: docData.raw_content,
         };
 
         // Show the modal
@@ -721,7 +722,7 @@ export function simsApp() {
 
       // Check if there are unsaved changes
       if (this.activeDocument.isEditing &&
-          this.activeDocument.content !== this.activeDocument.originalContent) {
+          this.activeDocument.rawContent !== this.activeDocument.originalRawContent) {
         if (!confirm('You have unsaved changes. Are you sure you want to close this document?')) {
           return;
         }
@@ -757,10 +758,10 @@ export function simsApp() {
 
       try {
         console.log('💾 Saving document:', doc.docName);
-        await this.api.saveDocument(doc.docType, doc.docName, doc.content, doc.projectName);
+        await this.api.saveDocument(doc.docType, doc.docName, doc.rawContent, doc.projectName);
 
         // Update original content to match saved content
-        doc.originalContent = doc.content;
+        doc.originalRawContent = doc.rawContent;
 
         // Switch back to view mode
         doc.isEditing = false;
@@ -783,7 +784,7 @@ export function simsApp() {
 
       try {
         console.log('💾 Saving document as new version:', doc.docName);
-        const response = await this.api.saveDocumentVersion(doc.docType, doc.docName, doc.content, doc.projectName);
+        const response = await this.api.saveDocumentVersion(doc.docType, doc.docName, doc.rawContent, doc.projectName);
 
         // Update versions list
         if (response.filename) {
@@ -791,7 +792,7 @@ export function simsApp() {
         }
 
         // Update original content to match saved content
-        doc.originalContent = doc.content;
+        doc.originalRawContent = doc.rawContent;
 
         // Switch back to view mode
         doc.isEditing = false;

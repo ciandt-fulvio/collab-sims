@@ -1291,11 +1291,11 @@
 
           <!-- Right: Action buttons -->
           <div class="flex items-center gap-2">
-            <!-- Save as Version (only in edit mode, enabled when has changes) -->
+            <!-- Save as Version (only in edit mode if document has version field, enabled when has changes) -->
             <button
-              x-show="activeDocument?.isEditing"
+              x-show="activeDocument?.isEditing && activeDocument?.frontmatter?.version"
               @click="saveDocumentAsVersion()"
-              :disabled="activeDocument?.content === activeDocument?.originalContent"
+              :disabled="activeDocument?.rawContent === activeDocument?.originalRawContent"
               class="btn btn-outline btn-sm gap-1"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1308,7 +1308,7 @@
             <button
               x-show="activeDocument?.isEditing"
               @click="saveDocumentContent()"
-              :disabled="activeDocument?.content === activeDocument?.originalContent"
+              :disabled="activeDocument?.rawContent === activeDocument?.originalRawContent"
               class="btn btn-success btn-sm gap-1"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1377,7 +1377,7 @@
           <div x-show="activeDocument && activeDocument.isEditing" class="space-y-4">
             <textarea
               id="document-modal-textarea"
-              x-model="activeDocument.content"
+              x-model="activeDocument.rawContent"
               class="textarea textarea-bordered w-full h-[60vh] font-mono text-sm"
               placeholder="Edit document content..."
             ></textarea>
