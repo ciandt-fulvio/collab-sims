@@ -356,6 +356,37 @@ export class SimsAPI {
 
     return await response.json();
   }
+
+  async listProcessTypes() {
+    const response = await fetch(`${this.baseURL}/api/library/process-types`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to list process types: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async createProject(name, content) {
+    const response = await fetch(`${this.baseURL}/api/library/projects`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, content }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create project: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
 }
 
 // EventSource handler for SSE streaming

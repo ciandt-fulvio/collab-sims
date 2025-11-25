@@ -3,8 +3,8 @@
  * Displays projects with their sessions in a hierarchical view
  */
 
-import { SimsAPI } from '../../services/api.js?v=5';
-import { initTheme, toggleTheme as toggleThemeUtil } from '../../utils/theme.js?v=5';
+import { SimsAPI } from '../../services/api.js?v=7';
+import { initTheme, toggleTheme as toggleThemeUtil } from '../../utils/theme.js?v=7';
 
 export function projectsListComponent() {
   return {
@@ -15,33 +15,53 @@ export function projectsListComponent() {
     projects: [],
     sessions: [],
     agents: [],
+    processTypes: [],
     loading: false,
     error: null,
     theme: initTheme(),
     expandedProjects: new Set(),
     creatingSessionFor: null,
 
+    // New project modal state
+    showCreateModal: false,
+    newProject: {
+      name: '',
+      title: '',
+      processType: '',
+      description: ''
+    },
+    creatingProject: false,
+
     // Initialize
     async init() {
       await this.loadData();
     },
 
-    // Load all data (projects, sessions, agents)
+    // Load all data (projects, sessions, agents, processTypes)
     async loadData() {
       this.loading = true;
       this.error = null;
 
       try {
         // Load in parallel
-        const [projectsResponse, sessionsResponse, agentsResponse] = await Promise.all([
+        const [projectsResponse, sessionsResponse, agentsResponse, processTypesResponse] = await Promise.all([
           this.api.listProjects(),
           this.api.listSessions(),
-          this.api.listAgents()
+          this.api.listAgents(),
+          this.api.listProcessTypes()
         ]);
 
         this.projects = projectsResponse.projects || [];
         this.sessions = sessionsResponse.sessions || [];
         this.agents = agentsResponse.agents || [];
+        this.processTypes = processTypesResponse.process_types || [];
+
+        // Sort projects by updated_at or created_at (newest first)
+        this.projects.sort((a, b) => {
+          const dateA = new Date(a.updated_at || a.created_at || 0);
+          const dateB = new Date(b.updated_at || b.created_at || 0);
+          return dateB - dateA;
+        });
 
         // Auto-expand projects that have sessions
         this.projects.forEach(project => {
@@ -55,6 +75,68 @@ export function projectsListComponent() {
         this.error = err.message;
       } finally {
         this.loading = false;
+      }
+    },
+
+    // Open create project modal
+    openCreateModal() {
+      this.newProject = {
+        name: '',
+        title: '',
+        processType: this.processTypes.length > 0 ? this.processTypes[0].id : '',
+        description: ''
+      };
+      this.showCreateModal = true;
+    },
+
+    // Close create project modal
+    closeCreateModal() {
+      this.showCreateModal = false;
+    },
+
+    // Generate project name from title (slug)
+    generateProjectName() {
+      if (this.newProject.title) {
+        this.newProject.name = this.newProject.title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '');
+      }
+    },
+
+    // Create new project
+    async createProject() {
+      if (!this.newProject.name || !this.newProject.title || !this.newProject.processType) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      this.creatingProject = true;
+
+      try {
+        const now = new Date().toISOString().split('T')[0];
+        const content = `---
+name: ${this.newProject.name}
+title: ${this.newProject.title}
+type: ${this.newProject.processType}
+created_at: ${now}
+updated_at: ${now}
+status: active
+---
+
+# ${this.newProject.title}
+
+${this.newProject.description || 'Project description goes here.'}
+`;
+
+        await this.api.createProject(this.newProject.name, content);
+        this.closeCreateModal();
+        await this.loadData();
+      } catch (err) {
+        console.error('Failed to create project:', err);
+        alert('Failed to create project: ' + err.message);
+      } finally {
+        this.creatingProject = false;
       }
     },
 
