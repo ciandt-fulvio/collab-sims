@@ -266,6 +266,41 @@ async def get_session_events(
         raise HTTPException(status_code=500, detail=f"Failed to retrieve events: {str(e)}")
 
 
+@router.patch("/{session_id}/events/{event_id}")
+async def update_event_data(session_id: str, event_id: int, request: dict):
+    """
+    Update the data field of an event (e.g., checkbox state in DoD).
+
+    Request body: {"data": {...}} - The complete new data object for the event
+    """
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    data = request.get("data")
+    if data is None:
+        raise HTTPException(status_code=400, detail="data field is required")
+
+    logger.info(f"🔵 Updating event {event_id} data in session {session_id}")
+
+    try:
+        # Get database tracker
+        db_tracker = session_manager.db_tracker
+        repository = db_tracker.repository
+
+        # Update event data in database
+        await repository.update_event_data(event_id=str(event_id), data=data)
+
+        logger.info(f"🟢 Event {event_id} updated successfully")
+        return {"session_id": session_id, "event_id": event_id, "status": "success"}
+    except ValueError as e:
+        logger.error(f"🔴 Event not found: {e}")
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"🔴 Failed to update event data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.put("/{session_id}/name")
 async def update_session_name(session_id: str, request: dict):
     """

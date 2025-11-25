@@ -114,6 +114,22 @@ export class SimsAPI {
     return await response.json();
   }
 
+  async updateEventData(sessionId, eventId, data) {
+    const response = await fetch(`${this.baseURL}/api/sessions/${sessionId}/events/${eventId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ data }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update event data: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
   async deleteSession(sessionId) {
     const response = await fetch(`${this.baseURL}/api/sessions/${sessionId}`, {
       method: 'DELETE',

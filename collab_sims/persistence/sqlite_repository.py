@@ -403,3 +403,30 @@ class SQLiteRepository(SessionRepository):
             results.append(result)
 
         return results
+
+    async def update_event_data(self, event_id: str, data: dict[str, Any]) -> None:
+        """Update the data field of an event.
+
+        Args:
+            event_id: Event ID to update
+            data: New data dictionary to store
+
+        Raises:
+            ValueError: If event not found
+        """
+        if not self.db:
+            msg = "Repository not initialized"
+            raise RuntimeError(msg)
+
+        data_json = json.dumps(data)
+
+        cursor = await self.db.execute(
+            "UPDATE event SET data = ? WHERE event_id = ?", (data_json, event_id)
+        )
+        await self.db.commit()
+
+        if cursor.rowcount == 0:
+            msg = f"Event {event_id} not found"
+            raise ValueError(msg)
+
+        logger.debug(f"Updated event {event_id} data")

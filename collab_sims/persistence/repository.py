@@ -127,6 +127,19 @@ class SessionRepository(ABC):
         pass
 
     @abstractmethod
+    async def update_event_data(self, event_id: str, data: dict[str, Any]) -> None:
+        """Update the data field of an event.
+
+        Args:
+            event_id: Event ID to update
+            data: New data dictionary to store
+
+        Raises:
+            ValueError: If event not found
+        """
+        pass
+
+    @abstractmethod
     async def get_events(
         self, session_id: str, event_type: str | None = None, limit: int = 100, offset: int = 0
     ) -> list[dict[str, Any]]:

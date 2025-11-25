@@ -728,14 +728,14 @@ export function simsApp() {
     },
 
     // Toggle verification checkbox state
-    toggleVerification(messageId, verificationIndex, checked) {
+    async toggleVerification(messageId, verificationIndex, checked) {
       // Find the message
       const message = this.messages.find(m => m.id === messageId);
       if (!message || !message.activityData || !message.activityData.verifications) {
         return;
       }
 
-      // Update checkbox state
+      // Update checkbox state locally
       if (message.activityData.verifications[verificationIndex]) {
         message.activityData.verifications[verificationIndex].checked = checked;
       }
@@ -746,7 +746,25 @@ export function simsApp() {
         checked
       });
 
-      // TODO: Send state to backend for persistence
+      // Persist to backend
+      if (message.event_id) {
+        try {
+          // Build updated event data with modified verification state
+          const updatedEventData = {
+            ...message.activityData,
+            verifications: message.activityData.verifications
+          };
+
+          await this.api.updateEventData(this.sessionId, message.event_id, updatedEventData);
+          console.log('✅ Verification state persisted to backend');
+        } catch (error) {
+          console.error('❌ Failed to persist verification state:', error);
+          // Revert local change on error
+          if (message.activityData.verifications[verificationIndex]) {
+            message.activityData.verifications[verificationIndex].checked = !checked;
+          }
+        }
+      }
     },
 
     // View agent details using document modal
