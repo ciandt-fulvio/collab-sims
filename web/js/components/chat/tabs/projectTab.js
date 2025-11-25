@@ -82,25 +82,6 @@ export function projectTabTemplate() {
                       <p class="text-xs text-gray-600 dark:text-gray-400" x-text="activity.description"></p>
                     </div>
                   </div>
-
-                  <!-- Definition of Done -->
-                  <div x-show="activity.definition_of_done && activity.definition_of_done.length > 0" class="px-3 pb-3 pt-1 border-t border-gray-200 dark:border-gray-700">
-                    <h6 class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Definition of Done</h6>
-                    <div class="space-y-1.5">
-                      <template x-for="(dodItem, dodIndex) in activity.definition_of_done || []" :key="dodIndex">
-                        <label class="flex items-start gap-2 cursor-pointer group" @click.stop>
-                          <input
-                            type="checkbox"
-                            :checked="dodItem.checked"
-                            @change="toggleDoDItem(stage.id, activity.id, dodIndex, dodItem.checked, $event)"
-                            :disabled="updatingDoD"
-                            class="mt-0.5 rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-500 focus:ring-green-500 dark:focus:ring-green-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                          />
-                          <span class="text-xs text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100" :class="{'line-through text-gray-500 dark:text-gray-500': dodItem.checked}" x-text="dodItem.text"></span>
-                        </label>
-                      </template>
-                    </div>
-                  </div>
                 </div>
               </template>
             </div>
