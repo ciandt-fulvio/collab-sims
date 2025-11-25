@@ -14,7 +14,7 @@ from collab_sims.core.loaders import (
     ProjectLoader,
 )
 
-router = APIRouter()
+router = APIRouter(prefix="/api", tags=["documents"])
 
 # Initialize loaders
 project_loader = ProjectLoader()

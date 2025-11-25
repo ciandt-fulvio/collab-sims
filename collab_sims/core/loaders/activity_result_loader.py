@@ -109,16 +109,18 @@ class ActivityResultLoader:
         """
         return activity_script.replace("-", " ").replace("_", " ").title()
 
-    def get_activity_result(self, project_name: str, filename: str) -> MarkdownDocument | None:
-        """Get a specific activity result by filename.
+    def get_activity_result(self, project_name: str, name: str) -> MarkdownDocument | None:
+        """Get a specific activity result by name.
 
         Args:
             project_name: Project name
-            filename: Result filename (e.g., 'how-might-we_2025-01-15.md')
+            name: Result name without .md extension (e.g., 'how-might-we_2025-01-15')
 
         Returns:
             MarkdownDocument if found, None otherwise
         """
+        # Ensure .md extension is added (consistent with other loaders)
+        filename = f"{name}.md" if not name.endswith(".md") else name
         file_path = self.base_path / project_name / filename
 
         if not file_path.exists():
