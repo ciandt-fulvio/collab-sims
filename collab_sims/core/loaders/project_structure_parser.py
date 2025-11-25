@@ -213,7 +213,7 @@ def parse_project_structure(markdown_content: str) -> ProjectStructure:
 
             # Parse Definition of Done checkboxes
             dod_section_match = re.search(
-                r"^\*\*Definition of Done:\*\*\s*$(.+?)(?=^\*\*|^---|$)",
+                r"^\*\*Definition of Done:\*\*\s*$(.+?)(?=^\*\*|^---|\Z)",
                 activity_content,
                 re.MULTILINE | re.DOTALL,
             )
@@ -231,7 +231,7 @@ def parse_project_structure(markdown_content: str) -> ProjectStructure:
 
             # Parse Activity Results (these are dynamically merged, but we read them if present)
             results_section_match = re.search(
-                r"^\*\*Activity Results:\*\*\s*$(.+?)(?=^---|$)",
+                r"^\*\*Activity Results:\*\*\s*$(.+?)(?=^---|\Z)",
                 activity_content,
                 re.MULTILINE | re.DOTALL,
             )
