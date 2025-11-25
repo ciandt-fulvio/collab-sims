@@ -232,14 +232,14 @@
           <div class="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
 
           <div class="flex flex-col justify-center gap-1">
-            <!-- Header: Project | Activity | Session Name -->
-            <h1 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <!-- Header: Project Name | Session Name -->
+            <h1 class="text-xl font-bold text-gray-900 dark:text-white">
               <span x-text="projectName || 'CollabSims'"></span>
-              <span x-show="projectName" class="text-gray-400">|</span>
-              <span x-show="projectName" class="text-gray-600 dark:text-gray-400 text-lg font-normal">Planning</span>
-              <span x-show="sessionName" class="text-gray-400">|</span>
+              <span x-show="sessionName" class="text-gray-400"> || </span>
               <span x-show="sessionName" class="text-gray-600 dark:text-gray-400 text-base font-normal italic">"<span x-text="sessionName"></span>"</span>
             </h1>
+            <!-- Project Type -->
+            <p x-show="projectType" class="text-sm text-gray-600 dark:text-gray-400" x-text="projectType"></p>
             <div
               x-show="projectName || agentName"
               x-cloak

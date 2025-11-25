@@ -25,6 +25,7 @@ export function simsApp() {
     // Session state
     sessionId: null,
     projectName: null,  // project name for this session
+    projectType: null,  // project type (loaded from project metadata)
     agentName: null,    // agent name if specified
     sessionName: null,  // session name (from first message)
     sessionNameCaptured: false,  // flag to capture only once
@@ -166,6 +167,18 @@ export function simsApp() {
         this.projectName = session.project_name || null;
         this.agentName = session.agent_name || null;
         this.sessionName = session.session_name || null;  // Load existing session name
+
+        // Load project type if project name exists
+        if (this.projectName) {
+          try {
+            const projectData = await this.api.getProject(this.projectName);
+            this.projectType = projectData.type || null;
+          } catch (e) {
+            console.warn('Failed to load project type:', e);
+            this.projectType = null;
+          }
+        }
+
         // If session already has a name, mark as captured to prevent overwrite
         if (this.sessionName) {
           this.sessionNameCaptured = true;
