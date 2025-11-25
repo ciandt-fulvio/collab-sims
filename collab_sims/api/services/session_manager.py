@@ -327,6 +327,27 @@ class SessionManager:
         """
         return [self._get_session_metadata(sid) for sid in self._sessions.keys()]
 
+    async def list_all_sessions_from_database(
+        self, status: str | None = None, limit: int = 1000
+    ) -> list[dict[str, Any]]:
+        """List all sessions from database (not just active ones in memory).
+
+        This is useful for showing session history and allowing users to reopen closed sessions.
+
+        Args:
+            status: Filter by status ('active', 'closed', or None for all)
+            limit: Maximum number of sessions to return
+
+        Returns:
+            List of session metadata dicts from database
+        """
+        try:
+            sessions = await self.db_tracker.repository.list_sessions(status=status, limit=limit)
+            return sessions
+        except Exception as e:
+            logger.error(f"Failed to list sessions from database: {e}")
+            return []
+
     async def query_session(
         self, session_id: str, prompt: str
     ) -> tuple[list[dict[str, Any]], str, str | None]:
