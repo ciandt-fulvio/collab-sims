@@ -83,7 +83,7 @@ Veja [README.md](README.md) para comandos completos.
 
 ## Atenção:
 
-- Sempre que vc fizer um plano, guarde ele de forma que eu possa consultar depois. Ele deve ser armazenado em ./docs/plans/ com um arquivo markdown com o formato YYYYMMDD_nome_curto.md 
+- Sempre que vc fizer um plano, guarde ele de forma que eu possa consultar depois. Ele deve ser armazenado em <proje/docs/plans com um arquivo markdown com o formato YYYYMMDD_nome_curto.md 
 - Sempre que for fazer um commit, rode o ruff fix
 - Sempre que uma nova funcionalidade for adicionada, tente criar testes automatizados para ela, prefira sempre os testes unitários, quando não for possível, crie testes de integração
 - Sempre que um bug for corrigido, crie um teste que reproduza o bug e depois corrija o bug

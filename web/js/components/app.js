@@ -61,7 +61,7 @@ export function simsApp() {
     // Activity results state (Activities tab)
     activityResults: null,
     loadingActivityResults: false,
-    selectedActivityGroup: null,
+    expandedActivityGroups: new Set(),
 
     // Agents state
     selectedAgent: null,     // Currently selected agent for viewing
@@ -530,6 +530,20 @@ export function simsApp() {
 
     isStageExpanded(stageId) {
       return this.expandedStages.has(stageId);
+    },
+
+    toggleActivityGroupExpansion(groupScript) {
+      if (this.expandedActivityGroups.has(groupScript)) {
+        this.expandedActivityGroups.delete(groupScript);
+      } else {
+        this.expandedActivityGroups.add(groupScript);
+      }
+      // Force reactivity
+      this.expandedActivityGroups = new Set(this.expandedActivityGroups);
+    },
+
+    isActivityGroupExpanded(groupScript) {
+      return this.expandedActivityGroups.has(groupScript);
     },
 
     // Progress calculation helpers
