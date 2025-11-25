@@ -1354,27 +1354,23 @@
           <!-- View Mode -->
           <div
             x-show="activeDocument && !activeDocument.isEditing"
-            class="space-y-4"
+            class="prose max-w-none bg-white dark:bg-gray-900 p-6 rounded-lg"
           >
-            <!-- Frontmatter Section -->
+            <!-- Frontmatter -->
             <div
               x-show="activeDocument?.frontmatter && Object.keys(activeDocument.frontmatter).length > 0"
-              class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+              class="text-xs font-mono text-gray-600 dark:text-gray-400 space-y-1 mb-6"
             >
-              <div class="text-xs font-mono text-gray-600 dark:text-gray-400 space-y-1">
-                <template x-for="[key, value] in Object.entries(activeDocument?.frontmatter || {})" :key="key">
-                  <div class="flex gap-2">
-                    <span class="font-semibold" x-text="key + ':'"></span>
-                    <span x-text="Array.isArray(value) ? value.join(', ') : value"></span>
-                  </div>
-                </template>
-              </div>
+              <template x-for="[key, value] in Object.entries(activeDocument?.frontmatter || {})" :key="key">
+                <div class="flex gap-2">
+                  <span class="font-semibold" x-text="key + ':'"></span>
+                  <span x-text="Array.isArray(value) ? value.join(', ') : value"></span>
+                </div>
+              </template>
             </div>
 
-            <!-- Content Section -->
-            <div class="prose max-w-none bg-white dark:bg-gray-900 p-6 rounded-lg">
-              <div class="markdown-content text-gray-900 dark:text-gray-100" x-html="renderMarkdown(activeDocument?.content || '')"></div>
-            </div>
+            <!-- Content -->
+            <div class="markdown-content text-gray-900 dark:text-gray-100" x-html="renderMarkdown(activeDocument?.content || '')"></div>
           </div>
 
           <!-- Edit Mode -->
