@@ -199,12 +199,16 @@ class ActivityResultLoader:
 
         Args:
             project_name: Project name
-            filename: Result filename
+            filename: Result filename (with or without .md extension)
             content: Full markdown content (including frontmatter)
 
         Returns:
             True if successful, False otherwise
         """
+        # Add .md extension if not present (consistency with other loaders)
+        if not filename.endswith(".md"):
+            filename = f"{filename}.md"
+
         file_path = self.base_path / project_name / filename
 
         try:

@@ -198,6 +198,74 @@ class TestGroupByActivity:
         assert activity_names == sorted(activity_names)
 
 
+class TestSaveActivityResult:
+    """Tests for save_activity_result method."""
+
+    @pytest.fixture
+    def temp_results_dir(self) -> Path:
+        """Create a temporary directory for testing saves.
+
+        Returns:
+            Path: Temporary directory path
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield Path(tmpdir)
+
+    def test_save_adds_md_extension_if_missing(self, temp_results_dir):
+        """Test that .md extension is added if not present."""
+        loader = ActivityResultLoader(base_path=temp_results_dir)
+
+        content = """---
+status: completed
+---
+
+# Test Result
+"""
+        # Save without .md extension
+        success = loader.save_activity_result("test-project", "test-result", content)
+
+        assert success is True
+        # Verify file was created with .md extension
+        result_file = temp_results_dir / "test-project" / "test-result.md"
+        assert result_file.exists()
+        assert result_file.read_text() == content
+
+    def test_save_keeps_md_extension_if_present(self, temp_results_dir):
+        """Test that existing .md extension is preserved."""
+        loader = ActivityResultLoader(base_path=temp_results_dir)
+
+        content = """---
+status: completed
+---
+
+# Test Result
+"""
+        # Save with .md extension
+        success = loader.save_activity_result("test-project", "test-result.md", content)
+
+        assert success is True
+        # Verify file was created (not test-result.md.md)
+        result_file = temp_results_dir / "test-project" / "test-result.md"
+        assert result_file.exists()
+        assert result_file.read_text() == content
+
+        # Make sure no double extension was created
+        double_ext_file = temp_results_dir / "test-project" / "test-result.md.md"
+        assert not double_ext_file.exists()
+
+    def test_save_creates_project_directory_if_missing(self, temp_results_dir):
+        """Test that project directory is created if it doesn't exist."""
+        loader = ActivityResultLoader(base_path=temp_results_dir)
+
+        content = "# Test"
+        success = loader.save_activity_result("new-project", "result", content)
+
+        assert success is True
+        project_dir = temp_results_dir / "new-project"
+        assert project_dir.exists()
+        assert project_dir.is_dir()
+
+
 if __name__ == "__main__":
     import sys
 
