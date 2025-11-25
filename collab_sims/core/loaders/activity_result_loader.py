@@ -37,15 +37,15 @@ class ActivityResultLoader:
         results = []
         for md_file in project_path.glob("*.md"):
             try:
-                # Parse filename: {activity-script}_{timestamp}.md
-                match = re.match(r"^(.+?)_(\d{4}-\d{2}-\d{2})\.md$", md_file.name)
+                # Parse filename: {activity-script}_v{number}.md
+                match = re.match(r"^(.+?)_v(\d+)\.md$", md_file.name)
 
                 if not match:
                     print(f"Skipping file with invalid naming: {md_file.name}")
                     continue
 
                 activity_script = match.group(1)
-                date_str = match.group(2)
+                version_num = int(match.group(2))
 
                 # Parse markdown document
                 doc = parse_markdown_with_frontmatter(md_file)
@@ -53,7 +53,8 @@ class ActivityResultLoader:
                 result_data = {
                     "filename": md_file.name,
                     "activity_script": activity_script,
-                    "created_at": date_str,
+                    "version": version_num,
+                    "created_at": doc.frontmatter.get("created_at", ""),
                     "status": doc.frontmatter.get("status", "completed"),
                     "metadata": doc.frontmatter,
                     "path": str(md_file.relative_to(self.base_path)),
@@ -63,8 +64,8 @@ class ActivityResultLoader:
                 print(f"Error loading activity result {md_file}: {e}")
                 continue
 
-        # Sort by date (most recent first)
-        results.sort(key=lambda r: r.get("created_at", ""), reverse=True)
+        # Sort by version (most recent version first)
+        results.sort(key=lambda r: r.get("version", 0), reverse=True)
         return results
 
     def group_by_activity(self, results: list[dict]) -> list[dict]:

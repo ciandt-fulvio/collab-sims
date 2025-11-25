@@ -34,19 +34,20 @@ class TestGetActivityResult:
             project_dir = tmppath / "test-project"
             project_dir.mkdir(parents=True)
 
-            # Create sample activity result file
+            # Create sample activity result file using versioned naming
             result_content = """---
 status: completed
 participants: "Alice, Bob"
 session_id: "test-123"
+version: 1
 ---
 
 # Test Activity Result
 
 This is a test activity result.
 """
-            (project_dir / "test-activity_2025-01-15.md").write_text(result_content)
-            (project_dir / "another-activity_2025-01-20.md").write_text(result_content)
+            (project_dir / "test-activity_v1.md").write_text(result_content)
+            (project_dir / "another-activity_v1.md").write_text(result_content)
 
             yield tmppath
 
@@ -59,7 +60,7 @@ This is a test activity result.
         loader = ActivityResultLoader(base_path=temp_results_dir)
 
         # Load without .md extension (the bug case)
-        result = loader.get_activity_result("test-project", "test-activity_2025-01-15")
+        result = loader.get_activity_result("test-project", "test-activity_v1")
 
         assert result is not None
         assert result.frontmatter.get("status") == "completed"
@@ -74,7 +75,7 @@ This is a test activity result.
         loader = ActivityResultLoader(base_path=temp_results_dir)
 
         # Load with .md extension
-        result = loader.get_activity_result("test-project", "test-activity_2025-01-15.md")
+        result = loader.get_activity_result("test-project", "test-activity_v1.md")
 
         assert result is not None
         assert result.frontmatter.get("status") == "completed"
@@ -83,7 +84,7 @@ This is a test activity result.
         """Test that loading a nonexistent result returns None."""
         loader = ActivityResultLoader(base_path=temp_results_dir)
 
-        result = loader.get_activity_result("test-project", "nonexistent_2025-01-01")
+        result = loader.get_activity_result("test-project", "nonexistent_v1")
 
         assert result is None
 
@@ -91,7 +92,7 @@ This is a test activity result.
         """Test that loading from a nonexistent project returns None."""
         loader = ActivityResultLoader(base_path=temp_results_dir)
 
-        result = loader.get_activity_result("nonexistent-project", "test-activity_2025-01-15")
+        result = loader.get_activity_result("nonexistent-project", "test-activity_v1")
 
         assert result is None
 
@@ -108,22 +109,31 @@ class TestListActivityResults:
             project_dir = tmppath / "multi-project"
             project_dir.mkdir(parents=True)
 
-            # Create multiple activity results
+            # Create multiple activity results using versioned naming
             content1 = """---
 status: completed
 participants: "Team A"
+version: 1
 ---
 # Activity 1
 """
             content2 = """---
 status: in_progress
 participants: "Team B"
+version: 1
 ---
 # Activity 2
 """
-            (project_dir / "activity-one_2025-01-15.md").write_text(content1)
-            (project_dir / "activity-two_2025-01-20.md").write_text(content2)
-            (project_dir / "activity-one_2025-01-10.md").write_text(content1)
+            content3 = """---
+status: completed
+participants: "Team A"
+version: 2
+---
+# Activity 1 v2
+"""
+            (project_dir / "activity-one_v1.md").write_text(content1)
+            (project_dir / "activity-two_v1.md").write_text(content2)
+            (project_dir / "activity-one_v2.md").write_text(content3)
 
             # Create an invalid file (won't match naming pattern)
             (project_dir / "invalid-file.md").write_text("# Invalid")
@@ -140,13 +150,13 @@ participants: "Team B"
         assert len(results) == 3
 
     def test_list_results_sorted_by_date_descending(self, temp_results_dir: Path):
-        """Test that results are sorted by date, most recent first."""
+        """Test that results are sorted by version, most recent first."""
         loader = ActivityResultLoader(base_path=temp_results_dir)
 
         results = loader.list_activity_results("multi-project")
 
-        dates = [r["created_at"] for r in results]
-        assert dates == sorted(dates, reverse=True)
+        versions = [r["version"] for r in results]
+        assert versions == sorted(versions, reverse=True)
 
     def test_list_results_for_nonexistent_project(self, temp_results_dir: Path):
         """Test that nonexistent project returns empty list."""
@@ -196,6 +206,108 @@ class TestGroupByActivity:
 
         activity_names = [g["activity_script"] for g in groups]
         assert activity_names == sorted(activity_names)
+
+
+class TestListActivityResultsWithVersioning:
+    """Tests for list_activity_results with versioned files (_vNN pattern)."""
+
+    @pytest.fixture
+    def temp_versioned_dir(self) -> Path:
+        """Create a temporary directory with versioned activity files."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmppath = Path(tmpdir)
+
+            project_dir = tmppath / "versioned-project"
+            project_dir.mkdir(parents=True)
+
+            # Create versioned activity results (the correct pattern)
+            content1 = """---
+status: completed
+participants: "Team A"
+version: 1
+---
+# How Might We v1
+"""
+            content2 = """---
+status: completed
+participants: "Team A"
+version: 2
+---
+# How Might We v2
+"""
+            content3 = """---
+status: in_progress
+participants: "Team B"
+version: 1
+---
+# Design Criteria v1
+"""
+            (project_dir / "how-might-we_v1.md").write_text(content1)
+            (project_dir / "how-might-we_v2.md").write_text(content2)
+            (project_dir / "design-criteria_v1.md").write_text(content3)
+
+            # Create old-style file with timestamp (should be ignored or handled differently)
+            old_content = """---
+status: completed
+---
+# Old Style
+"""
+            (project_dir / "old-activity_2025-01-15.md").write_text(old_content)
+
+            yield tmppath
+
+    def test_list_versioned_files(self, temp_versioned_dir: Path):
+        """Test that versioned files (_vNN) are correctly listed."""
+        loader = ActivityResultLoader(base_path=temp_versioned_dir)
+
+        results = loader.list_activity_results("versioned-project")
+
+        # Should find 3 versioned files (old timestamp format should be skipped)
+        versioned_results = [r for r in results if "_v" in r["filename"]]
+        assert len(versioned_results) == 3
+
+    def test_versioned_files_have_correct_metadata(self, temp_versioned_dir: Path):
+        """Test that versioned files have correct activity_script extracted."""
+        loader = ActivityResultLoader(base_path=temp_versioned_dir)
+
+        results = loader.list_activity_results("versioned-project")
+
+        # Find the how-might-we results
+        hmw_results = [r for r in results if r["activity_script"] == "how-might-we"]
+        assert len(hmw_results) == 2
+
+        # Verify they have different versions
+        filenames = [r["filename"] for r in hmw_results]
+        assert "how-might-we_v1.md" in filenames
+        assert "how-might-we_v2.md" in filenames
+
+    def test_versioned_files_sorted_by_version(self, temp_versioned_dir: Path):
+        """Test that versioned files are sorted correctly (most recent version first)."""
+        loader = ActivityResultLoader(base_path=temp_versioned_dir)
+
+        results = loader.list_activity_results("versioned-project")
+
+        # Find how-might-we results
+        hmw_results = [r for r in results if r["activity_script"] == "how-might-we"]
+
+        # Should be sorted with v2 before v1 (descending version order)
+        assert hmw_results[0]["filename"] == "how-might-we_v2.md"
+        assert hmw_results[1]["filename"] == "how-might-we_v1.md"
+
+    def test_grouping_with_versioned_files(self, temp_versioned_dir: Path):
+        """Test that grouping works correctly with versioned files."""
+        loader = ActivityResultLoader(base_path=temp_versioned_dir)
+
+        results = loader.list_activity_results("versioned-project")
+        grouped = loader.group_by_activity(results)
+
+        # Should have 2 groups: how-might-we and design-criteria
+        assert len(grouped) == 2
+
+        # Find how-might-we group
+        hmw_group = next((g for g in grouped if g["activity_script"] == "how-might-we"), None)
+        assert hmw_group is not None
+        assert len(hmw_group["executions"]) == 2
 
 
 class TestSaveActivityResult:
