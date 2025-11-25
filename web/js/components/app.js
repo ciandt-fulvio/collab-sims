@@ -3,19 +3,19 @@
  * Refactored to use modular imports for maintainability
  */
 
-import { SimsAPI } from '../services/api.js?v=11';
-import { formatToolInput, formatToolOutput } from '../utils/toolFormatters.js?v=11';
-import { escapeHtml, renderMarkdown, getEventSummary } from '../utils/rendering.js?v=11';
-import { dispatchEvent } from '../handlers/eventHandlers.js?v=11';
+import { SimsAPI } from '../services/api.js?v=12';
+import { formatToolInput, formatToolOutput } from '../utils/toolFormatters.js?v=12';
+import { escapeHtml, renderMarkdown, getEventSummary } from '../utils/rendering.js?v=12';
+import { dispatchEvent } from '../handlers/eventHandlers.js?v=12';
 import {
   getCurrentToolGroup,
   getToolGroup
-} from '../state/sessionState.js?v=11';
-import { initTheme, toggleTheme as toggleThemeUtil } from '../utils/theme.js?v=11';
-import { metricsPanel } from './chat/metricsPanel.js?v=11';
-import { planPanel } from './chat/planPanel.js?v=11';
-import { eventsPanel } from './chat/eventsPanel.js?v=11';
-import { approvalsPanel } from './chat/approvalsPanel.js?v=11';
+} from '../state/sessionState.js?v=12';
+import { initTheme, toggleTheme as toggleThemeUtil } from '../utils/theme.js?v=12';
+import { metricsPanel } from './chat/metricsPanel.js?v=12';
+import { planPanel } from './chat/planPanel.js?v=12';
+import { eventsPanel } from './chat/eventsPanel.js?v=12';
+import { approvalsPanel } from './chat/approvalsPanel.js?v=12';
 
 export function simsApp() {
   return {
@@ -593,6 +593,19 @@ export function simsApp() {
         }
       }
 
+      // Convert definition_of_done (array of strings) to verifications (array of objects)
+      let verifications = [];
+      if (activity.definition_of_done && Array.isArray(activity.definition_of_done)) {
+        verifications = activity.definition_of_done.map(item => ({
+          title: item,
+          description: '',
+          checked: false
+        }));
+      } else if (activity.verifications && Array.isArray(activity.verifications)) {
+        // Support both formats (legacy verifications or new definition_of_done)
+        verifications = activity.verifications;
+      }
+
       // Prepare activity data for API
       const activityData = {
         project_name: this.projectName || '',
@@ -603,7 +616,7 @@ export function simsApp() {
         activity_script: activity.script || '',
         activity_required: activity.required || false,
         activity_completed: activity.completed || false,
-        verifications: activity.verifications || [],
+        verifications: verifications,
       };
 
       try {
