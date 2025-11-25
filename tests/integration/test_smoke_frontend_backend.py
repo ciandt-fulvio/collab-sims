@@ -93,10 +93,10 @@ class TestSessionCreationAndMetadata:
                     "approval_config": {
                         "mode": "auto",
                         "tool_policies": {},
-                        "auto_approved_tools": []
-                    }
-                }
-            }
+                        "auto_approved_tools": [],
+                    },
+                },
+            },
         )
 
         # Should return 200, not 500 (internal server error)
@@ -132,8 +132,8 @@ class TestSessionCreationAndMetadata:
             json={
                 "project_name": "research-ux",
                 "agent_name": "researcher",
-                "config": {"include_partial_messages": True}
-            }
+                "config": {"include_partial_messages": True},
+            },
         )
         assert create_response.status_code == 200
 
@@ -204,8 +204,8 @@ class TestCriticalWorkflow:
             json={
                 "project_name": project_name,
                 "agent_name": agent_name,
-                "config": {"include_partial_messages": True}
-            }
+                "config": {"include_partial_messages": True},
+            },
         )
         assert create_response.status_code == 200, (
             f"Session creation failed: {create_response.text}"
@@ -229,6 +229,4 @@ class TestCriticalWorkflow:
 
         # All library endpoints must work (bug #2, #4)
         for resp in [lib_projects, lib_agents, lib_scripts]:
-            assert resp.status_code == 200, (
-                f"Library endpoint failed: {resp.url}"
-            )
+            assert resp.status_code == 200, f"Library endpoint failed: {resp.url}"

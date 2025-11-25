@@ -31,9 +31,7 @@ class TestSQLiteRepositoryInitialization:
         assert repo.db is not None
 
         # Verify tables exist
-        cursor = await repo.db.execute(
-            "SELECT name FROM sqlite_master WHERE type='table'"
-        )
+        cursor = await repo.db.execute("SELECT name FROM sqlite_master WHERE type='table'")
         tables = [row[0] for row in await cursor.fetchall()]
         assert "session" in tables
         assert "event" in tables
@@ -91,7 +89,9 @@ class TestSQLiteRepositorySessionOperations:
         metadata = {"role": "worker", "tags": ["dev", "test"]}
         created_at = datetime.now()
 
-        await repo.create_session(session_id, None, created_at, project_name="test-project", metadata=metadata)
+        await repo.create_session(
+            session_id, None, created_at, project_name="test-project", metadata=metadata
+        )
 
         session = await repo.get_session(session_id)
         assert session["metadata"] == metadata
@@ -223,24 +223,22 @@ class TestSQLiteRepositoryEventOperations:
         await repo.initialize()
 
         # Create test session
-        await repo.create_session("test-session", "user-1", datetime.now(), project_name="test-project")
+        await repo.create_session(
+            "test-session", "user-1", datetime.now(), project_name="test-project"
+        )
 
         yield repo
         await repo.close()
 
     async def test_add_event_basic(self, repo_with_session):
         """Test adding a basic event."""
-        event_data = {
-            "type": "message",
-            "role": "assistant",
-            "content": "Hello!"
-        }
+        event_data = {"type": "message", "role": "assistant", "content": "Hello!"}
 
         await repo_with_session.add_event(
             session_id="test-session",
             event_type="message",
             timestamp=datetime.now(),
-            data=event_data
+            data=event_data,
         )
 
         events = await repo_with_session.get_events("test-session")
@@ -257,7 +255,7 @@ class TestSQLiteRepositoryEventOperations:
             event_type="query",
             timestamp=datetime.now(),
             data=event_data,
-            query_index=1
+            query_index=1,
         )
 
         events = await repo_with_session.get_events("test-session")
@@ -272,7 +270,7 @@ class TestSQLiteRepositoryEventOperations:
             event_type="tool_use",
             timestamp=datetime.now(),
             data=event_data,
-            message_id="msg_123"
+            message_id="msg_123",
         )
 
         events = await repo_with_session.get_events("test-session")
@@ -287,14 +285,11 @@ class TestSQLiteRepositoryEventOperations:
                 session_id="test-session",
                 event_type=event_type,
                 timestamp=timestamp,
-                data={"type": event_type}
+                data={"type": event_type},
             )
 
         # Filter by type
-        messages = await repo_with_session.get_events(
-            "test-session",
-            event_type="message"
-        )
+        messages = await repo_with_session.get_events("test-session", event_type="message")
         assert len(messages) == 2
         assert all(e["event_type"] == "message" for e in messages)
 
@@ -307,7 +302,7 @@ class TestSQLiteRepositoryEventOperations:
                 session_id="test-session",
                 event_type="message",
                 timestamp=timestamp,
-                data={"index": i}
+                data={"index": i},
             )
 
         # Get first page
@@ -327,7 +322,7 @@ class TestSQLiteRepositoryEventOperations:
                 session_id="test-session",
                 event_type="message",
                 timestamp=timestamp,
-                data={"index": i}
+                data={"index": i},
             )
 
         count = await repo_with_session.count_events("test-session")
@@ -341,13 +336,10 @@ class TestSQLiteRepositoryEventOperations:
                 session_id="test-session",
                 event_type=event_type,
                 timestamp=timestamp,
-                data={"type": event_type}
+                data={"type": event_type},
             )
 
-        count = await repo_with_session.count_events(
-            "test-session",
-            event_type="message"
-        )
+        count = await repo_with_session.count_events("test-session", event_type="message")
         assert count == 2
 
 
@@ -371,10 +363,7 @@ class TestSQLiteRepositoryCascadeDeletion:
         timestamp = datetime.now()
         for i in range(3):
             await repo.add_event(
-                session_id=session_id,
-                event_type="message",
-                timestamp=timestamp,
-                data={"index": i}
+                session_id=session_id, event_type="message", timestamp=timestamp, data={"index": i}
             )
 
         # Verify events exist

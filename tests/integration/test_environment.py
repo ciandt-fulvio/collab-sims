@@ -37,9 +37,7 @@ class TestPythonVersion:
         actual_version = f"{version_info.major}.{version_info.minor}.{version_info.micro}"
 
         assert version_info.major == 3, f"Python 3.x required, got {actual_version}"
-        assert (
-            version_info.minor >= 13
-        ), f"Python 3.13+ required, got {actual_version}"
+        assert version_info.minor >= 13, f"Python 3.13+ required, got {actual_version}"
 
     def test_python_executable_path(self):
         """Verify Python executable is from expected location.
@@ -53,9 +51,7 @@ class TestPythonVersion:
         is_venv = ".venv" in str(executable)
         is_system_313_plus = sys.version_info >= (3, 13)
 
-        assert (
-            is_venv or is_system_313_plus
-        ), f"Expected venv or Python 3.13+, got {executable}"
+        assert is_venv or is_system_313_plus, f"Expected venv or Python 3.13+, got {executable}"
 
 
 class TestCriticalDependencies:
@@ -150,13 +146,11 @@ class TestCoreModuleImports:
 
         except ImportError as e:
             pytest.fail(
-                f"Failed to import {module_path}: {e}\n"
-                "This indicates a dependency or import issue."
+                f"Failed to import {module_path}: {e}\nThis indicates a dependency or import issue."
             )
         except Exception as e:
             pytest.fail(
-                f"Unexpected error importing {module_path}: {e}\n"
-                f"Error type: {type(e).__name__}"
+                f"Unexpected error importing {module_path}: {e}\nError type: {type(e).__name__}"
             )
 
     def test_collabsims_agent_class_accessible(self):
@@ -207,9 +201,7 @@ class TestAPIInitialization:
 
         for route in expected_routes:
             matching_routes = [r for r in routes if route in r]
-            assert (
-                len(matching_routes) > 0
-            ), f"Expected route '{route}' not found in {routes}"
+            assert len(matching_routes) > 0, f"Expected route '{route}' not found in {routes}"
 
     def test_api_can_create_test_client(self):
         """Test that a test client can be created for the API."""
@@ -248,8 +240,7 @@ class TestEnvironmentConfiguration:
         # This is informational - not a hard requirement
         if not has_venv:
             print(
-                "⚠️  Not running in a virtual environment. "
-                "Consider using: python3.13 -m venv .venv"
+                "⚠️  Not running in a virtual environment. Consider using: python3.13 -m venv .venv"
             )
 
     def test_site_packages_accessible(self):
@@ -283,10 +274,7 @@ class TestPackageIntegration:
             assert Tool is not None
 
         except ImportError as e:
-            pytest.fail(
-                f"Failed to import MCP types: {e}\n"
-                "Claude Agent SDK requires MCP package."
-            )
+            pytest.fail(f"Failed to import MCP types: {e}\nClaude Agent SDK requires MCP package.")
 
     def test_jsonschema_validation_works(self):
         """Test that jsonschema validation works (uses attrs internally)."""

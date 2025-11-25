@@ -72,7 +72,7 @@ class SQLiteRepository(SessionRepository):
         project_name: str,
         agent_name: str | None = None,
         session_name: str | None = None,
-        metadata: dict[str, Any] | None = None
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Create a new session record."""
         metadata_json = json.dumps(metadata) if metadata else None
@@ -82,7 +82,15 @@ class SQLiteRepository(SessionRepository):
             INSERT INTO session (session_id, project_name, session_name, agent_name, user_id, created_at, status, query_count, metadata)
             VALUES (?, ?, ?, ?, ?, ?, 'active', 0, ?)
             """,
-            (session_id, project_name, session_name, agent_name, user_id, created_at.isoformat(), metadata_json)
+            (
+                session_id,
+                project_name,
+                session_name,
+                agent_name,
+                user_id,
+                created_at.isoformat(),
+                metadata_json,
+            ),
         )
         await self.db.commit()
         logger.debug(f"Created session {session_id} for project {project_name}")
@@ -92,7 +100,7 @@ class SQLiteRepository(SessionRepository):
         session_id: str,
         closed_at: datetime | None = None,
         status: str | None = None,
-        query_count: int | None = None
+        query_count: int | None = None,
     ) -> None:
         """Update session record."""
         updates = []
@@ -122,10 +130,7 @@ class SQLiteRepository(SessionRepository):
 
     async def get_session(self, session_id: str) -> dict[str, Any] | None:
         """Get session by ID."""
-        cursor = await self.db.execute(
-            "SELECT * FROM session WHERE session_id = ?",
-            (session_id,)
-        )
+        cursor = await self.db.execute("SELECT * FROM session WHERE session_id = ?", (session_id,))
         row = await cursor.fetchone()
 
         if row is None:
@@ -144,7 +149,7 @@ class SQLiteRepository(SessionRepository):
         status: str | None = None,
         project_name: str | None = None,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
     ) -> list[dict[str, Any]]:
         """List sessions with optional filtering."""
         query = "SELECT * FROM session WHERE 1=1"
@@ -178,11 +183,7 @@ class SQLiteRepository(SessionRepository):
 
         return results
 
-    async def count_sessions(
-        self,
-        user_id: str | None = None,
-        status: str | None = None
-    ) -> int:
+    async def count_sessions(self, user_id: str | None = None, status: str | None = None) -> int:
         """Count sessions matching criteria."""
         query = "SELECT COUNT(*) as count FROM session WHERE 1=1"
         params = []
@@ -206,7 +207,7 @@ class SQLiteRepository(SessionRepository):
         timestamp: datetime,
         data: dict[str, Any],
         query_index: int | None = None,
-        message_id: str | None = None
+        message_id: str | None = None,
     ) -> None:
         """Add an event to the database."""
         data_json = json.dumps(data)
@@ -216,16 +217,12 @@ class SQLiteRepository(SessionRepository):
             INSERT INTO event (session_id, event_type, timestamp, data, query_index, message_id)
             VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (session_id, event_type, timestamp.isoformat(), data_json, query_index, message_id)
+            (session_id, event_type, timestamp.isoformat(), data_json, query_index, message_id),
         )
         await self.db.commit()
 
     async def get_events(
-        self,
-        session_id: str,
-        event_type: str | None = None,
-        limit: int = 100,
-        offset: int = 0
+        self, session_id: str, event_type: str | None = None, limit: int = 100, offset: int = 0
     ) -> list[dict[str, Any]]:
         """Get events for a session."""
         query = "SELECT * FROM event WHERE session_id = ?"
@@ -251,11 +248,7 @@ class SQLiteRepository(SessionRepository):
 
         return results
 
-    async def count_events(
-        self,
-        session_id: str,
-        event_type: str | None = None
-    ) -> int:
+    async def count_events(self, session_id: str, event_type: str | None = None) -> int:
         """Count events for a session."""
         query = "SELECT COUNT(*) as count FROM event WHERE session_id = ?"
         params = [session_id]
@@ -270,22 +263,14 @@ class SQLiteRepository(SessionRepository):
 
     async def delete_session(self, session_id: str) -> None:
         """Delete session and all its events (CASCADE)."""
-        await self.db.execute(
-            "DELETE FROM session WHERE session_id = ?",
-            (session_id,)
-        )
+        await self.db.execute("DELETE FROM session WHERE session_id = ?", (session_id,))
         await self.db.commit()
         logger.debug(f"Deleted session {session_id}")
 
-    async def update_session_name(
-        self,
-        session_id: str,
-        session_name: str
-    ) -> None:
+    async def update_session_name(self, session_id: str, session_name: str) -> None:
         """Update session name (auto-generated from first prompt)."""
         await self.db.execute(
-            "UPDATE session SET session_name = ? WHERE session_id = ?",
-            (session_name, session_id)
+            "UPDATE session SET session_name = ? WHERE session_id = ?", (session_name, session_id)
         )
         await self.db.commit()
         logger.debug(f"Updated session_name for {session_id}: {session_name}")
@@ -299,7 +284,7 @@ class SQLiteRepository(SessionRepository):
         activity_script: str,
         agent_names: list[str],
         session_id: str | None = None,
-        metadata: dict[str, Any] | None = None
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Create a new activity execution record."""
         agent_names_json = json.dumps(agent_names)
@@ -314,8 +299,15 @@ class SQLiteRepository(SessionRepository):
             )
             VALUES (?, ?, ?, ?, ?, 'running', ?, ?)
             """,
-            (execution_id, project_name, activity_script, session_id,
-             agent_names_json, created_at, metadata_json)
+            (
+                execution_id,
+                project_name,
+                activity_script,
+                session_id,
+                agent_names_json,
+                created_at,
+                metadata_json,
+            ),
         )
         await self.db.commit()
         logger.debug(f"Created activity execution {execution_id}")
@@ -325,7 +317,7 @@ class SQLiteRepository(SessionRepository):
         execution_id: str,
         status: str | None = None,
         completed_at: datetime | None = None,
-        result_path: str | None = None
+        result_path: str | None = None,
     ) -> None:
         """Update activity execution record."""
         updates = []
@@ -353,14 +345,10 @@ class SQLiteRepository(SessionRepository):
         await self.db.commit()
         logger.debug(f"Updated activity execution {execution_id}")
 
-    async def get_activity_execution(
-        self,
-        execution_id: str
-    ) -> dict[str, Any] | None:
+    async def get_activity_execution(self, execution_id: str) -> dict[str, Any] | None:
         """Get activity execution by ID."""
         cursor = await self.db.execute(
-            "SELECT * FROM activity_execution WHERE execution_id = ?",
-            (execution_id,)
+            "SELECT * FROM activity_execution WHERE execution_id = ?", (execution_id,)
         )
         row = await cursor.fetchone()
 
@@ -381,7 +369,7 @@ class SQLiteRepository(SessionRepository):
         project_name: str | None = None,
         status: str | None = None,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
     ) -> list[dict[str, Any]]:
         """List activity executions with optional filtering."""
         query = "SELECT * FROM activity_execution WHERE 1=1"

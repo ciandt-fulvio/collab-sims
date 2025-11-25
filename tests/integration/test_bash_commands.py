@@ -10,7 +10,6 @@ References:
 - https://github.com/anthropics/claude-agent-sdk
 """
 
-
 import pytest
 
 from collab_sims.core.agent import CollabSims
@@ -50,7 +49,7 @@ class TestBashCommandExecution:
         # Collect output from tool results
         outputs = []
         for result in tool_results:
-            if hasattr(result, 'output'):
+            if hasattr(result, "output"):
                 outputs.append(str(result.output))
 
         # Verify the working directory appears somewhere in the output
@@ -84,9 +83,9 @@ class TestBashCommandExecution:
         # Get all content from messages and tool results
         all_content = []
         for event in events:
-            if hasattr(event, 'content') and event.content:
+            if hasattr(event, "content") and event.content:
                 all_content.append(event.content)
-            if hasattr(event, 'output') and event.output:
+            if hasattr(event, "output") and event.output:
                 all_content.append(str(event.output))
 
         combined_content = " ".join(all_content)
@@ -111,9 +110,7 @@ class TestBashCommandExecution:
         test_message = "HelloFromCollabSims123"
 
         events = []
-        async for event in session.query(
-            f"Use bash to run 'echo {test_message}'"
-        ):
+        async for event in session.query(f"Use bash to run 'echo {test_message}'"):
             events.append(event)
 
         # Get tool results
@@ -122,7 +119,7 @@ class TestBashCommandExecution:
         # Collect outputs
         outputs = []
         for result in tool_results:
-            if hasattr(result, 'output'):
+            if hasattr(result, "output"):
                 outputs.append(str(result.output))
 
         # The test message should appear in output
@@ -218,13 +215,13 @@ class TestBashCommandToolEvents:
         assert len(tool_uses) > 0, "Should generate at least one tool_use event"
 
         # At least one should be Bash
-        bash_uses = [e for e in tool_uses if hasattr(e, 'tool_name') and e.tool_name == "Bash"]
+        bash_uses = [e for e in tool_uses if hasattr(e, "tool_name") and e.tool_name == "Bash"]
         assert len(bash_uses) > 0, "Should have at least one Bash tool use"
 
         # Bash tool should have input with command
         bash_event = bash_uses[0]
-        assert hasattr(bash_event, 'input'), "Tool use should have input"
-        assert 'command' in bash_event.input, "Bash tool should have command in input"
+        assert hasattr(bash_event, "input"), "Tool use should have input"
+        assert "command" in bash_event.input, "Bash tool should have command in input"
 
         await session.close()
 
@@ -248,7 +245,7 @@ class TestBashCommandToolEvents:
 
         # Tool result should have output
         result_event = tool_results[0]
-        assert hasattr(result_event, 'output'), "Tool result should have output"
+        assert hasattr(result_event, "output"), "Tool result should have output"
         assert result_event.output is not None, "Tool result output should not be None"
 
         await session.close()

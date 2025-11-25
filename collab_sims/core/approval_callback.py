@@ -21,7 +21,7 @@ class ApprovalCallback:
         self,
         approval_manager,  # ApprovalManager type annotation removed to avoid circular import
         session_id: str,
-        event_emitter: Callable[[AgentEvent], Awaitable[None]]
+        event_emitter: Callable[[AgentEvent], Awaitable[None]],
     ):
         """
         Initialize the approval callback.
@@ -36,10 +36,7 @@ class ApprovalCallback:
         self.event_emitter = event_emitter
 
     async def __call__(
-        self,
-        tool_name: str,
-        tool_input: dict,
-        context: ToolPermissionContext
+        self, tool_name: str, tool_input: dict, context: ToolPermissionContext
     ) -> PermissionResultAllow | PermissionResultDeny:
         """
         Called by SDK before each tool execution.
@@ -53,10 +50,7 @@ class ApprovalCallback:
             Either allow or deny the tool execution
         """
         # Check if approval needed
-        if not self.approval_manager.should_request_approval(
-            self.session_id,
-            tool_name
-        ):
+        if not self.approval_manager.should_request_approval(self.session_id, tool_name):
             return PermissionResultAllow()
 
         # Generate tool_use_id for tracking
@@ -74,7 +68,7 @@ class ApprovalCallback:
             tool_input=tool_input,  # Use raw input (no path normalization needed for local execution)
             session_id=self.session_id,
             status="pending",
-            risk_level=risk_level
+            risk_level=risk_level,
         )
         await self.event_emitter(event)
 
@@ -83,7 +77,7 @@ class ApprovalCallback:
             tool_use_id=tool_use_id,
             tool_name=tool_name,
             tool_input=tool_input,
-            session_id=self.session_id
+            session_id=self.session_id,
         )
 
         # Emit approval response event to frontend
@@ -92,7 +86,7 @@ class ApprovalCallback:
             approved=approved,
             remember=remember,
             reason=reason,
-            session_id=self.session_id
+            session_id=self.session_id,
         )
         await self.event_emitter(response_event)
 
@@ -101,5 +95,5 @@ class ApprovalCallback:
         else:
             return PermissionResultDeny(
                 message=reason or "User rejected this action",
-                interrupt=False  # Continue execution, just skip this tool
+                interrupt=False,  # Continue execution, just skip this tool
             )

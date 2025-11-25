@@ -115,7 +115,9 @@ class TestAgentSessionManagement:
         """Test using session as async context manager."""
         agent = CollabSims()
 
-        async with await agent.create_session(SessionConfig(project_name="test-project")) as session:
+        async with await agent.create_session(
+            SessionConfig(project_name="test-project")
+        ) as session:
             events = []
             async for event in session.query("Hello"):
                 events.append(event)
@@ -144,9 +146,7 @@ class TestAgentBashIntegration:
         )
 
         events = []
-        async for event in session.query(
-            "Use bash to show the current working directory (pwd)"
-        ):
+        async for event in session.query("Use bash to show the current working directory (pwd)"):
             events.append(event)
 
         # Should have tool_use and tool_result somewhere
@@ -159,7 +159,7 @@ class TestAgentBashIntegration:
             # If agent used tools, verify structure
             assert len(tool_results) > 0
             # At least one tool should be Bash
-            bash_tools = [t for t in tool_uses if hasattr(t, 'tool_name') and t.tool_name == "Bash"]
+            bash_tools = [t for t in tool_uses if hasattr(t, "tool_name") and t.tool_name == "Bash"]
             assert len(bash_tools) > 0
 
         await session.close()
@@ -191,9 +191,9 @@ class TestAgentBashIntegration:
         # Check if agent found the files (in message or tool result)
         all_content = []
         for event in events:
-            if hasattr(event, 'content') and event.content:
+            if hasattr(event, "content") and event.content:
                 all_content.append(event.content)
-            if hasattr(event, 'output') and event.output:
+            if hasattr(event, "output") and event.output:
                 all_content.append(str(event.output))
 
         # At least one piece of content should mention our files
@@ -249,7 +249,10 @@ class TestAgentErrorHandling:
         # The agent should handle this by creating it or raising a clear error
         try:
             session = await agent.create_session(
-                SessionConfig(project_name="test-project", working_dir="/tmp/collab-sims-test-nonexistent-" + str(os.getpid()))
+                SessionConfig(
+                    project_name="test-project",
+                    working_dir="/tmp/collab-sims-test-nonexistent-" + str(os.getpid()),
+                )
             )
 
             # If successful, should be connected

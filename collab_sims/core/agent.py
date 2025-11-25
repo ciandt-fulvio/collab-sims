@@ -31,7 +31,7 @@ class CollabSims(_SessionBase):
         options: ClaudeAgentOptions | None = None,
         trackers: list | None = None,  # Changed from list[BaseTracker] to avoid import
         config: SessionConfig | None = None,
-        approval_manager=None
+        approval_manager=None,
     ):
         """Initialize CollabSims.
 
@@ -48,7 +48,7 @@ class CollabSims(_SessionBase):
         # Default to bypassPermissions for auto-approval unless options provided
         self.options = options or ClaudeAgentOptions(
             permission_mode="bypassPermissions",
-            include_partial_messages=self.config.include_partial_messages
+            include_partial_messages=self.config.include_partial_messages,
         )
         self._start_time: datetime | None = None
 
@@ -60,10 +60,7 @@ class CollabSims(_SessionBase):
         """
         self.trackers.append(tracker)
 
-    async def create_session(
-        self,
-        config: SessionConfig | None = None
-    ):
+    async def create_session(self, config: SessionConfig | None = None):
         """Create and start a new session for multi-turn conversations.
 
         Args:
@@ -93,7 +90,7 @@ class CollabSims(_SessionBase):
             options=self.options,
             config=config or SessionConfig(),
             trackers=self.trackers,
-            approval_manager=self.approval_manager
+            approval_manager=self.approval_manager,
         )
         await session._connect()
         return session
@@ -122,8 +119,7 @@ class CollabSims(_SessionBase):
 
             # Emit start event
             start_event = StartEvent(
-                prompt=prompt,
-                options={"permission_mode": self.options.permission_mode}
+                prompt=prompt, options={"permission_mode": self.options.permission_mode}
             )
             await self._emit_event(start_event)
             yield start_event
@@ -148,7 +144,7 @@ class CollabSims(_SessionBase):
                 error_type=type(e).__name__,
                 context={"prompt": prompt},
                 traceback=tb.format_exc(),
-                session_id=self._session_id
+                session_id=self._session_id,
             )
             await self._emit_event(error_event)
             yield error_event

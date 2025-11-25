@@ -30,16 +30,19 @@ async def create_session(request: SessionCreateRequest):
     Optional: agent_name, config
     """
     import logging
+
     logger = logging.getLogger(__name__)
-    logger.info(f"🔵 create_session endpoint called for project '{request.project_name}' with agent '{request.agent_name}'")
+    logger.info(
+        f"🔵 create_session endpoint called for project '{request.project_name}' with agent '{request.agent_name}'"
+    )
 
     try:
         session_data = await session_manager.create_session(
-            project_name=request.project_name,
-            agent_name=request.agent_name,
-            config=request.config
+            project_name=request.project_name, agent_name=request.agent_name, config=request.config
         )
-        logger.info(f"🟢 create_session completed: {session_data['session_id']} for project '{request.project_name}'")
+        logger.info(
+            f"🟢 create_session completed: {session_data['session_id']} for project '{request.project_name}'"
+        )
         return SessionResponse(**session_data)
     except Exception as e:
         logger.error(f"🔴 create_session failed: {e}")
@@ -116,6 +119,7 @@ async def query_session_stream(session_id: str, request: SessionQueryRequest):
     Returns:
         StreamingResponse with SSE-formatted events
     """
+
     async def event_generator():
         """Generator that yields SSE-formatted events"""
         try:
@@ -163,6 +167,7 @@ async def interrupt_session(session_id: str):
         400: Session not connected or no query is executing
     """
     import logging
+
     logger = logging.getLogger(__name__)
 
     try:
@@ -170,14 +175,13 @@ async def interrupt_session(session_id: str):
 
         if not success:
             raise HTTPException(
-                status_code=404,
-                detail=f"Session {session_id} not found or cannot be interrupted"
+                status_code=404, detail=f"Session {session_id} not found or cannot be interrupted"
             )
 
         return {
             "session_id": session_id,
             "status": "interrupted",
-            "message": "Query execution interrupted successfully"
+            "message": "Query execution interrupted successfully",
         }
     except Exception as e:
         logger.error(f"Failed to interrupt session {session_id}: {e}")
@@ -201,10 +205,7 @@ async def delete_session(session_id: str):
 
 @router.get("/{session_id}/events")
 async def get_session_events(
-    session_id: str,
-    event_type: str | None = None,
-    page: int = 1,
-    page_size: int = 100
+    session_id: str, event_type: str | None = None, page: int = 1, page_size: int = 100
 ):
     """
     Get all events for a session from database.
@@ -237,17 +238,11 @@ async def get_session_events(
     try:
         # Get events from database
         events = await repository.get_events(
-            session_id=session_id,
-            event_type=event_type,
-            limit=page_size,
-            offset=offset
+            session_id=session_id, event_type=event_type, limit=page_size, offset=offset
         )
 
         # Get total count
-        total = await repository.count_events(
-            session_id=session_id,
-            event_type=event_type
-        )
+        total = await repository.count_events(session_id=session_id, event_type=event_type)
 
         return {
             "session_id": session_id,
@@ -255,7 +250,7 @@ async def get_session_events(
             "total": total,
             "page": page,
             "page_size": page_size,
-            "total_pages": (total + page_size - 1) // page_size
+            "total_pages": (total + page_size - 1) // page_size,
         }
 
     except Exception as e:
@@ -270,6 +265,7 @@ async def update_session_name(session_id: str, request: dict):
     Request body: {"name": "First 30 characters of message..."}
     """
     import logging
+
     logger = logging.getLogger(__name__)
 
     session_name = request.get("name")

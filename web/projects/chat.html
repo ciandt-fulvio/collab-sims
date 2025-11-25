@@ -989,7 +989,10 @@
         <!-- Project tab -->
         <div
           x-show="activeTab === 'project'"
-          x-init="$watch('activeTab', value => { if (value === 'project' && projectName && !processProgress) loadProcessProgress() })"
+          x-init="
+            $watch('activeTab', value => { if (value === 'project' && projectName && !processProgress) loadProcessProgress() });
+            $watch('projectName', value => { if (value && activeTab === 'project' && !processProgress) loadProcessProgress() });
+          "
           class="p-4 space-y-3"
         >
           <!-- Project Header -->

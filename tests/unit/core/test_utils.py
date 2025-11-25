@@ -5,7 +5,6 @@ Tests the utility functions in collab_sims.core.utils without requiring
 any external dependencies or integrations.
 """
 
-
 from collab_sims.core.utils import truncate_session_name
 
 

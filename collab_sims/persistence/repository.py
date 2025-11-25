@@ -28,7 +28,7 @@ class SessionRepository(ABC):
         session_id: str,
         user_id: str | None,
         created_at: datetime,
-        metadata: dict[str, Any] | None = None
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Create a new session record.
 
@@ -46,7 +46,7 @@ class SessionRepository(ABC):
         session_id: str,
         closed_at: datetime | None = None,
         status: str | None = None,
-        query_count: int | None = None
+        query_count: int | None = None,
     ) -> None:
         """Update session record.
 
@@ -76,7 +76,7 @@ class SessionRepository(ABC):
         user_id: str | None = None,
         status: str | None = None,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
     ) -> list[dict[str, Any]]:
         """List sessions with optional filtering.
 
@@ -92,11 +92,7 @@ class SessionRepository(ABC):
         pass
 
     @abstractmethod
-    async def count_sessions(
-        self,
-        user_id: str | None = None,
-        status: str | None = None
-    ) -> int:
+    async def count_sessions(self, user_id: str | None = None, status: str | None = None) -> int:
         """Count sessions matching criteria.
 
         Args:
@@ -116,7 +112,7 @@ class SessionRepository(ABC):
         timestamp: datetime,
         data: dict[str, Any],
         query_index: int | None = None,
-        message_id: str | None = None
+        message_id: str | None = None,
     ) -> None:
         """Add an event to the database.
 
@@ -132,11 +128,7 @@ class SessionRepository(ABC):
 
     @abstractmethod
     async def get_events(
-        self,
-        session_id: str,
-        event_type: str | None = None,
-        limit: int = 100,
-        offset: int = 0
+        self, session_id: str, event_type: str | None = None, limit: int = 100, offset: int = 0
     ) -> list[dict[str, Any]]:
         """Get events for a session.
 
@@ -152,11 +144,7 @@ class SessionRepository(ABC):
         pass
 
     @abstractmethod
-    async def count_events(
-        self,
-        session_id: str,
-        event_type: str | None = None
-    ) -> int:
+    async def count_events(self, session_id: str, event_type: str | None = None) -> int:
         """Count events for a session.
 
         Args:

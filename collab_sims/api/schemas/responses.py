@@ -27,11 +27,15 @@ class SessionResponse(BaseModel):
     session_id: str = Field(..., description="Unique session identifier")
     project_name: str = Field(..., description="Project name")
     agent_name: str | None = Field(default=None, description="Agent persona used")
-    session_name: str | None = Field(default=None, description="Session name (auto-generated from first prompt)")
+    session_name: str | None = Field(
+        default=None, description="Session name (auto-generated from first prompt)"
+    )
     created_at: str = Field(..., description="ISO formatted creation timestamp")
     config: dict[str, Any] = Field(default_factory=dict, description="Session configuration")
     status: str = Field(..., description="Session status (active, closed)")
-    execution_state: str = Field(default="idle", description="Query execution state (idle, executing)")
+    execution_state: str = Field(
+        default="idle", description="Query execution state (idle, executing)"
+    )
     query_count: int = Field(default=0, description="Number of queries in this session")
 
 

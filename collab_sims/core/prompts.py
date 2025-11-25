@@ -96,9 +96,9 @@ def list_available_prompts() -> dict[str, str]:
     if not PROMPTS_DIR.exists():
         return prompts
 
-    for prompt_file in PROMPTS_DIR.rglob('*.txt'):
+    for prompt_file in PROMPTS_DIR.rglob("*.txt"):
         try:
-            first_line = prompt_file.read_text().split('\n')[0]
+            first_line = prompt_file.read_text().split("\n")[0]
             # Make path relative to PROMPTS_DIR
             relative_path = prompt_file.relative_to(PROMPTS_DIR)
             prompts[str(relative_path)] = first_line

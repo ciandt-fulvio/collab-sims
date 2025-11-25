@@ -42,7 +42,7 @@ async def test_sqlite_persistence():
             user_id="test-user",
             created_at=datetime.now(),
             project_name="test-project",
-            metadata={"test": "data"}
+            metadata={"test": "data"},
         )
 
         # Get session
@@ -56,7 +56,7 @@ async def test_sqlite_persistence():
             session_id=session_id,
             event_type="message",
             timestamp=datetime.now(),
-            data={"content": "test message"}
+            data={"content": "test message"},
         )
 
         # Get events
@@ -73,6 +73,7 @@ async def test_sqlite_persistence():
     except Exception as e:
         print(f"❌ SQLite persistence test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
     finally:
@@ -92,21 +93,14 @@ async def test_events():
         )
 
         # Create message event
-        event = MessageEvent(
-            role="assistant",
-            content="Test message",
-            session_id="test"
-        )
+        event = MessageEvent(role="assistant", content="Test message", session_id="test")
 
         assert event.type == EventType.MESSAGE
         assert event.content == "Test message"
         assert event.event_id is not None
 
         # Create session start event
-        start_event = SessionStartEvent(
-            session_id="test",
-            user_id="user1"
-        )
+        start_event = SessionStartEvent(session_id="test", user_id="user1")
 
         assert start_event.type == EventType.SESSION_START
         assert start_event.session_id == "test"
@@ -122,6 +116,7 @@ async def test_events():
     except Exception as e:
         print(f"❌ Event test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

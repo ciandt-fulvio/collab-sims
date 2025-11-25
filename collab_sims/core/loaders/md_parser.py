@@ -69,9 +69,7 @@ def parse_markdown_with_frontmatter(file_path: str | Path) -> MarkdownDocument:
     except yaml.YAMLError as e:
         raise yaml.YAMLError(f"Invalid YAML frontmatter in {file_path}: {e}") from e
 
-    return MarkdownDocument(
-        frontmatter=frontmatter, content=content, raw_content=raw_content
-    )
+    return MarkdownDocument(frontmatter=frontmatter, content=content, raw_content=raw_content)
 
 
 def parse_markdown_string(content: str) -> MarkdownDocument:
@@ -85,17 +83,13 @@ def parse_markdown_string(content: str) -> MarkdownDocument:
     """
     # Check if content has frontmatter
     if not content.startswith("---"):
-        return MarkdownDocument(
-            frontmatter={}, content=content.strip(), raw_content=content
-        )
+        return MarkdownDocument(frontmatter={}, content=content.strip(), raw_content=content)
 
     # Split frontmatter and content
     parts = content.split("---", 2)
 
     if len(parts) < 3:
-        return MarkdownDocument(
-            frontmatter={}, content=content.strip(), raw_content=content
-        )
+        return MarkdownDocument(frontmatter={}, content=content.strip(), raw_content=content)
 
     frontmatter_text = parts[1].strip()
     markdown_content = parts[2].strip()
@@ -103,6 +97,4 @@ def parse_markdown_string(content: str) -> MarkdownDocument:
     # Parse YAML frontmatter
     frontmatter = yaml.safe_load(frontmatter_text) or {}
 
-    return MarkdownDocument(
-        frontmatter=frontmatter, content=markdown_content, raw_content=content
-    )
+    return MarkdownDocument(frontmatter=frontmatter, content=markdown_content, raw_content=content)

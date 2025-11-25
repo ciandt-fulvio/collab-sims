@@ -23,14 +23,13 @@ from .routes import (
 
 # Configure logging
 logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
 # Suppress verbose logs from Claude Agent SDK internals
 # These logs include internal errors that don't affect functionality
-logging.getLogger('claude_agent_sdk._internal').setLevel(logging.WARNING)
-logging.getLogger('claude_agent_sdk').setLevel(logging.INFO)
+logging.getLogger("claude_agent_sdk._internal").setLevel(logging.WARNING)
+logging.getLogger("claude_agent_sdk").setLevel(logging.INFO)
 
 logger = logging.getLogger(__name__)
 
@@ -47,10 +46,10 @@ app = FastAPI(
 setup_cors(app)
 
 # Register routes
-app.include_router(execute_router)           # Single-turn execution
-app.include_router(sessions_router)          # Multi-turn sessions
-app.include_router(approvals_router)         # Approval workflow
-app.include_router(library_router)           # Library (projects, types, scripts, agents)
+app.include_router(execute_router)  # Single-turn execution
+app.include_router(sessions_router)  # Multi-turn sessions
+app.include_router(approvals_router)  # Approval workflow
+app.include_router(library_router)  # Library (projects, types, scripts, agents)
 
 
 @app.get("/")
@@ -88,6 +87,7 @@ async def startup_event():
 
     # Initialize database
     from .services.session_manager import session_manager
+
     await session_manager.db_tracker.repository.initialize()
     logger.info("   Database initialized")
 
@@ -112,5 +112,6 @@ async def shutdown_event():
 
     # Shutdown session manager (cancels cleanup task, closes database)
     from .services.session_manager import session_manager
+
     await session_manager.shutdown()
     logger.info("   Shutdown complete")

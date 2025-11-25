@@ -37,20 +37,16 @@ async def get_pending_approvals(session_id: str):
                 tool_use_id=req.tool_use_id,
                 tool_name=req.tool_name,
                 tool_input=req.tool_input,
-                created_at=req.created_at
+                created_at=req.created_at,
             )
             for req in pending
         ],
-        count=len(pending)
+        count=len(pending),
     )
 
 
 @router.post("/{tool_use_id}/respond")
-async def respond_to_approval(
-    session_id: str,
-    tool_use_id: str,
-    response: ApprovalRequestData
-):
+async def respond_to_approval(session_id: str, tool_use_id: str, response: ApprovalRequestData):
     """
     Approve or reject a pending tool execution.
 

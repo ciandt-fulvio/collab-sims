@@ -9,6 +9,7 @@ from typing import Any
 
 class EventType(str, Enum):
     """Event type enumeration."""
+
     # Session lifecycle
     SESSION_START = "session_start"
     SESSION_END = "session_end"
@@ -54,6 +55,7 @@ class AgentEvent:
     def to_json(self) -> str:
         """Convert event to JSON string."""
         import json
+
         return json.dumps(self.to_dict())
 
 
@@ -81,6 +83,7 @@ class CompleteEvent(AgentEvent):
 @dataclass
 class TaskInfo:
     """Individual task information."""
+
     content: str
     status: str  # "pending" | "in_progress" | "completed"
     active_form: str
@@ -89,6 +92,7 @@ class TaskInfo:
 @dataclass
 class PlanChanges:
     """Changes in the plan."""
+
     added: list[str] = field(default_factory=list)
     removed: list[str] = field(default_factory=list)
     status_changed: list[dict[str, str]] = field(default_factory=list)
@@ -112,8 +116,9 @@ class PlanEvent(AgentEvent):
         result = asdict(self)
         # Convert TaskInfo objects to dictionaries
         if "todos" in result and result["todos"]:
-            result["todos"] = [asdict(task) if isinstance(task, TaskInfo) else task
-                              for task in result["todos"]]
+            result["todos"] = [
+                asdict(task) if isinstance(task, TaskInfo) else task for task in result["todos"]
+            ]
         # Convert PlanChanges to dictionary
         if "changes" in result and result["changes"]:
             result["changes"] = asdict(result["changes"])

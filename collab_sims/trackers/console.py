@@ -77,11 +77,9 @@ class ConsoleTracker(BaseTracker):
             print("=" * 70)
 
             for i, task in enumerate(event.todos, 1):
-                status_icon = {
-                    "completed": "✅",
-                    "in_progress": "🔧",
-                    "pending": "⏳"
-                }.get(task.status, "❓")
+                status_icon = {"completed": "✅", "in_progress": "🔧", "pending": "⏳"}.get(
+                    task.status, "❓"
+                )
 
                 display = task.active_form if task.status == "in_progress" else task.content
                 print(f"{i}. {status_icon} {display}")
@@ -112,7 +110,9 @@ class ConsoleTracker(BaseTracker):
                 if event.input:
                     # Show first few items of input
                     input_preview = str(event.input)[:100]
-                    print(f"   Input: {input_preview}{'...' if len(str(event.input)) > 100 else ''}")
+                    print(
+                        f"   Input: {input_preview}{'...' if len(str(event.input)) > 100 else ''}"
+                    )
             else:
                 print(f"[TOOL] {event.tool_name}")
 
@@ -122,7 +122,9 @@ class ConsoleTracker(BaseTracker):
             bar_length = 40
             filled = int(bar_length * event.percentage / 100)
             bar = "█" * filled + "░" * (bar_length - filled)
-            print(f"\n📊 Progress: [{bar}] {event.percentage:.1f}% ({event.completed}/{event.total})")
+            print(
+                f"\n📊 Progress: [{bar}] {event.percentage:.1f}% ({event.completed}/{event.total})"
+            )
             if event.current_task:
                 print(f"   Current: {event.current_task}")
         else:

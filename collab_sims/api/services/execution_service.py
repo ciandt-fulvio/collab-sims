@@ -58,11 +58,7 @@ class ExecutionService:
 
         except Exception as e:
             # Yield error event
-            yield {
-                "type": "error",
-                "error": str(e),
-                "timestamp": datetime.now().isoformat()
-            }
+            yield {"type": "error", "error": str(e), "timestamp": datetime.now().isoformat()}
 
     @staticmethod
     async def _simulate_execution(prompt: str) -> list[dict[str, Any]]:

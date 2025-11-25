@@ -100,7 +100,7 @@ class TestDatabaseTrackerSessionEvents:
             session_id="test-session",
             user_id="test-user",
             tags=["test"],
-            metadata={"role": "worker"}
+            metadata={"role": "worker"},
         )
 
         await tracker.on_session_start(event)
@@ -113,11 +113,7 @@ class TestDatabaseTrackerSessionEvents:
 
     async def test_on_session_end_updates_session(self, tracker, mock_repo):
         """Test that session end updates session record."""
-        event = SessionEndEvent(
-            session_id="test-session",
-            total_queries=5,
-            total_duration_ms=30000
-        )
+        event = SessionEndEvent(session_id="test-session", total_queries=5, total_duration_ms=30000)
 
         await tracker.on_session_end(event)
 
@@ -128,11 +124,7 @@ class TestDatabaseTrackerSessionEvents:
 
     async def test_on_query_tracks_query_index(self, tracker):
         """Test that query event updates query index."""
-        event = QueryEvent(
-            prompt="Test query",
-            query_number=1,
-            session_id="test-session"
-        )
+        event = QueryEvent(prompt="Test query", query_number=1, session_id="test-session")
 
         await tracker.on_query(event)
 
@@ -162,11 +154,7 @@ class TestDatabaseTrackerEventPersistence:
 
     async def test_on_event_persists_message(self, tracker, mock_repo):
         """Test that message events are persisted."""
-        event = MessageEvent(
-            role="assistant",
-            content="Test message",
-            session_id="test-session"
-        )
+        event = MessageEvent(role="assistant", content="Test message", session_id="test-session")
 
         await tracker.on_event(event)
 
@@ -180,7 +168,7 @@ class TestDatabaseTrackerEventPersistence:
         event = MessageEvent(
             role="assistant",
             content="Test message",
-            session_id=None  # No session ID
+            session_id=None,  # No session ID
         )
 
         await tracker.on_event(event)
@@ -193,10 +181,7 @@ class TestDatabaseTrackerEventPersistence:
         # Set up query index
         tracker._query_index = 2
 
-        event = CompleteEvent(
-            session_id="test-session",
-            duration_ms=1000
-        )
+        event = CompleteEvent(session_id="test-session", duration_ms=1000)
 
         await tracker.on_event(event)
 
@@ -218,11 +203,7 @@ class TestDatabaseTrackerErrorHandling:
         tracker = DatabaseTracker(mock_repo)
         await tracker.setup()
 
-        event = MessageEvent(
-            role="assistant",
-            content="Test",
-            session_id="test-session"
-        )
+        event = MessageEvent(role="assistant", content="Test", session_id="test-session")
 
         # Should not raise exception
         await tracker.on_event(event)

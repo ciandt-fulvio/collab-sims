@@ -116,7 +116,7 @@ class CollabSimsSession(_SessionBase):
             approval_config = config.approval_config or {
                 "mode": "interactive",
                 "tool_policies": {},
-                "auto_approved_tools": []
+                "auto_approved_tools": [],
             }
             approval_manager.set_config(self._session_id, approval_config)
 
@@ -125,7 +125,7 @@ class CollabSimsSession(_SessionBase):
             permission_mode="bypassPermissions",  # Auto-approve all tools by default
             include_partial_messages=config.include_partial_messages,
             cwd=str(self._working_dir),  # Use working directory directly
-            extra_args={"session-id": self._session_id}
+            extra_args={"session-id": self._session_id},
         )
 
     async def _connect(self):
@@ -147,7 +147,7 @@ class CollabSimsSession(_SessionBase):
             "permission_mode": "bypassPermissions",
             "include_partial_messages": self.config.include_partial_messages,
             "cwd": str(self._working_dir),
-            "setting_sources": ['user'],  # Enable user settings (includes file tools)
+            "setting_sources": ["user"],  # Enable user settings (includes file tools)
         }
 
         # Add resume parameter if resuming session
@@ -176,7 +176,7 @@ class CollabSimsSession(_SessionBase):
             user_id=self._user_id,
             tags=self.config.tags,
             metadata=self.config.metadata,
-            system_prompt=actual_system_prompt  # Include actual system prompt sent to SDK
+            system_prompt=actual_system_prompt,  # Include actual system prompt sent to SDK
         )
         await self._emit_event(start_event)
 
@@ -238,7 +238,7 @@ class CollabSimsSession(_SessionBase):
             """Consumer task for SDK messages."""
             try:
                 async for message in self.client.receive_response():
-                    await merged_queue.put(('sdk', message))
+                    await merged_queue.put(("sdk", message))
             finally:
                 sdk_done.set()
 
@@ -250,7 +250,7 @@ class CollabSimsSession(_SessionBase):
                     if self._event_queue is None:
                         break
                     event = await asyncio.wait_for(self._event_queue.get(), timeout=0.1)
-                    await merged_queue.put(('queued', event))
+                    await merged_queue.put(("queued", event))
                 except TimeoutError:
                     continue
             # Drain remaining events after SDK is done
@@ -258,7 +258,7 @@ class CollabSimsSession(_SessionBase):
                 while not self._event_queue.empty():
                     try:
                         event = self._event_queue.get_nowait()
-                        await merged_queue.put(('queued', event))
+                        await merged_queue.put(("queued", event))
                     except asyncio.QueueEmpty:
                         break
 
@@ -269,7 +269,7 @@ class CollabSimsSession(_SessionBase):
                 query_number=self._query_count,
                 session_id=self._session_id,
                 user_id=self._user_id,
-                metadata=self.config.metadata
+                metadata=self.config.metadata,
             )
             await self._emit_event(query_event)
             yield query_event
@@ -286,7 +286,7 @@ class CollabSimsSession(_SessionBase):
                 try:
                     source, data = await asyncio.wait_for(merged_queue.get(), timeout=0.1)
 
-                    if source == 'queued':
+                    if source == "queued":
                         # Already an event, just yield it
                         yield data
                     else:  # source == 'sdk'
@@ -318,13 +318,10 @@ class CollabSimsSession(_SessionBase):
             error_event = ErrorEvent(
                 error=str(e),
                 error_type=type(e).__name__,
-                context={
-                    "prompt": prompt,
-                    "query_number": self._query_count
-                },
+                context={"prompt": prompt, "query_number": self._query_count},
                 traceback=tb.format_exc(),
                 session_id=self._session_id,
-                user_id=self._user_id
+                user_id=self._user_id,
             )
             await self._emit_event(error_event)
             yield error_event
@@ -364,7 +361,7 @@ class CollabSimsSession(_SessionBase):
             user_id=self._user_id,
             total_queries=self._query_count,
             total_duration_ms=duration_ms,
-            metadata=self.config.metadata
+            metadata=self.config.metadata,
         )
         await self._emit_event(end_event)
 

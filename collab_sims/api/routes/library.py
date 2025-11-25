@@ -88,9 +88,7 @@ async def create_project(request: ProjectCreateRequest):
     success = project_loader.save_project(request.name, request.content)
 
     if not success:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to create project '{request.name}'"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to create project '{request.name}'")
 
     return {"message": "Project created successfully", "name": request.name}
 
@@ -117,9 +115,7 @@ async def update_project(name: str, request: ProjectUpdateRequest):
     success = project_loader.save_project(name, request.content)
 
     if not success:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to update project '{name}'"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to update project '{name}'")
 
     return {"message": "Project updated successfully", "name": name}
 
@@ -180,9 +176,7 @@ async def get_project_process_progress(name: str):
                         completed_activities.add(activity_id)
                         if activity_id not in activity_result_files:
                             activity_result_files[activity_id] = []
-                        activity_result_files[activity_id].append(
-                            result.get("filename")
-                        )
+                        activity_result_files[activity_id].append(result.get("filename"))
 
     # Enrich process type with completion data
     for stage in process_type.get("stages", []):
@@ -255,9 +249,7 @@ async def get_process_type(process_type_id: str):
     data = process_type_loader.get_process_type(process_type_id)
 
     if data is None:
-        raise HTTPException(
-            status_code=404, detail=f"Process type '{process_type_id}' not found"
-        )
+        raise HTTPException(status_code=404, detail=f"Process type '{process_type_id}' not found")
 
     return data
 
@@ -292,9 +284,7 @@ async def get_activity_script(name: str):
     doc = activity_script_loader.get_activity_script(name)
 
     if doc is None:
-        raise HTTPException(
-            status_code=404, detail=f"Activity script '{name}' not found"
-        )
+        raise HTTPException(status_code=404, detail=f"Activity script '{name}' not found")
 
     return {
         "name": name,
@@ -321,16 +311,12 @@ async def update_activity_script(name: str, request: ProjectUpdateRequest):
     # Check if activity script exists
     existing = activity_script_loader.get_activity_script(name)
     if existing is None:
-        raise HTTPException(
-            status_code=404, detail=f"Activity script '{name}' not found"
-        )
+        raise HTTPException(status_code=404, detail=f"Activity script '{name}' not found")
 
     success = activity_script_loader.save_activity_script(name, request.content)
 
     if not success:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to update activity script '{name}'"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to update activity script '{name}'")
 
     return {"message": "Activity script updated successfully", "name": name}
 
@@ -397,8 +383,6 @@ async def update_agent(name: str, request: ProjectUpdateRequest):
     success = agent_loader.save_agent(name, request.content)
 
     if not success:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to update agent '{name}'"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to update agent '{name}'")
 
     return {"message": "Agent updated successfully", "name": name}

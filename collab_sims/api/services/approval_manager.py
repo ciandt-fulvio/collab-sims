@@ -8,6 +8,7 @@ from dataclasses import dataclass
 @dataclass
 class ApprovalRequest:
     """Pending approval request."""
+
     tool_use_id: str
     tool_name: str
     tool_input: dict
@@ -39,14 +40,10 @@ class ApprovalManager:
         self._approval_config[session_id] = {
             "mode": config.get("mode", "interactive"),
             "tool_policies": config.get("tool_policies", {}),
-            "auto_approved_tools": config.get("auto_approved_tools", [])
+            "auto_approved_tools": config.get("auto_approved_tools", []),
         }
 
-    def should_request_approval(
-        self,
-        session_id: str,
-        tool_name: str
-    ) -> bool:
+    def should_request_approval(self, session_id: str, tool_name: str) -> bool:
         """
         Determine if tool needs approval based on configuration.
 
@@ -82,11 +79,7 @@ class ApprovalManager:
         return True  # Needs approval
 
     async def request_approval(
-        self,
-        tool_use_id: str,
-        tool_name: str,
-        tool_input: dict,
-        session_id: str
+        self, tool_use_id: str, tool_name: str, tool_input: dict, session_id: str
     ) -> tuple[bool, str | None, bool]:
         """
         Request approval and wait for user response.
@@ -107,7 +100,7 @@ class ApprovalManager:
             tool_input=tool_input,
             session_id=session_id,
             future=future,
-            created_at=time.time()
+            created_at=time.time(),
         )
 
         self._pending[tool_use_id] = request
@@ -179,7 +172,4 @@ class ApprovalManager:
         Returns:
             List of pending ApprovalRequests for the session
         """
-        return [
-            req for req in self._pending.values()
-            if req.session_id == session_id
-        ]
+        return [req for req in self._pending.values() if req.session_id == session_id]

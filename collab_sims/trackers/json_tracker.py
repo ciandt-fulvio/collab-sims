@@ -28,9 +28,8 @@ class JSONTracker(BaseTracker):
     async def teardown(self) -> None:
         """Write all events to file on teardown."""
         with open(self.output_file, "w") as f:
-            json.dump({
-                "events": self.events,
-                "total_events": len(self.events)
-            }, f, indent=self.indent)
+            json.dump(
+                {"events": self.events, "total_events": len(self.events)}, f, indent=self.indent
+            )
 
         print(f"💾 Saved {len(self.events)} events to: {self.output_file}")

@@ -99,9 +99,7 @@ class TestServerStartup:
             process.terminate()
             stdout, stderr = process.communicate(timeout=2)
             pytest.fail(
-                f"Server failed to start within 10 seconds.\n"
-                f"STDOUT: {stdout}\n"
-                f"STDERR: {stderr}"
+                f"Server failed to start within 10 seconds.\nSTDOUT: {stdout}\nSTDERR: {stderr}"
             )
 
         yield process, free_port, base_url
@@ -168,9 +166,7 @@ class TestServerStartup:
         assert len(data["events"]) > 0
 
         # Should have at least one message event
-        message_events = [
-            e for e in data["events"] if e.get("event_type") == "message"
-        ]
+        message_events = [e for e in data["events"] if e.get("event_type") == "message"]
         assert len(message_events) > 0
 
         # Message should contain "hello" (case insensitive)

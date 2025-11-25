@@ -109,9 +109,7 @@ class ActivityResultLoader:
         """
         return activity_script.replace("-", " ").replace("_", " ").title()
 
-    def get_activity_result(
-        self, project_name: str, filename: str
-    ) -> MarkdownDocument | None:
+    def get_activity_result(self, project_name: str, filename: str) -> MarkdownDocument | None:
         """Get a specific activity result by filename.
 
         Args:

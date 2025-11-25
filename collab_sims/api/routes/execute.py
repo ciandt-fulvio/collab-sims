@@ -60,6 +60,7 @@ async def execute_stream(request: ExecuteRequest):
     Returns:
         StreamingResponse with SSE-formatted events
     """
+
     async def event_generator():
         """Generator that yields SSE-formatted events"""
         try:

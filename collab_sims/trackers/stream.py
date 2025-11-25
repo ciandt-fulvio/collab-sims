@@ -51,7 +51,7 @@ class StreamTracker(BaseTracker):
                 yield event
 
                 # Check if this is a completion event
-                if event.get('event_type') in ['complete', 'error', 'session_end']:
+                if event.get("event_type") in ["complete", "error", "session_end"]:
                     break
         finally:
             self._is_streaming = False

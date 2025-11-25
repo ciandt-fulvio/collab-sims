@@ -76,7 +76,7 @@ class DatabaseTracker(BaseTracker):
                 session_id=event.session_id,
                 user_id=event.user_id,
                 created_at=datetime.fromisoformat(event.timestamp),
-                metadata=event.metadata
+                metadata=event.metadata,
             )
             logger.debug(f"Session started: {event.session_id}")
         except Exception as e:
@@ -85,7 +85,7 @@ class DatabaseTracker(BaseTracker):
     async def on_query(self, event: QueryEvent) -> None:
         """Track query index for event linking."""
         # Store query index for this session (QueryEvent uses query_number)
-        self._query_index = event.query_number - 1 if hasattr(event, 'query_number') else 0
+        self._query_index = event.query_number - 1 if hasattr(event, "query_number") else 0
 
     async def on_session_end(self, event: SessionEndEvent) -> None:
         """Update session record when session ends."""
@@ -93,7 +93,7 @@ class DatabaseTracker(BaseTracker):
             await self.repository.update_session(
                 session_id=event.session_id,
                 closed_at=datetime.fromisoformat(event.timestamp),
-                status='closed'
+                status="closed",
             )
             logger.debug(f"Session ended: {event.session_id}")
         except Exception as e:
@@ -112,33 +112,37 @@ class DatabaseTracker(BaseTracker):
         try:
             # Extract query_index if available
             query_index = None
-            if hasattr(event, 'query_index'):
+            if hasattr(event, "query_index"):
                 query_index = event.query_index
-            elif event.type in [EventType.QUERY, EventType.MESSAGE, EventType.TOOL_USE, EventType.TOOL_RESULT]:
+            elif event.type in [
+                EventType.QUERY,
+                EventType.MESSAGE,
+                EventType.TOOL_USE,
+                EventType.TOOL_RESULT,
+            ]:
                 query_index = self._query_index
 
             # Extract message_id for linking tool_use and tool_result
             message_id = None
-            if hasattr(event, 'message_id'):
+            if hasattr(event, "message_id"):
                 message_id = event.message_id
-            elif hasattr(event, 'tool_use_id'):
+            elif hasattr(event, "tool_use_id"):
                 message_id = event.tool_use_id
 
             # Store event
             await self.repository.add_event(
                 session_id=event.session_id,
-                event_type=event.type.value if hasattr(event.type, 'value') else str(event.type),
+                event_type=event.type.value if hasattr(event.type, "value") else str(event.type),
                 timestamp=datetime.fromisoformat(event.timestamp),
                 data=event.to_dict(),
                 query_index=query_index,
-                message_id=message_id
+                message_id=message_id,
             )
 
             # Update query count on CompleteEvent
             if event.type == EventType.COMPLETE:
                 await self.repository.update_session(
-                    session_id=event.session_id,
-                    query_count=self._query_index + 1
+                    session_id=event.session_id, query_count=self._query_index + 1
                 )
 
         except Exception as e:

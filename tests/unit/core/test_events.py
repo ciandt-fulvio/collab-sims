@@ -63,29 +63,20 @@ class TestAgentEvent:
 
     def test_event_with_session_id(self):
         """Test creating event with session_id."""
-        event = AgentEvent(
-            type=EventType.MESSAGE,
-            session_id="test-session-123"
-        )
+        event = AgentEvent(type=EventType.MESSAGE, session_id="test-session-123")
 
         assert event.session_id == "test-session-123"
 
     def test_event_with_metadata(self):
         """Test creating event with metadata."""
         metadata = {"key": "value", "number": 42}
-        event = AgentEvent(
-            type=EventType.MESSAGE,
-            metadata=metadata
-        )
+        event = AgentEvent(type=EventType.MESSAGE, metadata=metadata)
 
         assert event.metadata == metadata
 
     def test_event_to_dict(self):
         """Test converting event to dictionary."""
-        event = AgentEvent(
-            type=EventType.MESSAGE,
-            session_id="test-session"
-        )
+        event = AgentEvent(type=EventType.MESSAGE, session_id="test-session")
 
         event_dict = event.to_dict()
 
@@ -95,10 +86,7 @@ class TestAgentEvent:
 
     def test_event_to_json(self):
         """Test converting event to JSON string."""
-        event = AgentEvent(
-            type=EventType.MESSAGE,
-            session_id="test-session"
-        )
+        event = AgentEvent(type=EventType.MESSAGE, session_id="test-session")
 
         event_json = event.to_json()
 
@@ -116,7 +104,7 @@ class TestSessionEvents:
             session_id="session-123",
             user_id="user-456",
             tags=["dev", "test"],
-            metadata={"role": "worker"}
+            metadata={"role": "worker"},
         )
 
         assert event.type == EventType.SESSION_START
@@ -127,11 +115,7 @@ class TestSessionEvents:
 
     def test_session_end_event(self):
         """Test SessionEndEvent creation."""
-        event = SessionEndEvent(
-            session_id="session-123",
-            total_queries=5,
-            total_duration_ms=30000
-        )
+        event = SessionEndEvent(session_id="session-123", total_queries=5, total_duration_ms=30000)
 
         assert event.type == EventType.SESSION_END
         assert event.total_queries == 5
@@ -139,11 +123,7 @@ class TestSessionEvents:
 
     def test_query_event(self):
         """Test QueryEvent creation."""
-        event = QueryEvent(
-            prompt="Create a file",
-            query_number=1,
-            session_id="session-123"
-        )
+        event = QueryEvent(prompt="Create a file", query_number=1, session_id="session-123")
 
         assert event.type == EventType.QUERY
         assert event.prompt == "Create a file"
@@ -155,10 +135,7 @@ class TestExecutionEvents:
 
     def test_start_event(self):
         """Test StartEvent creation."""
-        event = StartEvent(
-            prompt="Test prompt",
-            options={"mode": "auto"}
-        )
+        event = StartEvent(prompt="Test prompt", options={"mode": "auto"})
 
         assert event.type == EventType.START
         assert event.prompt == "Test prompt"
@@ -170,7 +147,7 @@ class TestExecutionEvents:
             duration_ms=1500,
             total_cost_usd=0.002,
             num_turns=3,
-            usage={"input_tokens": 100, "output_tokens": 50}
+            usage={"input_tokens": 100, "output_tokens": 50},
         )
 
         assert event.type == EventType.COMPLETE
@@ -186,9 +163,7 @@ class TestMessageEvents:
     def test_message_event(self):
         """Test MessageEvent creation."""
         event = MessageEvent(
-            role="assistant",
-            content="Hello, how can I help?",
-            model="claude-3-5-sonnet-20250122"
+            role="assistant", content="Hello, how can I help?", model="claude-3-5-sonnet-20250122"
         )
 
         assert event.type == EventType.MESSAGE
@@ -201,7 +176,7 @@ class TestMessageEvents:
         event = MessageEvent(
             role="assistant",
             content="I'll create that file.",
-            thinking="First, I need to determine the file path..."
+            thinking="First, I need to determine the file path...",
         )
 
         assert event.thinking == "First, I need to determine the file path..."
@@ -215,7 +190,7 @@ class TestToolEvents:
         event = ToolUseEvent(
             tool_name="Write",
             tool_use_id="tool_123",
-            input={"file_path": "/test.txt", "content": "test"}
+            input={"file_path": "/test.txt", "content": "test"},
         )
 
         assert event.type == EventType.TOOL_USE
@@ -234,13 +209,7 @@ class TestPlanEvents:
             TaskInfo(content="Task 2", status="in_progress", active_form="Task 2 active"),
         ]
 
-        event = PlanEvent(
-            todos=tasks,
-            total_tasks=2,
-            completed=1,
-            in_progress=1,
-            pending=0
-        )
+        event = PlanEvent(todos=tasks, total_tasks=2, completed=1, in_progress=1, pending=0)
 
         assert event.type == EventType.PLAN
         assert len(event.todos) == 2
@@ -249,11 +218,7 @@ class TestPlanEvents:
 
     def test_task_info(self):
         """Test TaskInfo creation."""
-        task = TaskInfo(
-            content="Create file",
-            status="in_progress",
-            active_form="Creating file"
-        )
+        task = TaskInfo(content="Create file", status="in_progress", active_form="Creating file")
 
         assert task.content == "Create file"
         assert task.status == "in_progress"
@@ -268,7 +233,7 @@ class TestErrorEvents:
         event = ErrorEvent(
             error="File not found",
             error_type="FileNotFoundError",
-            context={"file_path": "/missing.txt"}
+            context={"file_path": "/missing.txt"},
         )
 
         assert event.type == EventType.ERROR
@@ -281,7 +246,7 @@ class TestErrorEvents:
         event = ErrorEvent(
             error="Division by zero",
             error_type="ZeroDivisionError",
-            traceback="Traceback (most recent call last):\n  ..."
+            traceback="Traceback (most recent call last):\n  ...",
         )
 
         assert "Traceback" in event.traceback

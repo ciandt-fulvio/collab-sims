@@ -37,13 +37,12 @@ class SessionCreateRequest(BaseModel):
     """
 
     project_name: str = Field(
-        ...,
-        description="Project name (required) - references MD file in data/projects/"
+        ..., description="Project name (required) - references MD file in data/projects/"
     )
 
     agent_name: str | None = Field(
         default=None,
-        description="Agent persona to use (optional) - references MD file in data/agents/"
+        description="Agent persona to use (optional) - references MD file in data/agents/",
     )
 
     config: dict[str, Any] | None = Field(
@@ -54,7 +53,7 @@ class SessionCreateRequest(BaseModel):
             "- tags: List of tags\n"
             "- metadata: Custom metadata dict\n"
             "- approval_config: Tool approval settings (see ApprovalConfig schema)"
-        )
+        ),
     )
 
     model_config = {
@@ -68,24 +67,15 @@ class SessionCreateRequest(BaseModel):
                         "tags": ["production"],
                         "approval_config": {
                             "mode": "interactive",
-                            "tool_policies": {
-                                "Bash": "high",
-                                "Write": "medium",
-                                "Read": "safe"
-                            }
-                        }
-                    }
+                            "tool_policies": {"Bash": "high", "Write": "medium", "Read": "safe"},
+                        },
+                    },
                 },
                 {
                     "project_name": "research-ux",
                     "agent_name": "researcher",
-                    "config": {
-                        "user_id": "user456",
-                        "approval_config": {
-                            "mode": "auto"
-                        }
-                    }
-                }
+                    "config": {"user_id": "user456", "approval_config": {"mode": "auto"}},
+                },
             ]
         }
     }
@@ -96,8 +86,4 @@ class SessionQueryRequest(BaseModel):
 
     prompt: str = Field(..., description="Prompt to send in the session context")
 
-    model_config = {
-        "json_schema_extra": {
-            "examples": [{"prompt": "Tell me more about that"}]
-        }
-    }
+    model_config = {"json_schema_extra": {"examples": [{"prompt": "Tell me more about that"}]}}

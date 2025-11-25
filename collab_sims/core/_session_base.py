@@ -41,7 +41,6 @@ class _SessionBase:
     for session classes that handle agent execution.
     """
 
-
     def __init__(self, trackers: list | None = None):  # Remove type hint to avoid import
         """Initialize session base.
 
@@ -68,11 +67,9 @@ class _SessionBase:
         # Extract session ID if available
         if isinstance(message, SystemMessage) and message.subtype == "init":
             self._session_id = message.data.get("session_id")
-            events.append(SystemEvent(
-                subtype=message.subtype,
-                data=message.data,
-                session_id=self._session_id
-            ))
+            events.append(
+                SystemEvent(subtype=message.subtype, data=message.data, session_id=self._session_id)
+            )
 
         # Parse AssistantMessage
         elif isinstance(message, AssistantMessage):
@@ -91,9 +88,10 @@ class _SessionBase:
                         completed=plan_event.completed,
                         total=plan_event.total_tasks,
                         percentage=(plan_event.completed / plan_event.total_tasks * 100)
-                        if plan_event.total_tasks > 0 else 0,
+                        if plan_event.total_tasks > 0
+                        else 0,
                         current_task=self._get_current_task(plan_event.todos),
-                        session_id=self._session_id
+                        session_id=self._session_id,
                     )
                     events.append(progress_event)
 
@@ -101,13 +99,15 @@ class _SessionBase:
                 elif isinstance(block, ToolUseBlock):
                     # Store mapping for later ToolResultBlock matching
                     self._tool_use_names[block.id] = block.name
-                    events.append(ToolUseEvent(
-                        tool_name=block.name,
-                        tool_use_id=block.id,
-                        input=block.input,
-                        session_id=self._session_id,
-                        originated_from_message_id=self._last_message_id
-                    ))
+                    events.append(
+                        ToolUseEvent(
+                            tool_name=block.name,
+                            tool_use_id=block.id,
+                            input=block.input,
+                            session_id=self._session_id,
+                            originated_from_message_id=self._last_message_id,
+                        )
+                    )
 
                 # NOTE: ToolResultBlock never appears in AssistantMessage
                 # It only appears in UserMessage - see UserMessage handler below
@@ -127,7 +127,7 @@ class _SessionBase:
                     content="".join(text_parts),
                     thinking=thinking_content,
                     model=message.model,
-                    session_id=self._session_id
+                    session_id=self._session_id,
                 )
                 # Track this MESSAGE event ID for linking subsequent tool events
                 self._last_message_id = msg_event.event_id
@@ -142,17 +142,23 @@ class _SessionBase:
 
                     # Skip TodoWrite - it's handled separately via Plan events
                     # Also skip if tool_name is empty (means TOOL_USE was filtered)
-                    if tool_name == "TodoWrite" or tool_name.endswith("__TodoWrite") or not tool_name:
+                    if (
+                        tool_name == "TodoWrite"
+                        or tool_name.endswith("__TodoWrite")
+                        or not tool_name
+                    ):
                         continue
 
-                    events.append(ToolResultEvent(
-                        tool_use_id=block.tool_use_id,
-                        tool_name=tool_name,
-                        output=block.content,
-                        is_error=block.is_error if hasattr(block, 'is_error') else False,
-                        session_id=self._session_id,
-                        originated_from_message_id=self._last_message_id
-                    ))
+                    events.append(
+                        ToolResultEvent(
+                            tool_use_id=block.tool_use_id,
+                            tool_name=tool_name,
+                            output=block.content,
+                            is_error=block.is_error if hasattr(block, "is_error") else False,
+                            session_id=self._session_id,
+                            originated_from_message_id=self._last_message_id,
+                        )
+                    )
 
         # Parse ResultMessage
         elif isinstance(message, ResultMessage):
@@ -162,7 +168,7 @@ class _SessionBase:
                 num_turns=message.num_turns,
                 result=message.result,
                 usage=message.usage or {},
-                session_id=message.session_id
+                session_id=message.session_id,
             )
             events.append(complete_event)
 
@@ -178,7 +184,7 @@ class _SessionBase:
                         delta=delta.get("text", ""),
                         index=event_data.get("index", 0),
                         content_type="text",
-                        session_id=self._session_id
+                        session_id=self._session_id,
                     )
                     events.append(partial_event)
 
@@ -202,11 +208,7 @@ class _SessionBase:
 
         # Convert to TaskInfo objects
         tasks = [
-            TaskInfo(
-                content=t["content"],
-                status=t["status"],
-                active_form=t.get("activeForm", "")
-            )
+            TaskInfo(content=t["content"], status=t["status"], active_form=t.get("activeForm", ""))
             for t in todos_data
         ]
 
@@ -232,14 +234,10 @@ class _SessionBase:
             pending=pending,
             changes=changes,
             tool_use_id=block.id,
-            session_id=self._session_id
+            session_id=self._session_id,
         )
 
-    def _detect_plan_changes(
-        self,
-        old_todos: list[dict],
-        new_todos: list[dict]
-    ) -> PlanChanges:
+    def _detect_plan_changes(self, old_todos: list[dict], new_todos: list[dict]) -> PlanChanges:
         """Detect changes between plan snapshots.
 
         Args:
@@ -263,17 +261,9 @@ class _SessionBase:
                 old_status = old_contents[content]["status"]
                 new_status = new_contents[content]["status"]
                 if old_status != new_status:
-                    status_changed.append({
-                        "task": content,
-                        "from": old_status,
-                        "to": new_status
-                    })
+                    status_changed.append({"task": content, "from": old_status, "to": new_status})
 
-        return PlanChanges(
-            added=added,
-            removed=removed,
-            status_changed=status_changed
-        )
+        return PlanChanges(added=added, removed=removed, status_changed=status_changed)
 
     def _get_current_task(self, tasks: list[TaskInfo]) -> str | None:
         """Get the current in-progress task.
