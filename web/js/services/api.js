@@ -417,6 +417,58 @@ export class SimsAPI {
 
     return await response.json();
   }
+
+  // ===== Document API Methods =====
+
+  async loadDocument(docType, docName, projectName = null) {
+    const params = projectName ? `?project_name=${encodeURIComponent(projectName)}` : '';
+    const response = await fetch(`${this.baseURL}/api/documents/${docType}/${docName}${params}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to load document: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async saveDocument(docType, docName, content, projectName = null) {
+    const params = projectName ? `?project_name=${encodeURIComponent(projectName)}` : '';
+    const response = await fetch(`${this.baseURL}/api/documents/${docType}/${docName}${params}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ content }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to save document: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async saveDocumentVersion(docType, docName, content, projectName = null) {
+    const params = projectName ? `?project_name=${encodeURIComponent(projectName)}` : '';
+    const response = await fetch(`${this.baseURL}/api/documents/${docType}/${docName}/version${params}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ content }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to save document version: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
 }
 
 // EventSource handler for SSE streaming

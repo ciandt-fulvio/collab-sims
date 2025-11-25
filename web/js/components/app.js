@@ -63,13 +63,6 @@ export function simsApp() {
     loadingActivityResults: false,
     expandedActivityGroups: new Set(),
 
-    // Agents state
-    selectedAgent: null,     // Currently selected agent for viewing
-    agentContent: '',        // Current agent markdown content
-    isEditingAgent: false,   // Edit mode for agent
-    editedAgentContent: '',  // Edited agent content (buffer)
-    isSavingAgent: false,    // Saving state
-
     // Component composition
     ...metricsPanel(),
     ...planPanel(),
@@ -574,58 +567,10 @@ export function simsApp() {
       alert(`View result: ${execution.filename}\n\nPath: ${execution.path}\n\nThis will open in a modal viewer (future enhancement)`);
     },
 
-    // Select and load agent content
-    async selectAgent(agentName) {
-      this.selectedAgent = agentName;
-      this.isEditingAgent = false;
-
-      try {
-        const response = await this.api.getAgent(agentName);
-        this.agentContent = response.content || '';
-      } catch (err) {
-        console.error('Failed to load agent content:', err);
-        this.agentContent = '';
-      }
-    },
-
-    // Clear agent selection
-    clearAgentSelection() {
-      this.selectedAgent = null;
-      this.agentContent = '';
-      this.isEditingAgent = false;
-    },
-
-    // Enter edit mode for agent
-    editAgent() {
-      this.editedAgentContent = this.agentContent;
-      this.isEditingAgent = true;
-    },
-
-    // Cancel edit mode for agent
-    cancelEditAgent() {
-      this.isEditingAgent = false;
-      this.editedAgentContent = '';
-    },
-
-    // Save agent content
-    async saveAgent() {
-      if (!this.selectedAgent) {
-        console.warn('No agent selected');
-        return;
-      }
-
-      this.isSavingAgent = true;
-      try {
-        await this.api.updateAgent(this.selectedAgent, this.editedAgentContent);
-        this.agentContent = this.editedAgentContent;
-        this.isEditingAgent = false;
-        console.log('Agent saved successfully');
-      } catch (err) {
-        console.error('Failed to save agent:', err);
-        alert('Failed to save agent: ' + err.message);
-      } finally {
-        this.isSavingAgent = false;
-      }
+    // View agent details (placeholder for future modal)
+    viewAgentDetails(agent) {
+      console.log('View agent details:', agent.name);
+      alert(`Agent: ${agent.name}\n\nDescription: ${agent.description || 'No description'}\n\nThis will open in a modal viewer (future enhancement)`);
     },
 
     // Get tool group by ID
