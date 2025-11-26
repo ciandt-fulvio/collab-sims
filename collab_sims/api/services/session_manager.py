@@ -855,10 +855,10 @@ class SessionManager:
 
         # Mark as closed in database
         try:
-            session = await self.db_tracker.repository.get_session(session_id)
-            if session:
-                # Update status (we'd need an update_session method, but for now just delete)
-                pass
+            await self.db_tracker.repository.update_session(
+                session_id=session_id, status="closed", closed_at=datetime.now()
+            )
+            logger.debug(f"Session {session_id} marked as closed in database")
         except Exception as e:
             logger.error(f"Error updating session status in database: {e}")
 

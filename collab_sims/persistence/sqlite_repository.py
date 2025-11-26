@@ -137,9 +137,12 @@ class SQLiteRepository(SessionRepository):
             return None
 
         result = dict(row)
-        # Parse JSON metadata
-        if result.get("metadata"):
-            result["metadata"] = json.loads(result["metadata"])
+        # Parse JSON metadata - always ensure it's a dict (not None)
+        metadata_str = result.get("metadata")
+        if metadata_str:
+            result["metadata"] = json.loads(metadata_str)
+        else:
+            result["metadata"] = {}
 
         return result
 
