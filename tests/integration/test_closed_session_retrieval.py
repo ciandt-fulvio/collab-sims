@@ -1,7 +1,7 @@
-"""Test for closed session retrieval bug.
+"""Test for session retrieval and persistence.
 
-Bug: When clicking on a closed session with query_count=0,
-     the API returns "Session not found" even though it exists in the database.
+Sessions remain accessible after being disconnected from memory.
+Users can access any session they have previously opened.
 """
 
 import asyncio
@@ -13,8 +13,8 @@ import httpx
 import pytest
 
 
-class TestClosedSessionRetrieval:
-    """Test retrieving closed sessions from the database."""
+class TestSessionPersistence:
+    """Test session persistence and retrieval from database."""
 
     @pytest.fixture
     def free_port(self):
@@ -73,49 +73,51 @@ class TestClosedSessionRetrieval:
             process.kill()
 
     @pytest.mark.asyncio
-    async def test_retrieve_closed_session_with_zero_queries(self, running_server):
-        """Test that we can retrieve a closed session even with query_count=0.
+    async def test_retrieve_disconnected_session_with_zero_queries(self, running_server):
+        """Test that we can retrieve a session disconnected from memory with query_count=0.
 
-        This tests the bug where closed sessions cannot be retrieved.
+        Sessions with no queries are still accessible from the database.
         """
         base_url, _process = running_server
 
         async with httpx.AsyncClient() as client:
-            # Get an existing closed session from the database
+            # Get an existing session from the database
             # The database already has test sessions from previous runs
             import sqlite3
 
             conn = sqlite3.connect("./data/api_sessions.db")
             cursor = conn.execute(
-                "SELECT session_id FROM session WHERE status = 'closed' LIMIT 1"
+                "SELECT session_id FROM session LIMIT 1"
             )
             row = cursor.fetchone()
             conn.close()
 
             if not row:
-                # Skip test if no closed sessions exist
-                pytest.skip("No closed sessions in database for testing")
+                # Skip test if no sessions exist
+                pytest.skip("No sessions in database for testing")
 
             session_id = row[0]
 
-            # Try to retrieve the closed session via API
+            # Try to retrieve the session via API
             response = await client.get(f"{base_url}/api/sessions/{session_id}")
 
-            # This should succeed, not return 404
+            # Should succeed - all sessions are accessible
             assert response.status_code == 200, (
-                f"Failed to retrieve closed session {session_id}. "
+                f"Failed to retrieve session {session_id}. "
                 f"Status: {response.status_code}, Response: {response.text}"
             )
 
             # Verify the response contains the session data
             data = response.json()
             assert data["session_id"] == session_id
-            assert data["status"] == "closed"
-            print(f"✅ Successfully retrieved closed session: {session_id}")
+            print(f"✅ Successfully retrieved session: {session_id}")
 
     @pytest.mark.asyncio
-    async def test_create_and_close_session_then_retrieve(self, running_server):
-        """Test creating a session, closing it, and then retrieving it."""
+    async def test_create_and_disconnect_session_then_retrieve(self, running_server):
+        """Test creating a session, disconnecting it, and then retrieving it.
+
+        Sessions should remain accessible even after being disconnected from memory.
+        """
         base_url, _process = running_server
 
         async with httpx.AsyncClient(timeout=10) as client:
@@ -129,26 +131,25 @@ class TestClosedSessionRetrieval:
             session_id = create_response.json()["session_id"]
             print(f"Created session: {session_id}")
 
-            # Close the session without executing any queries
+            # Close/disconnect the session without executing any queries
             close_response = await client.delete(f"{base_url}/api/sessions/{session_id}")
 
             assert close_response.status_code == 204
-            print(f"Closed session: {session_id}")
+            print(f"Disconnected session: {session_id}")
 
             # Wait a moment for database to persist
             await asyncio.sleep(0.5)
 
-            # Try to retrieve the closed session
+            # Try to retrieve the session - should still be accessible
             get_response = await client.get(f"{base_url}/api/sessions/{session_id}")
 
-            # This should succeed, not return 404
+            # Should succeed - session remains in database
             assert get_response.status_code == 200, (
-                f"Failed to retrieve closed session {session_id} immediately after closing. "
+                f"Failed to retrieve disconnected session {session_id} immediately after closing. "
                 f"Status: {get_response.status_code}, Response: {get_response.text}"
             )
 
             data = get_response.json()
             assert data["session_id"] == session_id
-            assert data["status"] == "closed"
             assert data["query_count"] == 0
-            print(f"✅ Successfully retrieved closed session with 0 queries: {session_id}")
+            print(f"✅ Successfully retrieved disconnected session with 0 queries: {session_id}")

@@ -85,22 +85,20 @@ class SessionManager:
         logger.info("🔄 Starting session restore (background task)...")
 
         try:
-            # Get all active sessions from database
-            active_sessions = await self.db_tracker.repository.list_sessions(
-                status="active", limit=1000
-            )
+            # Get all sessions from database (no status filter - all sessions are accessible)
+            all_sessions = await self.db_tracker.repository.list_sessions(limit=1000)
 
-            if not active_sessions:
-                logger.info("   No active sessions to restore")
+            if not all_sessions:
+                logger.info("   No sessions to restore")
                 self._restore_status = "completed"
                 return
 
-            logger.info(f"   Found {len(active_sessions)} active session(s) to restore")
+            logger.info(f"   Found {len(all_sessions)} session(s) to restore")
 
             restored_count = 0
             failed_count = 0
 
-            for session_data in active_sessions:
+            for session_data in all_sessions:
                 session_id = session_data["session_id"]
                 try:
                     # Extract fields from database
@@ -177,13 +175,7 @@ class SessionManager:
                 except Exception as e:
                     failed_count += 1
                     logger.error(f"   ❌ Failed to resume session {session_id}: {e}")
-                    # Mark failed session as closed
-                    try:
-                        await self.db_tracker.repository.update_session(
-                            session_id=session_id, status="closed", closed_at=datetime.now()
-                        )
-                    except Exception:
-                        pass
+                    # Session remains in database for potential retry
 
             # Update restore status
             self._restore_count = restored_count
@@ -332,17 +324,19 @@ class SessionManager:
     ) -> list[dict[str, Any]]:
         """List all sessions from database (not just active ones in memory).
 
-        This is useful for showing session history and allowing users to reopen closed sessions.
+        All sessions are accessible to users (no status filtering).
+        Users can resume any session that has events.
 
         Args:
-            status: Filter by status ('active', 'closed', or None for all)
+            status: Deprecated - status filtering is no longer applied
             limit: Maximum number of sessions to return
 
         Returns:
             List of session metadata dicts from database
         """
         try:
-            sessions = await self.db_tracker.repository.list_sessions(status=status, limit=limit)
+            # Ignore status parameter - all sessions are always accessible
+            sessions = await self.db_tracker.repository.list_sessions(limit=limit)
             return sessions
         except Exception as e:
             logger.error(f"Failed to list sessions from database: {e}")
@@ -831,7 +825,10 @@ class SessionManager:
 
     async def close_session(self, session_id: str) -> bool:
         """
-        Close and remove a session.
+        Close and disconnect a session from memory.
+
+        The session remains in the database and can be resumed/accessed later.
+        Users can always return to any session that has events.
 
         Args:
             session_id: Session identifier
@@ -853,19 +850,10 @@ class SessionManager:
             except Exception as e:
                 logger.error(f"Error closing Claude session: {e}")
 
-        # Mark as closed in database
-        try:
-            await self.db_tracker.repository.update_session(
-                session_id=session_id, status="closed", closed_at=datetime.now()
-            )
-            logger.debug(f"Session {session_id} marked as closed in database")
-        except Exception as e:
-            logger.error(f"Error updating session status in database: {e}")
-
-        # Remove from active sessions
+        # Remove from active sessions (but keep in database for later access)
         del self._sessions[session_id]
 
-        logger.info(f"Session {session_id} closed")
+        logger.info(f"Session {session_id} disconnected from memory (can be resumed later)")
 
         return True
 
