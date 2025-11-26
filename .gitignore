@@ -203,7 +203,7 @@ docs/.doctrees/
 sessions_data/
 
 # Data directory
-/data/
+/data/execution/
 
 # Backup files
 *.bak

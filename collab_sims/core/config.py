@@ -5,6 +5,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 
 def get_collab_sims_config_dir() -> str:
     """Get Collab Sims configuration directory.
@@ -25,20 +30,20 @@ def get_collab_sims_config_dir() -> str:
 
 
 def get_default_working_dir() -> str:
-    """Get default working directory from environment or use current working directory.
+    """Get default working directory from environment.
 
     Returns:
         Working directory path (absolute)
 
     Behavior:
-        - If COLLAB_SIMS_WORKSPACE_DIR is set, use that value
-        - Otherwise, use current working directory (os.getcwd())
+        - Reads COLLAB_SIMS_WORKSPACE_DIR from environment (loaded from .env)
+        - Falls back to current working directory if not set
     """
     env_dir = os.environ.get("COLLAB_SIMS_WORKSPACE_DIR")
     if env_dir:
         return env_dir
 
-    # Default to current working directory (local filesystem execution)
+    # Fallback to current working directory
     return os.getcwd()
 
 
