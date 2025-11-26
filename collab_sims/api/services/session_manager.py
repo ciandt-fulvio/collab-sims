@@ -85,20 +85,22 @@ class SessionManager:
         logger.info("🔄 Starting session restore (background task)...")
 
         try:
-            # Get all sessions from database (no status filter - all sessions are accessible)
-            all_sessions = await self.db_tracker.repository.list_sessions(limit=1000)
+            # Get all active sessions from database
+            active_sessions = await self.db_tracker.repository.list_sessions(
+                status="active", limit=1000
+            )
 
-            if not all_sessions:
-                logger.info("   No sessions to restore")
+            if not active_sessions:
+                logger.info("   No active sessions to restore")
                 self._restore_status = "completed"
                 return
 
-            logger.info(f"   Found {len(all_sessions)} session(s) to restore")
+            logger.info(f"   Found {len(active_sessions)} active session(s) to restore")
 
             restored_count = 0
             failed_count = 0
 
-            for session_data in all_sessions:
+            for session_data in active_sessions:
                 session_id = session_data["session_id"]
                 try:
                     # Extract fields from database
@@ -175,7 +177,13 @@ class SessionManager:
                 except Exception as e:
                     failed_count += 1
                     logger.error(f"   ❌ Failed to resume session {session_id}: {e}")
-                    # Session remains in database for potential retry
+                    # Mark failed session as closed
+                    try:
+                        await self.db_tracker.repository.update_session(
+                            session_id=session_id, status="closed", closed_at=datetime.now()
+                        )
+                    except Exception:
+                        pass
 
             # Update restore status
             self._restore_count = restored_count
@@ -308,6 +316,121 @@ class SessionManager:
             logger.error(f"Failed to get session {session_id} from database: {e}")
             return None
 
+    async def _reactivate_session(self, session_id: str) -> bool:
+        """Reactivate a session from database (closed or from previous server run).
+
+        This allows users to return to any previous session seamlessly.
+
+        Args:
+            session_id: Session identifier
+
+        Returns:
+            True if session was reactivated, False if not found in database
+        """
+        # Already active?
+        if session_id in self._sessions:
+            return True
+
+        try:
+            # Get session from database
+            db_session = await self.db_tracker.repository.get_session(session_id)
+            if not db_session:
+                logger.warning(f"Cannot reactivate session {session_id}: not found in database")
+                return False
+
+            # Extract fields
+            project_name = db_session.get("project_name")
+            if not project_name:
+                logger.warning(f"Cannot reactivate session {session_id}: no project_name")
+                return False
+
+            agent_name = db_session.get("agent_name")
+            session_name = db_session.get("session_name")
+            user_id = db_session.get("user_id")
+            metadata = db_session.get("metadata", {})
+            query_count = db_session.get("query_count", 0)
+
+            # Create config from stored metadata
+            config_dict = dict(metadata) if metadata else {}
+            if user_id:
+                config_dict["user_id"] = user_id
+
+            # Create stream tracker for this session
+            stream_tracker = StreamTracker()
+
+            # Create session configuration
+            session_config = SessionConfig(
+                project_name=project_name,
+                agent_name=agent_name,
+                include_partial_messages=config_dict.get("include_partial_messages", True),
+                user_id=user_id,
+            )
+
+            # Create CollabSimsSession with resume=True
+            claude_session = CollabSimsSession(
+                options=ClaudeAgentOptions(
+                    permission_mode="bypassPermissions",
+                    include_partial_messages=session_config.include_partial_messages,
+                ),
+                config=session_config,
+                trackers=[self.db_tracker, stream_tracker],
+                approval_manager=self.approval_manager,
+                session_id=session_id,
+                resume=True,  # Resume existing session
+            )
+
+            # Connect to Claude SDK
+            await claude_session._connect()
+
+            # Parse created_at
+            created_at = db_session.get("created_at", datetime.now())
+            if isinstance(created_at, datetime):
+                created_at_str = created_at.isoformat()
+            else:
+                created_at_str = str(created_at)
+
+            # Store session data in memory
+            self._sessions[session_id] = {
+                "session_id": session_id,
+                "project_name": project_name,
+                "agent_name": agent_name,
+                "session_name": session_name,
+                "tracker": stream_tracker,
+                "claude_session": claude_session,
+                "config": config_dict,
+                "created_at": created_at_str,
+                "status": "active",
+                "execution_state": "idle",
+                "current_query_id": None,
+                "query_count": query_count,
+            }
+
+            # Update status in database to active
+            await self.db_tracker.repository.update_session(
+                session_id=session_id, status="active"
+            )
+
+            logger.info(f"✅ Reactivated session {session_id[:12]} (queries: {query_count})")
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to reactivate session {session_id}: {e}")
+            return False
+
+    async def _ensure_session_active(self, session_id: str) -> bool:
+        """Ensure a session is active (in memory), reactivating from DB if needed.
+
+        Args:
+            session_id: Session identifier
+
+        Returns:
+            True if session is now active, False if not found
+        """
+        if session_id in self._sessions:
+            return True
+
+        return await self._reactivate_session(session_id)
+
     async def list_sessions(self) -> list[dict[str, Any]]:
         """List all active sessions in memory.
 
@@ -324,19 +447,17 @@ class SessionManager:
     ) -> list[dict[str, Any]]:
         """List all sessions from database (not just active ones in memory).
 
-        All sessions are accessible to users (no status filtering).
-        Users can resume any session that has events.
+        This is useful for showing session history and allowing users to reopen closed sessions.
 
         Args:
-            status: Deprecated - status filtering is no longer applied
+            status: Filter by status ('active', 'closed', or None for all)
             limit: Maximum number of sessions to return
 
         Returns:
             List of session metadata dicts from database
         """
         try:
-            # Ignore status parameter - all sessions are always accessible
-            sessions = await self.db_tracker.repository.list_sessions(limit=limit)
+            sessions = await self.db_tracker.repository.list_sessions(status=status, limit=limit)
             return sessions
         except Exception as e:
             logger.error(f"Failed to list sessions from database: {e}")
@@ -355,7 +476,8 @@ class SessionManager:
         Returns:
             Tuple of (events, status, error_message)
         """
-        if session_id not in self._sessions:
+        # Ensure session is active (reactivate from DB if needed)
+        if not await self._ensure_session_active(session_id):
             return [], "error", f"Session {session_id} not found"
 
         session_data = self._sessions[session_id]
@@ -451,7 +573,8 @@ class SessionManager:
         Raises:
             ValueError: If session not found
         """
-        if session_id not in self._sessions:
+        # Ensure session is active (reactivate from DB if needed)
+        if not await self._ensure_session_active(session_id):
             raise ValueError(f"Session {session_id} not found")
 
         query_id = f"{session_id}_{uuid.uuid4().hex[:8]}"
@@ -769,7 +892,8 @@ class SessionManager:
         Yields:
             Events as they occur in real-time
         """
-        if session_id not in self._sessions:
+        # Ensure session is active (reactivate from DB if needed)
+        if not await self._ensure_session_active(session_id):
             yield {
                 "type": "error",
                 "error": f"Session {session_id} not found",
@@ -825,10 +949,7 @@ class SessionManager:
 
     async def close_session(self, session_id: str) -> bool:
         """
-        Close and disconnect a session from memory.
-
-        The session remains in the database and can be resumed/accessed later.
-        Users can always return to any session that has events.
+        Close and remove a session.
 
         Args:
             session_id: Session identifier
@@ -850,10 +971,18 @@ class SessionManager:
             except Exception as e:
                 logger.error(f"Error closing Claude session: {e}")
 
-        # Remove from active sessions (but keep in database for later access)
+        # Mark as closed in database
+        try:
+            await self.db_tracker.repository.update_session(
+                session_id=session_id, status="closed", closed_at=datetime.now()
+            )
+        except Exception as e:
+            logger.error(f"Error updating session status in database: {e}")
+
+        # Remove from active sessions
         del self._sessions[session_id]
 
-        logger.info(f"Session {session_id} disconnected from memory (can be resumed later)")
+        logger.info(f"Session {session_id} closed")
 
         return True
 
@@ -865,14 +994,12 @@ class SessionManager:
             session_id: Session identifier
             session_name: New name for the session
         """
-        if session_id not in self._sessions:
-            raise ValueError(f"Session {session_id} not found")
-
-        # Update in-memory session
-        self._sessions[session_id]["session_name"] = session_name
-
-        # Update in database
+        # Update in database first (works even for inactive sessions)
         await self.db_tracker.repository.update_session_name(session_id, session_name)
+
+        # Update in-memory session if active
+        if session_id in self._sessions:
+            self._sessions[session_id]["session_name"] = session_name
 
         logger.info(f"Session {session_id} name updated to: {session_name}")
 
@@ -887,7 +1014,8 @@ class SessionManager:
             session_id: Session identifier
             event: ActivityCardEvent to emit
         """
-        if session_id not in self._sessions:
+        # Ensure session is active (reactivate from DB if needed)
+        if not await self._ensure_session_active(session_id):
             raise ValueError(f"Session {session_id} not found")
 
         # Convert event to dict format

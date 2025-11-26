@@ -50,14 +50,18 @@ async def create_session(request: SessionCreateRequest):
 
 
 @router.get("", response_model=SessionListResponse)
-async def list_sessions():
-    """List all sessions.
+async def list_sessions(status: str | None = None):
+    """List sessions.
 
-    Returns all sessions from database that users have previously accessed.
-    All sessions are accessible and can be resumed (no status filtering).
+    Args:
+        status: Filter by status ('active', 'closed', or None for all sessions).
+                Default is None (all sessions from database).
+
+    Returns:
+        List of all sessions from database (not just active ones in memory)
     """
-    # List all sessions from database
-    sessions = await session_manager.list_all_sessions_from_database()
+    # List all sessions from database (not just active ones in memory)
+    sessions = await session_manager.list_all_sessions_from_database(status=status)
     return SessionListResponse(
         sessions=[SessionResponse(**s) for s in sessions], total=len(sessions)
     )
