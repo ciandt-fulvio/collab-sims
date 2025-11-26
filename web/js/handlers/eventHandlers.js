@@ -356,6 +356,57 @@ export function handleMetricsEvent(context, event) {
 }
 
 /**
+ * Handle session_start event (session was created)
+ */
+export function handleSessionStartEvent(context, event) {
+  console.log('Session started:', event.session_id);
+  // Event is added to events array by caller for visibility in Events tab
+}
+
+/**
+ * Handle session_end event (session was closed)
+ */
+export function handleSessionEndEvent(context, event) {
+  console.log('Session ended:', {
+    total_queries: event.total_queries,
+    total_duration_ms: event.total_duration_ms
+  });
+  context.isStreaming = false;
+  // Event is added to events array by caller for visibility in Events tab
+}
+
+/**
+ * Handle start event (legacy - agent execution started)
+ */
+export function handleStartEvent(context, event) {
+  console.log('Agent execution started (legacy event):', event.prompt);
+  // This is a legacy event, treat it similarly to query event
+  // but don't add duplicate messages
+}
+
+/**
+ * Handle progress event (progress updates during execution)
+ */
+export function handleProgressEvent(context, event) {
+  console.log('Progress update:', {
+    completed: event.completed,
+    total: event.total,
+    percentage: event.percentage,
+    current_task: event.current_task
+  });
+  // Could update a progress bar in the future
+  // For now, just log and add to events array
+}
+
+/**
+ * Handle system event (system-level notifications)
+ */
+export function handleSystemEvent(context, event) {
+  console.log('System event:', event.subtype, event.data);
+  // System events are informational, just log and add to events array
+}
+
+/**
  * Handle error event (something went wrong)
  */
 export function handleErrorEvent(context, event) {
@@ -402,17 +453,31 @@ export function dispatchEvent(context, event) {
 
   // Map of event types to handlers
   const handlers = {
+    // Session lifecycle
+    'session_start': handleSessionStartEvent,
+    'session_end': handleSessionEndEvent,
+
+    // Query lifecycle
     'query': handleQueryEvent,
-    'partial_message': handlePartialMessageEvent,
+    'start': handleStartEvent,  // legacy
+    'complete': handleCompleteEvent,
+
+    // Agent events
+    'plan': handlePlanEvent,
     'message': handleMessageEvent,
+    'partial_message': handlePartialMessageEvent,
     'tool_use': handleToolUseEvent,
     'tool_result': handleToolResultEvent,
-    'plan': handlePlanEvent,
+    'progress': handleProgressEvent,
+    'system': handleSystemEvent,
+    'error': handleErrorEvent,
+
+    // Approval events
     'approval_request': handleApprovalRequestEvent,
     'approval_response': handleApprovalResponseEvent,
-    'complete': handleCompleteEvent,
+
+    // Metrics and activities
     'metrics': handleMetricsEvent,
-    'error': handleErrorEvent,
     'activity_card': handleActivityCardEvent,
   };
 
